@@ -231,11 +231,7 @@ function ChatScreenContent() {
     >
       <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="chat-header">
         <TouchableOpacity style={styles.backBtn} onPress={() => {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
-            router.replace('/');
-          }
+          router.back();
         }} testID="chat-back" accessibilityLabel="Back">
           <ChevronLeft size={22} color="#fff" />
         </TouchableOpacity>

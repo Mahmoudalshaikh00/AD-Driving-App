@@ -371,6 +371,9 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
             <View style={styles.hoursColumn}>
               {HOURS.map(hour => (
                 <View key={hour} style={styles.hourLabelContainer}>
+                  <Text style={styles.hourLabel}>
+                    {hour.toString().padStart(2, '0')}:00
+                  </Text>
                 </View>
               ))}
             </View>

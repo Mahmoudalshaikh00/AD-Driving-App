@@ -38,6 +38,7 @@ export default function StudentScheduleScreen() {
   const [showAvailabilityModal, setShowAvailabilityModal] = useState<boolean>(false);
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
+  const [showAppointmentDetails, setShowAppointmentDetails] = useState<boolean>(false);
 
   const student = getStudentById(id);
   const isTrainer = user?.role === 'trainer';
@@ -191,12 +192,55 @@ export default function StudentScheduleScreen() {
 
     return (
       <View style={styles.appointmentsContainer}>
-        <TouchableOpacity style={styles.appointmentButton}>
+        <TouchableOpacity 
+          style={styles.appointmentButton}
+          onPress={() => setShowAppointmentDetails(!showAppointmentDetails)}
+        >
           <Text style={styles.appointmentButtonText}>{title}</Text>
           <View style={styles.appointmentBadge}>
             <Text style={styles.appointmentBadgeText}>{studentAppointments.length}</Text>
           </View>
         </TouchableOpacity>
+        
+        {showAppointmentDetails && (
+          <View style={styles.appointmentsList}>
+            {studentAppointments.map(appointment => {
+              const startDate = new Date(appointment.start);
+              const endDate = new Date(appointment.end);
+              
+              return (
+                <View key={appointment.id} style={styles.appointmentItem}>
+                  <View style={styles.appointmentInfo}>
+                    <Text style={styles.appointmentDate}>
+                      {format(startDate, 'EEE, MMM d')}
+                    </Text>
+                    <Text style={styles.appointmentTime}>
+                      {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
+                    </Text>
+                    <Text style={[styles.appointmentStatus, 
+                      appointment.status === 'approved' && styles.statusApproved,
+                      appointment.status === 'pending' && styles.statusPending,
+                      appointment.status === 'rejected' && styles.statusRejected
+                    ]}>
+                      {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                    </Text>
+                  </View>
+                  {isTrainer && (
+                    <TouchableOpacity
+                      style={styles.editAppointmentButton}
+                      onPress={() => {
+                        setEditingAppointment(appointment);
+                        setShowAppointmentModal(true);
+                      }}
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
       </View>
     );
   };
@@ -413,6 +457,62 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
+  },
+  appointmentsList: {
+    marginTop: 8,
+    gap: 8,
+  },
+  appointmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.light.background,
+    borderRadius: 8,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  appointmentInfo: {
+    flex: 1,
+  },
+  appointmentDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  appointmentTime: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    marginBottom: 4,
+  },
+  appointmentStatus: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  statusApproved: {
+    color: '#28a745',
+  },
+  statusPending: {
+    color: '#ffc107',
+  },
+  statusRejected: {
+    color: '#dc3545',
+  },
+  editAppointmentButton: {
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   appointmentButton: {
     flexDirection: 'row',
