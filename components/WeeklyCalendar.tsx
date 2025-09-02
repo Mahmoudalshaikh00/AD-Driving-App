@@ -53,7 +53,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     });
   }, [myBookings, studentId, studentBookings]);
 
-  const getContinuousBooking = useCallback((date: Date, hour: number): { booking: Booking; startHour: number; endHour: number; isStart: boolean; isEnd: boolean } | null => {
+  const getContinuousBooking = useCallback((date: Date, hour: number): { booking: Booking; startHour: number; endHour: number; isStart: boolean; isEnd: boolean; startMinute: number; endMinute: number } | null => {
     const booking = getBookingForSlot(date, hour, 0);
     if (!booking) return null;
     
@@ -61,13 +61,17 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     const bookingEnd = new Date(booking.end);
     const startHour = bookingStart.getHours();
     const endHour = bookingEnd.getHours();
+    const startMinute = bookingStart.getMinutes();
+    const endMinute = bookingEnd.getMinutes();
     
     return {
       booking,
       startHour,
       endHour,
+      startMinute,
+      endMinute,
       isStart: hour === startHour,
-      isEnd: hour === endHour - 1 || (hour === endHour && bookingEnd.getMinutes() === 0)
+      isEnd: hour === endHour - 1 || (hour === endHour && endMinute === 0)
     };
   }, [getBookingForSlot]);
 
@@ -176,9 +180,36 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     let backgroundColor = Colors.light.background;
     let borderColor = Colors.light.border;
     let textColor = Colors.light.textLight;
+    let slotHeight = 60;
+    let marginTop = 0;
     
     if (continuousBooking) {
-      const { booking, isStart, isEnd } = continuousBooking;
+      const { booking, isStart, isEnd, startMinute, endMinute } = continuousBooking;
+      
+      // Calculate precise positioning based on minutes
+      const bookingStart = new Date(booking.start);
+      const bookingEnd = new Date(booking.end);
+      const startHour = bookingStart.getHours();
+      const endHour = bookingEnd.getHours();
+      
+      // Calculate height and position based on actual start/end times
+      const hourlySlotHeight = 60;
+      
+      if (isStart) {
+        // For the starting slot, adjust margin top based on start minutes
+        marginTop = (startMinute / 60) * hourlySlotHeight;
+        
+        // If booking ends in the same hour, adjust height
+        if (startHour === endHour) {
+          slotHeight = ((endMinute - startMinute) / 60) * hourlySlotHeight;
+        } else {
+          slotHeight = ((60 - startMinute) / 60) * hourlySlotHeight;
+        }
+      } else if (isEnd && endMinute > 0) {
+        // For the ending slot with minutes, adjust height
+        slotHeight = (endMinute / 60) * hourlySlotHeight;
+        marginTop = 0;
+      }
       
       if (booking.status === 'approved') {
         backgroundColor = isTrainer ? studentColor(booking.student_id) : Colors.light.primary;
@@ -200,62 +231,93 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     }
 
     return (
-      <TouchableOpacity
-        key={`${hour}`}
-        style={[
-          styles.timeSlot,
-          {
-            backgroundColor,
-            borderColor,
-            opacity: isPast ? 0.5 : 1,
-            borderBottomWidth: 0, // Remove horizontal lines
-          },
-        ]}
-        onPress={() => handleSlotPress(date, hour)}
-        disabled={isPast}
-        testID={`time-slot-${hour}`}
-      >
+      <View style={styles.timeSlotWrapper}>
         {continuousBooking ? (
-          <View style={styles.bookingContent}>
-            {continuousBooking.isStart && (
+          <TouchableOpacity
+            key={`${hour}`}
+            style={[
+              styles.timeSlot,
+              {
+                backgroundColor,
+                borderColor,
+                opacity: isPast ? 0.5 : 1,
+                borderBottomWidth: 0,
+                height: slotHeight,
+                marginTop: marginTop,
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                zIndex: 2,
+              },
+            ]}
+            onPress={() => handleSlotPress(date, hour)}
+            disabled={isPast}
+            testID={`time-slot-${hour}`}
+          >
+            <View style={styles.bookingContent}>
               <Text style={[styles.bookingStartTime, { color: textColor }]}>
                 {format(new Date(continuousBooking.booking.start), 'HH:mm')}
               </Text>
-            )}
-            <View style={styles.bookingMiddle}>
-              {isTrainer && (
-                <Text style={[styles.studentName, { color: textColor }]} numberOfLines={1}>
-                  {studentOfTrainer(continuousBooking.booking.student_id)?.name || 'Student'}
-                </Text>
-              )}
-              {continuousBooking.booking.status === 'pending' && (
-                <Text style={[styles.statusText, { color: textColor }]}>Pending</Text>
-              )}
-            </View>
-            {continuousBooking.isEnd && (
+              <View style={styles.bookingMiddle}>
+                {isTrainer && (
+                  <Text style={[styles.studentName, { color: textColor }]} numberOfLines={1}>
+                    {studentOfTrainer(continuousBooking.booking.student_id)?.name || 'Student'}
+                  </Text>
+                )}
+                {continuousBooking.booking.status === 'pending' && (
+                  <Text style={[styles.statusText, { color: textColor }]}>Pending</Text>
+                )}
+              </View>
               <Text style={[styles.bookingEndTime, { color: textColor }]}>
                 {format(new Date(continuousBooking.booking.end), 'HH:mm')}
               </Text>
-            )}
-          </View>
+            </View>
+          </TouchableOpacity>
         ) : availabilitySlot ? (
-          <View style={styles.availabilityContent}>
-            <Text style={[styles.availabilityStartTime, { color: textColor }]}>
-              {format(availabilitySlot.start, 'HH:mm')}
-            </Text>
-            <Text style={[styles.availabilityLabel, { color: textColor }]}>Available</Text>
-            <Text style={[styles.availabilityEndTime, { color: textColor }]}>
-              {format(availabilitySlot.end, 'HH:mm')}
-            </Text>
-          </View>
+          <TouchableOpacity
+            key={`${hour}`}
+            style={[
+              styles.timeSlot,
+              {
+                backgroundColor,
+                borderColor,
+                opacity: isPast ? 0.5 : 1,
+                borderBottomWidth: 0,
+              },
+            ]}
+            onPress={() => handleSlotPress(date, hour)}
+            disabled={isPast}
+            testID={`time-slot-${hour}`}
+          >
+            <View style={styles.availabilityContent}>
+              <Text style={[styles.availabilityStartTime, { color: textColor }]}>
+                {format(availabilitySlot.start, 'HH:mm')}
+              </Text>
+              <Text style={[styles.availabilityLabel, { color: textColor }]}>Available</Text>
+              <Text style={[styles.availabilityEndTime, { color: textColor }]}>
+                {format(availabilitySlot.end, 'HH:mm')}
+              </Text>
+            </View>
+          </TouchableOpacity>
         ) : (
-          <View style={styles.timeSlotContent}>
-            <Text style={[styles.timeText, { color: textColor }]}>
-              {String(hour).padStart(2, '0')}:00
-            </Text>
-          </View>
+          <TouchableOpacity
+            key={`${hour}`}
+            style={[
+              styles.timeSlot,
+              {
+                backgroundColor,
+                borderColor,
+                opacity: isPast ? 0.5 : 1,
+                borderBottomWidth: 0,
+              },
+            ]}
+            onPress={() => handleSlotPress(date, hour)}
+            disabled={isPast}
+            testID={`time-slot-${hour}`}
+          >
+          </TouchableOpacity>
         )}
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -309,9 +371,6 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
             <View style={styles.hoursColumn}>
               {HOURS.map(hour => (
                 <View key={hour} style={styles.hourLabelContainer}>
-                  <Text style={styles.hourLabel}>
-                    {String(hour).padStart(2, '0')}:00
-                  </Text>
                 </View>
               ))}
             </View>
@@ -414,13 +473,18 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: Colors.light.border,
   },
+  timeSlotWrapper: {
+    height: 60,
+    position: 'relative',
+  },
   timeSlot: {
     height: 60,
-    borderBottomWidth: 0, // Remove horizontal lines
+    borderBottomWidth: 0,
     paddingHorizontal: 4,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 0,
+    borderRadius: 4,
   },
   timeSlotContent: {
     alignItems: 'center',
