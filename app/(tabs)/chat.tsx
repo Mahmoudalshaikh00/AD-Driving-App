@@ -231,9 +231,9 @@ function ChatScreenContent() {
     >
       <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="chat-header">
         <TouchableOpacity style={styles.backBtn} onPress={() => {
-          // For trainer, always go back to student details when studentId is present
+          // For trainer, navigate to student details when studentId is present
           if (isTrainer && params.studentId) {
-            router.back();
+            router.push(`/students/${params.studentId}`);
           } else {
             router.back();
           }
