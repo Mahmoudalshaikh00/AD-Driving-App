@@ -191,66 +191,12 @@ export default function StudentScheduleScreen() {
 
     return (
       <View style={styles.appointmentsContainer}>
-        <Text style={styles.appointmentsTitle}>{title} ({studentAppointments.length})</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {studentAppointments.map(booking => {
-            const startDate = new Date(booking.start);
-            const endDate = new Date(booking.end);
-            
-            return (
-              <View key={booking.id} style={[
-                styles.appointmentCard,
-                booking.status === 'approved' && styles.approvedCard,
-                booking.status === 'pending' && styles.pendingCard,
-                booking.status === 'rejected' && styles.rejectedCard,
-              ]}>
-                <View style={styles.appointmentHeader}>
-                  <View style={[styles.colorDot, { backgroundColor: studentColor(booking.student_id) }]} />
-                  <Text style={styles.appointmentStudentName}>
-                    {isTrainer ? (student?.name || 'Student') : 'Your Appointment'}
-                  </Text>
-                </View>
-                <Text style={styles.appointmentTime}>
-                  {format(startDate, 'MMM d, HH:mm')} - {format(endDate, 'HH:mm')}
-                </Text>
-                <View style={styles.appointmentStatus}>
-                  <Text style={[
-                    styles.statusText,
-                    booking.status === 'approved' && styles.approvedText,
-                    booking.status === 'pending' && styles.pendingText,
-                    booking.status === 'rejected' && styles.rejectedText,
-                  ]}>
-                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                  </Text>
-                </View>
-                {isTrainer && booking.status === 'pending' && (
-                  <View style={styles.appointmentActions}>
-                    <TouchableOpacity
-                      style={styles.approveButton}
-                      onPress={() => {
-                        updateBookingStatus(booking.id, 'approved');
-                        Alert.alert('Success', 'Booking approved!');
-                      }}
-                      testID={`approve-${booking.id}`}
-                    >
-                      <Text style={styles.approveButtonText}>Approve</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.rejectButton}
-                      onPress={() => {
-                        updateBookingStatus(booking.id, 'rejected');
-                        Alert.alert('Success', 'Booking rejected');
-                      }}
-                      testID={`reject-${booking.id}`}
-                    >
-                      <Text style={styles.rejectButtonText}>Reject</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </ScrollView>
+        <TouchableOpacity style={styles.appointmentButton}>
+          <Text style={styles.appointmentButtonText}>{title}</Text>
+          <View style={styles.appointmentBadge}>
+            <Text style={styles.appointmentBadgeText}>{studentAppointments.length}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -258,7 +204,7 @@ export default function StudentScheduleScreen() {
   const renderTrainerAvailability = () => {
     if (trainerAvailabilitySlots.length === 0) return null;
 
-    const title = isTrainer ? 'Your Availability' : 'Trainer Availability';
+    const title = isTrainer ? 'Your Availability' : 'Instructor Availability';
 
     return (
       <View style={styles.availabilityContainer}>
@@ -463,111 +409,42 @@ const styles = StyleSheet.create({
   },
   appointmentsContainer: {
     backgroundColor: Colors.light.cardBackground,
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
-    maxHeight: 80,
   },
-  appointmentsTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.light.text,
-    marginBottom: 4,
-  },
-  appointmentCard: {
+  appointmentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Colors.light.background,
-    borderRadius: 6,
-    padding: 6,
-    marginRight: 6,
-    minWidth: 140,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
   },
-  approvedCard: {
-    borderColor: '#28a745',
-    backgroundColor: '#f8fff9',
-  },
-  pendingCard: {
-    borderColor: '#ffc107',
-    backgroundColor: '#fffdf0',
-  },
-  rejectedCard: {
-    borderColor: '#dc3545',
-    backgroundColor: '#fff5f5',
-  },
-  appointmentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  appointmentStudentName: {
-    fontSize: 12,
+  appointmentButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
   },
-  appointmentTime: {
-    fontSize: 11,
-    color: Colors.light.textLight,
-    marginBottom: 6,
-  },
-  appointmentStatus: {
-    marginBottom: 8,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-    paddingVertical: 4,
+  appointmentBadge: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: 12,
     paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  approvedText: {
-    color: '#28a745',
-    backgroundColor: '#e7f9ee',
-  },
-  pendingText: {
-    color: '#856404',
-    backgroundColor: '#fff3cd',
-  },
-  rejectedText: {
-    color: '#dc3545',
-    backgroundColor: '#fde8ea',
-  },
-  appointmentActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  approveButton: {
-    flex: 1,
-    backgroundColor: '#e7f9ee',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 4,
+    minWidth: 24,
     alignItems: 'center',
   },
-  approveButtonText: {
+  appointmentBadgeText: {
+    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
-    color: '#14b86a',
-  },
-  rejectButton: {
-    flex: 1,
-    backgroundColor: '#fde8ea',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  rejectButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#e53935',
   },
   colorDot: {
     width: 12,

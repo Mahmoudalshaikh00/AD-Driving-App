@@ -180,7 +180,7 @@ export default function StudentsScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.studentHeaderName} numberOfLines={1}>{user.name}</Text>
               <Text style={styles.profileEmail}>{user.email}</Text>
-              {trainerName ? <Text style={styles.trainerSubtitle} numberOfLines={1}>Trainer: {trainerName}</Text> : null}
+              {trainerName ? <Text style={styles.trainerSubtitle} numberOfLines={1}>Instructor: {trainerName}</Text> : null}
             </View>
           </View>
           <View style={styles.circularWrapper}>
@@ -219,7 +219,7 @@ export default function StudentsScreen() {
                 style={[styles.capitalButton, selectedCapital === c && styles.capitalButtonActive]}
                 testID={`student-capital-${c}`}
               >
-                <Text style={[styles.capitalButtonText, selectedCapital === c && styles.capitalButtonTextActive]}>Capital {c}</Text>
+                <Text style={[styles.capitalButtonText, selectedCapital === c && styles.capitalButtonTextActive]}>Section {c}</Text>
                 <Text style={[styles.capitalPercentage, selectedCapital === c && styles.capitalPercentageActive]}>{capitalPercentages[c]}%</Text>
               </TouchableOpacity>
             )}
@@ -239,7 +239,7 @@ export default function StudentsScreen() {
                   <View style={styles.taskIcon}><ClipboardList size={20} color={Colors.light.primary} /></View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.taskName}>{item.name}</Text>
-                    <Text style={styles.taskMeta}>Capital {item.capital}</Text>
+                    <Text style={styles.taskMeta}>Section {item.capital}</Text>
                   </View>
                   <View style={styles.badge}><Text style={styles.badgeText}>{taskCompletion[item.id]}%</Text></View>
                   {isOpen ? <ChevronUp size={20} color={Colors.light.textLight} /> : <ChevronDown size={20} color={Colors.light.textLight} />}
@@ -249,7 +249,7 @@ export default function StudentsScreen() {
                   <View style={styles.taskBody}>
                     {notes?.notes ? (
                       <View style={styles.notesBox}>
-                        <Text style={styles.notesTitle}>Trainer Notes</Text>
+                        <Text style={styles.notesTitle}>Instructor Notes</Text>
                         <Text style={styles.notesText}>{notes.notes}</Text>
                       </View>
                     ) : null}
@@ -292,12 +292,7 @@ export default function StudentsScreen() {
           />
         </View>
         
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <LogOut size={20} color={Colors.light.danger} />
-        </TouchableOpacity>
+        <View style={{ width: 50 }} />
       </View>
 
       {isAddingStudent ? (

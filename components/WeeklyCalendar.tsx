@@ -161,8 +161,8 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     } else if (availabilitySlot && !isTrainer) {
       // For students, show trainer availability info (read-only)
       Alert.alert(
-        'Trainer Available',
-        `Your trainer is available during this time slot.\n${format(availabilitySlot.start, 'MMM d, HH:mm')} - ${format(availabilitySlot.end, 'HH:mm')}`,
+        'Instructor Available',
+        `Your instructor is available during this time slot.\n${format(availabilitySlot.start, 'MMM d, HH:mm')} - ${format(availabilitySlot.end, 'HH:mm')}`,
         [{ text: 'OK' }]
       );
     }
@@ -248,7 +248,13 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
               {format(availabilitySlot.end, 'HH:mm')}
             </Text>
           </View>
-        ) : null}
+        ) : (
+          <View style={styles.timeSlotContent}>
+            <Text style={[styles.timeText, { color: textColor }]}>
+              {String(hour).padStart(2, '0')}:00
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -415,6 +421,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 0,
+  },
+  timeSlotContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
   timeText: {
     fontSize: 10,

@@ -251,7 +251,7 @@ export default function ScheduleScreen() {
     const availabilitySlots = isTrainer ? trainerAvailability() : myTrainerAvailability;
     if (availabilitySlots.length === 0) return null;
 
-    const title = isTrainer ? 'Your Availability' : 'Trainer Availability';
+    const title = isTrainer ? 'Your Availability' : 'Instructor Availability';
 
     return (
       <View style={styles.availabilityContainer}>

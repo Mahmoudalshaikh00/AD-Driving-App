@@ -185,7 +185,7 @@ export default function AppointmentModal({
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>
                 {isStudentView 
-                  ? 'Your trainer will be notified about this appointment request.'
+                  ? 'Your instructor will be notified about this appointment request.'
                   : 'The student will be notified about this appointment.'
                 }
               </Text>

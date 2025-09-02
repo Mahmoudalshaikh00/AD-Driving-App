@@ -230,7 +230,13 @@ function ChatScreenContent() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="chat-header">
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="chat-back" accessibilityLabel="Back">
+        <TouchableOpacity style={styles.backBtn} onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/');
+          }
+        }} testID="chat-back" accessibilityLabel="Back">
           <ChevronLeft size={22} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>

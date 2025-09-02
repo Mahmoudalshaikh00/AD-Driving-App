@@ -133,7 +133,7 @@ export default function StudentDetailsScreen() {
               {student.email ? (
                 <Text style={styles.contactInfo}>{student.email}</Text>
               ) : null}
-              <Text style={styles.trainerInfo}>Trainer: {user?.role === 'trainer' ? (user?.name ?? 'You') : 'Assigned Trainer'}</Text>
+              <Text style={styles.trainerInfo}>Instructor: {user?.role === 'trainer' ? (user?.name ?? 'You') : 'Assigned Instructor'}</Text>
             </View>
             <View style={styles.studentHeaderRight}>
               <View style={styles.circularWrapper}>
@@ -168,22 +168,6 @@ export default function StudentDetailsScreen() {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.actionCard}
-          onPress={() => router.push(`/students/${id}/schedule`)}
-          testID="student-schedule-button"
-        >
-          <View style={styles.actionCardIcon}>
-            <Calendar size={20} color={Colors.light.primary} />
-            <NotificationBadge 
-              studentId={id} 
-              type="schedule" 
-              size="small" 
-              style={{ top: -6, right: -6 }}
-            />
-          </View>
-          <Text style={styles.actionCardLabel} numberOfLines={1}>Schedule</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionCard}
           onPress={handleViewEvaluations}
           testID="student-evaluations-button"
         >
@@ -197,6 +181,22 @@ export default function StudentDetailsScreen() {
             />
           </View>
           <Text style={styles.actionCardLabel} numberOfLines={1}>Evaluation</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.actionCard}
+          onPress={() => router.push(`/students/${id}/schedule`)}
+          testID="student-schedule-button"
+        >
+          <View style={styles.actionCardIcon}>
+            <Calendar size={20} color={Colors.light.primary} />
+            <NotificationBadge 
+              studentId={id} 
+              type="schedule" 
+              size="small" 
+              style={{ top: -6, right: -6 }}
+            />
+          </View>
+          <Text style={styles.actionCardLabel} numberOfLines={1}>Schedule</Text>
         </TouchableOpacity>
       </View>
 
@@ -220,7 +220,7 @@ export default function StudentDetailsScreen() {
                 selectedCapital === capital && styles.capitalButtonTextActive
               ]}
               >
-                Capital {capital}
+                Section {capital}
               </Text>
               <Text style={[
                 styles.capitalPercentage,
@@ -259,16 +259,16 @@ export default function StudentDetailsScreen() {
                   {taskCompletionPercentages[item.id]}%
                 </Text>
               </View>
-              <Text style={styles.taskCapital}>Capital {item.capital}</Text>
+              <Text style={styles.taskCapital}>Section {item.capital}</Text>
             </View>
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No tasks assigned to Capital {selectedCapital}</Text>
+            <Text style={styles.emptyText}>No tasks assigned to Section {selectedCapital}</Text>
             <Text style={styles.emptySubtext}>
-              Tasks need to be assigned to this capital first
+              Tasks need to be assigned to this section first
             </Text>
           </View>
         }
