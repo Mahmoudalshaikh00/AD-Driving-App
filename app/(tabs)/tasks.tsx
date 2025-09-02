@@ -10,7 +10,7 @@ export default function TasksScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
-  const [newTaskCapital, setNewTaskCapital] = useState<1 | 2 | 3 | 4>(1);
+  const [newTaskSection, setNewTaskSection] = useState<1 | 2 | 3 | 4>(1);
 
   const filteredTasks = tasks.filter(task => 
     task.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -20,10 +20,10 @@ export default function TasksScreen() {
     if (newTaskName.trim()) {
       addTask({
         name: newTaskName.trim(),
-        capital: newTaskCapital,
+        capital: newTaskSection,
       });
       setNewTaskName('');
-      setNewTaskCapital(1);
+      setNewTaskSection(1);
       setIsAddingTask(false);
     }
   };
@@ -60,22 +60,22 @@ export default function TasksScreen() {
             autoFocus
           />
           
-          <Text style={styles.capitalLabel}>Select Capital:</Text>
-          <View style={styles.capitalSelector}>
-            {[1, 2, 3, 4].map((capital) => (
+          <Text style={styles.sectionLabel}>Select Section:</Text>
+          <View style={styles.sectionSelector}>
+            {[1, 2, 3, 4].map((section) => (
               <TouchableOpacity
-                key={capital}
+                key={section}
                 style={[
-                  styles.capitalOption,
-                  newTaskCapital === capital && styles.capitalOptionActive
+                  styles.sectionOption,
+                  newTaskSection === section && styles.sectionOptionActive
                 ]}
-                onPress={() => setNewTaskCapital(capital as 1 | 2 | 3 | 4)}
+                onPress={() => setNewTaskSection(section as 1 | 2 | 3 | 4)}
               >
                 <Text style={[
-                  styles.capitalOptionText,
-                  newTaskCapital === capital && styles.capitalOptionTextActive
+                  styles.sectionOptionText,
+                  newTaskSection === section && styles.sectionOptionTextActive
                 ]}>
-                  {capital}
+                  {section}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -228,18 +228,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textLight,
   },
-  capitalLabel: {
+  sectionLabel: {
     fontSize: 16,
     fontWeight: '500',
     color: Colors.light.text,
     marginBottom: 8,
   },
-  capitalSelector: {
+  sectionSelector: {
     flexDirection: 'row',
     gap: 8,
     marginBottom: 16,
   },
-  capitalOption: {
+  sectionOption: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -249,16 +249,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  capitalOptionActive: {
+  sectionOptionActive: {
     backgroundColor: Colors.light.primary,
     borderColor: Colors.light.primary,
   },
-  capitalOptionText: {
+  sectionOptionText: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.light.textLight,
   },
-  capitalOptionTextActive: {
+  sectionOptionTextActive: {
     color: '#fff',
   },
 });

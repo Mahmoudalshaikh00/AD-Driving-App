@@ -17,7 +17,7 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
   const { updateTask, deleteTask } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(task.name);
-  const [editCapital, setEditCapital] = useState<1 | 2 | 3 | 4>(task.capital);
+  const [editSection, setEditSection] = useState<1 | 2 | 3 | 4>(task.capital);
 
   const handlePress = () => {
     if (!isEditing) {
@@ -32,7 +32,7 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
   const handleEdit = () => {
     setIsEditing(true);
     setEditName(task.name);
-    setEditCapital(task.capital);
+    setEditSection(task.capital);
   };
 
   const handleSave = () => {
@@ -40,7 +40,7 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
       updateTask({
         ...task,
         name: editName.trim(),
-        capital: editCapital,
+        capital: editSection,
       });
       setIsEditing(false);
     }
@@ -49,7 +49,7 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
   const handleCancel = () => {
     setIsEditing(false);
     setEditName(task.name);
-    setEditCapital(task.capital);
+    setEditSection(task.capital);
   };
 
   const handleDelete = () => {
@@ -81,23 +81,23 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
             placeholder="Task Name"
             placeholderTextColor={Colors.light.textLight}
           />
-          <View style={styles.capitalEditContainer}>
-            <Text style={styles.capitalEditLabel}>Capital:</Text>
-            <View style={styles.capitalEditSelector}>
-              {[1, 2, 3, 4].map((capital) => (
+          <View style={styles.sectionEditContainer}>
+            <Text style={styles.sectionEditLabel}>Section:</Text>
+            <View style={styles.sectionEditSelector}>
+              {[1, 2, 3, 4].map((section) => (
                 <TouchableOpacity
-                  key={capital}
+                  key={section}
                   style={[
-                    styles.capitalEditOption,
-                    editCapital === capital && styles.capitalEditOptionActive
+                    styles.sectionEditOption,
+                    editSection === section && styles.sectionEditOptionActive
                   ]}
-                  onPress={() => setEditCapital(capital as 1 | 2 | 3 | 4)}
+                  onPress={() => setEditSection(section as 1 | 2 | 3 | 4)}
                 >
                   <Text style={[
-                    styles.capitalEditOptionText,
-                    editCapital === capital && styles.capitalEditOptionTextActive
+                    styles.sectionEditOptionText,
+                    editSection === section && styles.sectionEditOptionTextActive
                   ]}>
-                    {capital}
+                    {section}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -127,7 +127,7 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{task.name}</Text>
-        <Text style={styles.capital}>Capital {task.capital}</Text>
+        <Text style={styles.section}>Section {task.capital}</Text>
       </View>
       {showActions && (
         <View style={styles.actionContainer}>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     marginBottom: 4,
   },
-  capital: {
+  section: {
     fontSize: 14,
     color: Colors.light.textLight,
     fontWeight: '500',
@@ -199,21 +199,21 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     marginBottom: 8,
   },
-  capitalEditContainer: {
+  sectionEditContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  capitalEditLabel: {
+  sectionEditLabel: {
     fontSize: 14,
     fontWeight: '500',
     color: Colors.light.text,
   },
-  capitalEditSelector: {
+  sectionEditSelector: {
     flexDirection: 'row',
     gap: 4,
   },
-  capitalEditOption: {
+  sectionEditOption: {
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -223,16 +223,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  capitalEditOptionActive: {
+  sectionEditOptionActive: {
     backgroundColor: Colors.light.primary,
     borderColor: Colors.light.primary,
   },
-  capitalEditOptionText: {
+  sectionEditOptionText: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.light.textLight,
   },
-  capitalEditOptionTextActive: {
+  sectionEditOptionTextActive: {
     color: '#fff',
   },
 });

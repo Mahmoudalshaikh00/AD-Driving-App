@@ -248,10 +248,13 @@ export default function ScheduleScreen() {
   };
 
   const renderAvailabilitySlots = () => {
-    const availabilitySlots = isTrainer ? trainerAvailability() : myTrainerAvailability;
+    // Only show availability for students, not trainers
+    if (isTrainer) return null;
+    
+    const availabilitySlots = myTrainerAvailability;
     if (availabilitySlots.length === 0) return null;
 
-    const title = isTrainer ? 'Your Availability' : 'Instructor Availability';
+    const title = 'Instructor Availability';
 
     return (
       <View style={styles.availabilityContainer}>
@@ -271,28 +274,6 @@ export default function ScheduleScreen() {
                     {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
                   </Text>
                 </View>
-                {isTrainer && (
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => {
-                      Alert.alert(
-                        'Remove Availability',
-                        'Are you sure you want to remove this availability slot?',
-                        [
-                          { text: 'Cancel', style: 'cancel' },
-                          {
-                            text: 'Remove',
-                            style: 'destructive',
-                            onPress: () => removeAvailability(slot.id)
-                          }
-                        ]
-                      );
-                    }}
-                    testID={`remove-availability-${slot.id}`}
-                  >
-                    <Text style={styles.removeButtonText}>×</Text>
-                  </TouchableOpacity>
-                )}
               </View>
             );
           })}
