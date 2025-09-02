@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { ChevronLeft, Plus, Clock } from 'lucide-react-native';
 import { format } from 'date-fns';
 import Colors from '@/constants/colors';
@@ -226,15 +226,34 @@ export default function StudentScheduleScreen() {
                     </Text>
                   </View>
                   {isTrainer && (
-                    <TouchableOpacity
-                      style={styles.editAppointmentButton}
-                      onPress={() => {
-                        setEditingAppointment(appointment);
-                        setShowAppointmentModal(true);
-                      }}
-                    >
-                      <Text style={styles.editButtonText}>Edit</Text>
-                    </TouchableOpacity>
+                    <View style={styles.appointmentActions}>
+                      {appointment.status === 'pending' ? (
+                        <>
+                          <TouchableOpacity
+                            style={[styles.appointmentActionButton, styles.approveButton]}
+                            onPress={() => updateBookingStatus(appointment.id, 'approved')}
+                          >
+                            <Text style={styles.approveButtonText}>Approve</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.appointmentActionButton, styles.rejectButton]}
+                            onPress={() => updateBookingStatus(appointment.id, 'rejected')}
+                          >
+                            <Text style={styles.rejectButtonText}>Reject</Text>
+                          </TouchableOpacity>
+                        </>
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.editAppointmentButton}
+                          onPress={() => {
+                            setEditingAppointment(appointment);
+                            setShowAppointmentModal(true);
+                          }}
+                        >
+                          <Text style={styles.editButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   )}
                 </View>
               );
@@ -503,11 +522,38 @@ const styles = StyleSheet.create({
   statusRejected: {
     color: '#dc3545',
   },
+  appointmentActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  appointmentActionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  approveButton: {
+    backgroundColor: '#28a745',
+  },
+  rejectButton: {
+    backgroundColor: '#dc3545',
+  },
   editAppointmentButton: {
     backgroundColor: Colors.light.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
+  },
+  approveButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  rejectButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   editButtonText: {
     color: '#fff',

@@ -94,35 +94,51 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     
     if (continuousBooking && isTrainer) {
       const { booking } = continuousBooking;
+      const buttons = [
+        { text: 'Cancel', style: 'cancel' as const },
+        {
+          text: 'Edit',
+          onPress: () => onEditAppointment?.(booking)
+        }
+      ];
+      
+      // Add approve/reject buttons for pending appointments
+      if (booking.status === 'pending') {
+        buttons.push(
+          {
+            text: 'Approve',
+            onPress: () => updateBookingStatus(booking.id, 'approved')
+          },
+          {
+            text: 'Reject',
+            onPress: () => updateBookingStatus(booking.id, 'rejected')
+          }
+        );
+      } else {
+        buttons.push({
+          text: 'Delete',
+          onPress: () => {
+            Alert.alert(
+              'Delete Appointment',
+              'Are you sure you want to delete this appointment?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: () => updateBookingStatus(booking.id, 'rejected')
+                }
+              ]
+            );
+          }
+        });
+      }
+      
       // Show options for appointment
       Alert.alert(
         'Appointment Options',
         `${studentOfTrainer(booking.student_id)?.name || 'Student'}\n${format(new Date(booking.start), 'MMM d, HH:mm')} - ${format(new Date(booking.end), 'HH:mm')}`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Edit',
-            onPress: () => onEditAppointment?.(booking)
-          },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              Alert.alert(
-                'Delete Appointment',
-                'Are you sure you want to delete this appointment?',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: () => updateBookingStatus(booking.id, 'rejected')
-                  }
-                ]
-              );
-            }
-          }
-        ]
+        buttons
       );
     } else if (availabilitySlot && isTrainer) {
       // Show options for availability (trainers only)
@@ -224,6 +240,33 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
       backgroundColor = '#f8f9fa';
       textColor = '#adb5bd';
     } else if (availabilitySlot) {
+      // Calculate precise positioning for availability slots
+      const availStart = new Date(availabilitySlot.start);
+      const availEnd = new Date(availabilitySlot.end);
+      const availStartHour = availStart.getHours();
+      const availEndHour = availEnd.getHours();
+      const availStartMinute = availStart.getMinutes();
+      const availEndMinute = availEnd.getMinutes();
+      
+      const hourlySlotHeight = 60;
+      
+      // Check if this hour slot is the start of the availability
+      const isAvailStart = hour === availStartHour;
+      const isAvailEnd = hour === availEndHour || (hour === availEndHour - 1 && availEndMinute === 0);
+      
+      if (isAvailStart) {
+        marginTop = (availStartMinute / 60) * hourlySlotHeight;
+        
+        if (availStartHour === availEndHour) {
+          slotHeight = ((availEndMinute - availStartMinute) / 60) * hourlySlotHeight;
+        } else {
+          slotHeight = ((60 - availStartMinute) / 60) * hourlySlotHeight;
+        }
+      } else if (isAvailEnd && availEndMinute > 0) {
+        slotHeight = (availEndMinute / 60) * hourlySlotHeight;
+        marginTop = 0;
+      }
+      
       // Show as available (green) when trainer has set availability
       backgroundColor = '#28a745';
       borderColor = '#28a745';
@@ -283,6 +326,12 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
                 borderColor,
                 opacity: isPast ? 0.5 : 1,
                 borderBottomWidth: 0,
+                height: slotHeight,
+                marginTop: marginTop,
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                zIndex: 2,
               },
             ]}
             onPress={() => handleSlotPress(date, hour)}
