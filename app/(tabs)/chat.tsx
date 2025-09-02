@@ -233,7 +233,7 @@ function ChatScreenContent() {
         <TouchableOpacity style={styles.backBtn} onPress={() => {
           // For trainer, always go back to student details when studentId is present
           if (isTrainer && params.studentId) {
-            router.replace(`/students/${params.studentId}`);
+            router.back();
           } else {
             router.back();
           }
