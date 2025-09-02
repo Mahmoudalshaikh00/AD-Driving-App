@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, ScrollView, Animated, Easing, Platform } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
 import Colors from '@/constants/colors';
-import { User, ClipboardList, MessageSquare, Calendar } from 'lucide-react-native';
+import { User, ClipboardList, MessageSquare, Calendar, ChevronLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuthStore';
 import Svg, { Circle } from 'react-native-svg';
 import { NotificationBadge } from '@/components/NotificationBadge';
@@ -121,7 +121,24 @@ export default function StudentDetailsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <>
+      <Stack.Screen 
+        options={{
+          title: "Student Details",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => {
+                // Always go back to the students list (tabs)
+                router.push('/(tabs)');
+              }}
+              style={{ marginLeft: -8, padding: 8 }}
+            >
+              <ChevronLeft size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
+        }} 
+      />
+      <View style={styles.container}>
       <View style={styles.studentInfoCard}>
         <View style={styles.avatarContainer}>
           <User size={24} color={Colors.light.primary} />
@@ -273,7 +290,8 @@ export default function StudentDetailsScreen() {
           </View>
         }
       />
-    </View>
+      </View>
+    </>
   );
 }
 
