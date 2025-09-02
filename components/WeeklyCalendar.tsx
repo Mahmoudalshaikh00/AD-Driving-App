@@ -339,13 +339,20 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
             testID={`time-slot-${hour}`}
           >
             <View style={styles.availabilityContent}>
-              <Text style={[styles.availabilityStartTime, { color: textColor }]}>
-                {format(availabilitySlot.start, 'HH:mm')}
-              </Text>
+              {/* Check if this is the start of availability slot */}
+              {hour === new Date(availabilitySlot.start).getHours() && (
+                <Text style={[styles.availabilityStartTime, { color: textColor }]}>
+                  {format(availabilitySlot.start, 'HH:mm')}
+                </Text>
+              )}
               <Text style={[styles.availabilityLabel, { color: textColor }]}>Available</Text>
-              <Text style={[styles.availabilityEndTime, { color: textColor }]}>
-                {format(availabilitySlot.end, 'HH:mm')}
-              </Text>
+              {/* Check if this is the end of availability slot */}
+              {(hour === new Date(availabilitySlot.end).getHours() - 1 || 
+                (hour === new Date(availabilitySlot.end).getHours() && new Date(availabilitySlot.end).getMinutes() === 0)) && (
+                <Text style={[styles.availabilityEndTime, { color: textColor }]}>
+                  {format(availabilitySlot.end, 'HH:mm')}
+                </Text>
+              )}
             </View>
           </TouchableOpacity>
         ) : (
@@ -589,8 +596,10 @@ const styles = StyleSheet.create({
   },
   hourLabelContainer: {
     height: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    paddingTop: 2,
+    paddingLeft: 8,
     borderBottomWidth: 0, // Remove horizontal lines
   },
   daysGrid: {
