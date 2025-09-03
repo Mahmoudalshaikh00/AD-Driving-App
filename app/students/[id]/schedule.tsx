@@ -358,7 +358,6 @@ export default function StudentScheduleScreen() {
 
       {renderActionButtons()}
       {renderStudentAppointments()}
-      {renderTrainerAvailability()}
       
       <WeeklyCalendar 
         studentId={id} // Pass the student ID to filter bookings
