@@ -5,6 +5,7 @@ import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
 import { useAuth } from '@/hooks/useAuthStore';
+import { useNotificationStore } from '@/hooks/useNotificationStore';
 import StudentCard from '@/components/StudentCard';
 import Colors from '@/constants/colors';
 import { Link, useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ export default function StudentsScreen() {
   const taskStore = useTaskStore();
   const evalStore = useEvaluationStore();
   const { signOut, user } = useAuth();
+  const { createTestNotifications } = useNotificationStore();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingStudent, setIsAddingStudent] = useState(false);
@@ -349,13 +351,26 @@ export default function StudentsScreen() {
           </View>
         </View>
       ) : (
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => setIsAddingStudent(true)}
-        >
-          <Plus size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add Student</Text>
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => setIsAddingStudent(true)}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Add Student</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.addButton, { backgroundColor: Colors.light.secondary, marginBottom: 8 }]} 
+            onPress={async () => {
+              await createTestNotifications();
+              Alert.alert('Success', 'Test notifications created! Check the chat tab and student cards for notification badges.');
+            }}
+          >
+            <MessageSquare size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Create Test Notifications</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       <FlatList

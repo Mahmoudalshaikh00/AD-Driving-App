@@ -341,6 +341,31 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     return unreadNotifications.length;
   }, [unreadNotifications]);
 
+  // Get unread count by student
+  const getUnreadCountByStudent = useCallback((studentId: string, type?: 'message' | 'booking' | 'schedule' | 'evaluation') => {
+    return unreadNotifications.filter(n => {
+      if (n.sender_id !== studentId) return false;
+      if (!type) return true;
+      
+      return (
+        (type === 'message' && n.type === 'message') ||
+        (type === 'booking' && (n.type === 'booking_request' || n.type === 'booking_approved' || n.type === 'booking_rejected')) ||
+        (type === 'schedule' && (n.type === 'availability_added' || n.type === 'lesson_reminder')) ||
+        (type === 'evaluation' && n.type === 'evaluation_completed')
+      );
+    }).length;
+  }, [unreadNotifications]);
+
+  // Get unread message count by student
+  const getUnreadMessageCountByStudent = useCallback((studentId: string) => {
+    return getUnreadCountByStudent(studentId, 'message');
+  }, [getUnreadCountByStudent]);
+
+  // Get total unread message count
+  const getTotalUnreadMessageCount = useCallback(() => {
+    return unreadNotifications.filter(n => n.type === 'message').length;
+  }, [unreadNotifications]);
+
   // Get notifications by priority
   const getNotificationsByPriority = useCallback((priority: NotificationPriority) => {
     return notifications.filter(n => n.priority === priority);
@@ -546,6 +571,9 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     sendEvaluationCompletedNotification,
     markAsReadByStudentAndType,
     createTestNotifications,
+    getUnreadCountByStudent,
+    getUnreadMessageCountByStudent,
+    getTotalUnreadMessageCount,
   }), [
     notifications,
     settings,
@@ -570,5 +598,8 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     sendEvaluationCompletedNotification,
     markAsReadByStudentAndType,
     createTestNotifications,
+    getUnreadCountByStudent,
+    getUnreadMessageCountByStudent,
+    getTotalUnreadMessageCount,
   ]);
 });

@@ -23,12 +23,12 @@ function CircularIcon({ children, active }: { children: React.ReactNode; active?
 
 export default function TabLayout() {
   const { user, signOut } = useAuth();
-  const { unreadNotifications } = useNotificationStore();
+  const { getTotalUnreadMessageCount } = useNotificationStore();
   
   // Count unread message notifications
   const unreadMessageCount = useMemo(() => {
-    return unreadNotifications.filter(n => n.type === 'message').length;
-  }, [unreadNotifications]);
+    return getTotalUnreadMessageCount();
+  }, [getTotalUnreadMessageCount]);
 
   if (user?.role === 'student') {
     return (
