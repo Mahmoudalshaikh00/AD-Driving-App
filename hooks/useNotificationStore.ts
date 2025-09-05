@@ -346,6 +346,54 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     return notifications.filter(n => n.priority === priority);
   }, [notifications]);
 
+  // Create test notifications for demonstration
+  const createTestNotifications = useCallback(async () => {
+    if (!user) return;
+    
+    console.log('🧪 Creating test notifications for user:', user.id);
+    
+    // Create test message notification
+    await createNotification(
+      'message',
+      'normal',
+      'New message from John Doe',
+      'Hey, how are you doing with the exercises?',
+      user.id,
+      'test-sender-1',
+      { senderName: 'John Doe', messagePreview: 'Hey, how are you doing with the exercises?' },
+      '/chat/test-sender-1',
+      24
+    );
+    
+    // Create test booking notification
+    await createNotification(
+      'booking_request',
+      'high',
+      'New lesson request',
+      'Jane Smith requested a lesson for tomorrow at 3 PM',
+      user.id,
+      'test-sender-2',
+      { studentName: 'Jane Smith', lessonTime: 'tomorrow at 3 PM' },
+      '/schedule',
+      72
+    );
+    
+    // Create test evaluation notification
+    await createNotification(
+      'evaluation_completed',
+      'normal',
+      'New evaluation',
+      'Your trainer completed your evaluation. Score: 8/10',
+      user.id,
+      'test-sender-3',
+      { trainerName: 'Your trainer', score: 8 },
+      '/evaluations',
+      168
+    );
+    
+    console.log('✅ Test notifications created');
+  }, [createNotification, user]);
+
   // Helper functions for specific notification types
   const sendMessageNotification = useCallback(async (
     recipientId: string, 
@@ -497,6 +545,7 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     sendLessonReminderNotification,
     sendEvaluationCompletedNotification,
     markAsReadByStudentAndType,
+    createTestNotifications,
   }), [
     notifications,
     settings,
@@ -520,5 +569,6 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     sendLessonReminderNotification,
     sendEvaluationCompletedNotification,
     markAsReadByStudentAndType,
+    createTestNotifications,
   ]);
 });

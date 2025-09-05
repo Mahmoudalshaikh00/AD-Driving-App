@@ -9,6 +9,7 @@ import { User, ClipboardList, MessageSquare, Calendar, ChevronLeft } from 'lucid
 import { useAuth } from '@/hooks/useAuthStore';
 import Svg, { Circle } from 'react-native-svg';
 import { NotificationBadge } from '@/components/NotificationBadge';
+import { useNotificationStore } from '@/hooks/useNotificationStore';
 
 export default function StudentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function StudentDetailsScreen() {
   const { getStudentById } = useStudentStore();
   const { tasks, subtasks, loading: tasksLoading } = useTaskStore();
   const { getEvaluationsByStudentId } = useEvaluationStore();
+  const { markAsReadByStudentAndType } = useNotificationStore();
   
   const [selectedCapital, setSelectedCapital] = useState<1 | 2 | 3 | 4>(1);
   const { user } = useAuth();
@@ -169,7 +171,11 @@ export default function StudentDetailsScreen() {
       <View style={styles.actionSection} testID="student-action-section">
         <TouchableOpacity 
           style={styles.actionCard}
-          onPress={() => router.push(`/chat?studentId=${id}`)}
+          onPress={() => {
+            // Mark message notifications as read when navigating to chat
+            markAsReadByStudentAndType(id, 'message');
+            router.push(`/chat?studentId=${id}`);
+          }}
           testID="student-chat-button"
         >
           <View style={styles.actionCardIcon}>
@@ -185,7 +191,11 @@ export default function StudentDetailsScreen() {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.actionCard}
-          onPress={handleViewEvaluations}
+          onPress={() => {
+            // Mark evaluation notifications as read when navigating to evaluations
+            markAsReadByStudentAndType(id, 'evaluation');
+            handleViewEvaluations();
+          }}
           testID="student-evaluations-button"
         >
           <View style={styles.actionCardIcon}>
@@ -201,7 +211,11 @@ export default function StudentDetailsScreen() {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.actionCard}
-          onPress={() => router.push(`/students/${id}/schedule`)}
+          onPress={() => {
+            // Mark schedule notifications as read when navigating to schedule
+            markAsReadByStudentAndType(id, 'schedule');
+            router.push(`/students/${id}/schedule`);
+          }}
           testID="student-schedule-button"
         >
           <View style={styles.actionCardIcon}>

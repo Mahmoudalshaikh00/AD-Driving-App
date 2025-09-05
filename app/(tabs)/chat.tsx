@@ -164,8 +164,10 @@ function ChatScreenContent() {
       
       // Mark message notifications as read when entering chat
       if (isTrainer) {
+        console.log('📖 Marking message notifications as read for student:', activeStudentId);
         markAsReadByStudentAndType(activeStudentId, 'message');
       } else {
+        console.log('📖 Marking message notifications as read for trainer:', trainerId);
         markAsReadByStudentAndType(trainerId, 'message');
       }
     }
