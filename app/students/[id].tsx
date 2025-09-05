@@ -179,7 +179,7 @@ export default function StudentDetailsScreen() {
           testID="student-chat-button"
         >
           <View style={styles.actionCardIcon}>
-            <MessageSquare size={20} color={Colors.light.primary} />
+            <MessageSquare size={14} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="message" 
@@ -199,7 +199,7 @@ export default function StudentDetailsScreen() {
           testID="student-evaluations-button"
         >
           <View style={styles.actionCardIcon}>
-            <ClipboardList size={20} color={Colors.light.primary} />
+            <ClipboardList size={14} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="evaluation" 
@@ -219,7 +219,7 @@ export default function StudentDetailsScreen() {
           testID="student-schedule-button"
         >
           <View style={styles.actionCardIcon}>
-            <Calendar size={20} color={Colors.light.primary} />
+            <Calendar size={14} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="schedule" 
@@ -435,25 +435,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   capitalButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: Colors.light.cardBackground,
     alignItems: 'center',
-    minWidth: 100,
+    minWidth: 50,
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   capitalButtonActive: {
     backgroundColor: Colors.light.primary,
     borderColor: Colors.light.primary,
   },
   capitalButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     color: Colors.light.text,
     fontWeight: '600',
   },
@@ -462,10 +462,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   capitalPercentage: {
-    fontSize: 13,
+    fontSize: 10,
     color: Colors.light.textLight,
     fontWeight: '500',
-    marginTop: 4,
+    marginTop: 2,
   },
   capitalPercentageActive: {
     color: '#fff',
@@ -575,26 +575,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    padding: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   actionCardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: Colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: 3,
     position: 'relative',
   },
   actionCardLabel: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: '600',
     color: Colors.light.text,
     flexShrink: 1,
