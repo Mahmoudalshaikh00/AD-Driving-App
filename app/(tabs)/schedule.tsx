@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
-import { ChevronLeft, Plus, Clock } from 'lucide-react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, TextInput } from 'react-native';
+import { ChevronLeft, Plus, Clock, Shield, Mail, Save, Eye, EyeOff } from 'lucide-react-native';
 import { format } from 'date-fns';
 import Colors from '@/constants/colors';
 import { useScheduleStore } from '@/hooks/useScheduleStore';
@@ -20,6 +20,12 @@ export default function ScheduleScreen() {
   const { students } = useStudentStore();
   const { markAsReadByStudentAndType } = useNotificationStore();
   const scheduleStore = useScheduleStore();
+  
+  // Admin settings state
+  const [adminEmail, setAdminEmail] = useState('mahmoud200276@gmail.com');
+  const [newEmail, setNewEmail] = useState('');
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     requestBooking,
     updateBookingStatus,
@@ -41,7 +47,37 @@ export default function ScheduleScreen() {
   const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
 
   const isTrainer = user?.role === 'trainer';
+  const isAdmin = user?.role === 'admin';
   const pendingBookings = myBookings.filter(b => b.status === 'pending');
+  
+  const handleEmailChange = () => {
+    if (!newEmail.trim()) {
+      Alert.alert('Error', 'Please enter a new email address');
+      return;
+    }
+    
+    if (newEmail === adminEmail) {
+      Alert.alert('Error', 'New email must be different from current email');
+      return;
+    }
+    
+    Alert.alert(
+      'Change Email',
+      `Are you sure you want to change the admin email from ${adminEmail} to ${newEmail}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Change',
+          onPress: () => {
+            setAdminEmail(newEmail);
+            setNewEmail('');
+            setIsEditingEmail(false);
+            Alert.alert('Success', 'Admin email updated successfully!');
+          }
+        }
+      ]
+    );
+  };
   
   // Mark schedule notifications as read when entering this screen
   React.useEffect(() => {
@@ -282,6 +318,133 @@ export default function ScheduleScreen() {
     );
   };
 
+  // Admin Settings View
+  if (isAdmin) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.adminHeader}>
+          <View style={styles.adminHeaderInfo}>
+            <View style={styles.adminIcon}>
+              <Shield size={24} color={Colors.light.primary} />
+            </View>
+            <View>
+              <Text style={styles.adminTitle}>Admin Settings</Text>
+              <Text style={styles.adminSubtitle}>Manage system configuration</Text>
+            </View>
+          </View>
+        </View>
+        
+        <ScrollView style={styles.settingsContent}>
+          <View style={styles.settingsSection}>
+            <Text style={styles.sectionTitle}>Account Settings</Text>
+            
+            <View style={styles.settingCard}>
+              <View style={styles.settingHeader}>
+                <Mail size={20} color={Colors.light.primary} />
+                <Text style={styles.settingTitle}>Admin Email</Text>
+              </View>
+              
+              <View style={styles.emailContainer}>
+                <Text style={styles.currentEmail}>Current: {adminEmail}</Text>
+                
+                {isEditingEmail ? (
+                  <View style={styles.emailEditContainer}>
+                    <TextInput
+                      style={styles.emailInput}
+                      value={newEmail}
+                      onChangeText={setNewEmail}
+                      placeholder="Enter new email address"
+                      placeholderTextColor={Colors.light.textLight}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    <View style={styles.emailActions}>
+                      <TouchableOpacity
+                        style={styles.cancelEmailButton}
+                        onPress={() => {
+                          setIsEditingEmail(false);
+                          setNewEmail('');
+                        }}
+                      >
+                        <Text style={styles.cancelEmailText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.saveEmailButton}
+                        onPress={handleEmailChange}
+                      >
+                        <Save size={16} color="#fff" />
+                        <Text style={styles.saveEmailText}>Save</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.changeEmailButton}
+                    onPress={() => setIsEditingEmail(true)}
+                  >
+                    <Text style={styles.changeEmailText}>Change Email</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+            
+            <View style={styles.settingCard}>
+              <View style={styles.settingHeader}>
+                <Shield size={20} color={Colors.light.primary} />
+                <Text style={styles.settingTitle}>Admin Credentials</Text>
+              </View>
+              
+              <View style={styles.credentialsContainer}>
+                <View style={styles.credentialRow}>
+                  <Text style={styles.credentialLabel}>Email:</Text>
+                  <Text style={styles.credentialValue}>{adminEmail}</Text>
+                </View>
+                <View style={styles.credentialRow}>
+                  <Text style={styles.credentialLabel}>Password:</Text>
+                  <View style={styles.passwordContainer}>
+                    <Text style={styles.credentialValue}>
+                      {showPassword ? 'Liverpool9876' : '••••••••••••'}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.togglePasswordButton}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={16} color={Colors.light.textLight} />
+                      ) : (
+                        <Eye size={16} color={Colors.light.textLight} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.settingsSection}>
+            <Text style={styles.sectionTitle}>System Information</Text>
+            
+            <View style={styles.settingCard}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>App Version:</Text>
+                <Text style={styles.infoValue}>1.0.0</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Database:</Text>
+                <Text style={styles.infoValue}>Supabase</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Last Updated:</Text>
+                <Text style={styles.infoValue}>{new Date().toLocaleDateString()}</Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+  
   if (!isLoaded) {
     return (
       <View style={styles.container}>
@@ -560,6 +723,182 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    color: Colors.light.textLight,
+  },
+  // Admin styles
+  adminHeader: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    margin: 16,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  adminHeaderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  adminIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.light.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+  },
+  adminSubtitle: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginTop: 2,
+  },
+  settingsContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  settingsSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+    marginBottom: 16,
+  },
+  settingCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  settingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.text,
+  },
+  emailContainer: {
+    gap: 12,
+  },
+  currentEmail: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+  },
+  emailEditContainer: {
+    gap: 12,
+  },
+  emailInput: {
+    backgroundColor: Colors.light.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: Colors.light.text,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  emailActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cancelEmailButton: {
+    flex: 1,
+    backgroundColor: Colors.light.textLight,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelEmailText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  saveEmailButton: {
+    flex: 1,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  saveEmailText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  changeEmailButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  changeEmailText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  credentialsContainer: {
+    gap: 12,
+  },
+  credentialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  credentialLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+  },
+  credentialValue: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  togglePasswordButton: {
+    padding: 4,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+  },
+  infoValue: {
+    fontSize: 14,
     color: Colors.light.textLight,
   },
 });

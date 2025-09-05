@@ -10,11 +10,11 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { User, UserPlus, Lock, Mail } from 'lucide-react-native';
+import { User, UserPlus, Lock, Mail, Shield } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
 
-type LoginMode = 'select' | 'trainer' | 'student' | 'signup';
+type LoginMode = 'select' | 'trainer' | 'student' | 'admin' | 'signup';
 
 export default function LoginScreen() {
   const [mode, setMode] = useState<LoginMode>('select');
@@ -30,6 +30,13 @@ export default function LoginScreen() {
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
+    }
+
+    if (mode === 'admin') {
+      if (email !== 'mahmoud200276@gmail.com' || password !== 'Liverpool9876') {
+        setError('Invalid admin credentials');
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -110,6 +117,18 @@ export default function LoginScreen() {
               <UserPlus size={24} color={Colors.light.primary} />
               <Text style={styles.roleButtonText}>I&apos;m a Student</Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.roleButton}
+              onPress={() => {
+                resetForm();
+                setMode('admin');
+              }}
+              testID="admin-button"
+            >
+              <Shield size={24} color={Colors.light.primary} />
+              <Text style={styles.roleButtonText}>Admin Panel</Text>
+            </TouchableOpacity>
           </View>
           
           <Text style={styles.footerText}>
@@ -130,6 +149,8 @@ export default function LoginScreen() {
           <View style={styles.iconContainer}>
             {mode === 'trainer' || mode === 'signup' ? (
               <User size={64} color={Colors.light.primary} />
+            ) : mode === 'admin' ? (
+              <Shield size={64} color={Colors.light.primary} />
             ) : (
               <UserPlus size={64} color={Colors.light.primary} />
             )}
@@ -137,10 +158,12 @@ export default function LoginScreen() {
           
           <Text style={styles.title}>
             {mode === 'signup' ? 'Create Trainer Account' : 
-             mode === 'trainer' ? 'Trainer Login' : 'Student Login'}
+             mode === 'trainer' ? 'Trainer Login' : 
+             mode === 'admin' ? 'Admin Panel' : 'Student Login'}
           </Text>
           <Text style={styles.subtitle}>
             {mode === 'signup' ? 'Sign up as a new trainer' :
+             mode === 'admin' ? 'Access administrative functions' :
              'Enter your credentials to continue'}
           </Text>
           

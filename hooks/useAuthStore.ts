@@ -77,7 +77,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     return () => subscription.unsubscribe();
   }, [fetchUserProfile]);
 
-  const signUp = useCallback(async (email: string, password: string, name: string, role: 'trainer' | 'student', trainerId?: string) => {
+  const signUp = useCallback(async (email: string, password: string, name: string, role: 'trainer' | 'student' | 'admin', trainerId?: string) => {
     try {
       console.log('🔐 Auth store: Starting sign up process for:', email, 'role:', role);
       const { data, error } = await supabase.auth.signUp({
@@ -131,6 +131,30 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       console.log('🔑 Auth store: Starting sign in process for:', email);
+      
+      // Handle admin login
+      if (email === 'mahmoud200276@gmail.com' && password === 'Liverpool9876') {
+        console.log('👑 Admin login detected');
+        // Create a mock admin user
+        const adminUser = {
+          id: 'admin-001',
+          name: 'System Administrator',
+          email: 'mahmoud200276@gmail.com',
+          role: 'admin' as const,
+          created_at: new Date().toISOString(),
+          is_approved: true,
+          is_restricted: false
+        };
+        
+        setAuthState({
+          user: adminUser,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        
+        return { success: true, error: null };
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

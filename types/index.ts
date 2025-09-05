@@ -2,9 +2,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'trainer' | 'student';
+  role: 'trainer' | 'student' | 'admin';
   trainer_id?: string;
   created_at: string;
+  is_approved?: boolean;
+  is_restricted?: boolean;
 }
 
 export interface Student extends User {
@@ -14,6 +16,10 @@ export interface Student extends User {
 
 export interface Trainer extends User {
   role: 'trainer';
+}
+
+export interface Admin extends User {
+  role: 'admin';
 }
 
 export interface Task {
@@ -164,4 +170,28 @@ export interface NotificationSettings {
   vibration_enabled: boolean;
   quiet_hours_start?: string; // HH:MM format
   quiet_hours_end?: string; // HH:MM format
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalTrainers: number;
+  totalStudents: number;
+  pendingApprovals: number;
+  restrictedUsers: number;
+  totalReports: number;
+  activeBookings: number;
+  totalEvaluations: number;
+}
+
+export interface UserReport {
+  id: string;
+  reported_user_id: string;
+  reporter_id: string;
+  reason: string;
+  description: string;
+  status: 'pending' | 'reviewed' | 'resolved';
+  created_at: string;
+  resolved_at?: string;
+  resolved_by?: string;
+  resolution_notes?: string;
 }

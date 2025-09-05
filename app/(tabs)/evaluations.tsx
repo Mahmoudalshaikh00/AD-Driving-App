@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Shield, CheckCircle, XCircle, AlertTriangle, Mail, Phone, Calendar } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
@@ -234,12 +234,68 @@ export default function EvaluationsScreen() {
   const { evaluations, getEvaluationNotes, loading: evaluationsLoading } = useEvaluationStore();
   const { tasks, subtasks, loading: tasksLoading } = useTaskStore();
   const { user } = useAuth();
+  
+  // Admin state
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     if (user?.role === 'student' && user.id) {
       router.replace(`/evaluations/${user.id}`);
     }
   }, [user?.role, user?.id]);
+  
+  // Load all users for admin
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadAllUsers();
+    }
+  }, [user?.role]);
+  
+  const loadAllUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        // Add mock trainers for demo
+        const mockTrainers = [
+          { id: 'trainer-1', name: 'John Smith', email: 'john@example.com', role: 'trainer', created_at: '2024-01-15', is_approved: true, is_restricted: false },
+          { id: 'trainer-2', name: 'Sarah Johnson', email: 'sarah@example.com', role: 'trainer', created_at: '2024-01-20', is_approved: true, is_restricted: false },
+          { id: 'trainer-3', name: 'Mike Wilson', email: 'mike@example.com', role: 'trainer', created_at: '2024-02-01', is_approved: false, is_restricted: false },
+          { id: 'trainer-4', name: 'Lisa Brown', email: 'lisa@example.com', role: 'trainer', created_at: '2024-02-10', is_approved: true, is_restricted: true },
+        ];
+        setAllUsers([...data, ...mockTrainers]);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+  
+  const handleUserAction = async (userId: string, action: 'approve' | 'restrict' | 'unrestrict') => {
+    // Mock implementation - in real app, this would call API
+    setAllUsers(prev => prev.map(user => {
+      if (user.id === userId) {
+        switch (action) {
+          case 'approve':
+            return { ...user, is_approved: true };
+          case 'restrict':
+            return { ...user, is_restricted: true };
+          case 'unrestrict':
+            return { ...user, is_restricted: false };
+          default:
+            return user;
+        }
+      }
+      return user;
+    }));
+  };
 
   const studentEvaluationCounts = useMemo(() => {
     return students
@@ -254,7 +310,7 @@ export default function EvaluationsScreen() {
     router.push(`/evaluations/${studentId}`);
   };
 
-  if (studentsLoading || evaluationsLoading || tasksLoading) {
+  if (studentsLoading || evaluationsLoading || tasksLoading || loadingUsers) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
@@ -266,6 +322,103 @@ export default function EvaluationsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
+
+  // Admin view - User Management
+  if (user?.role === 'admin') {
+    const UserCard = ({ user: userData }: { user: any }) => {
+      const getStatusColor = () => {
+        if (userData.is_restricted) return '#ef4444';
+        if (!userData.is_approved && userData.role === 'trainer') return '#f59e0b';
+        return '#10b981';
+      };
+      
+      const getStatusText = () => {
+        if (userData.is_restricted) return 'Restricted';
+        if (!userData.is_approved && userData.role === 'trainer') return 'Pending';
+        return 'Active';
+      };
+      
+      return (
+        <View style={styles.userCard}>
+          <View style={styles.userHeader}>
+            <View style={styles.userInfo}>
+              <View style={styles.userAvatar}>
+                <UserIcon size={20} color={Colors.light.primary} />
+              </View>
+              <View style={styles.userDetails}>
+                <Text style={styles.userName}>{userData.name}</Text>
+                <Text style={styles.userEmail}>{userData.email}</Text>
+                <Text style={styles.userRole}>{userData.role.toUpperCase()}</Text>
+              </View>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '15' }]}>
+              <Text style={[styles.statusText, { color: getStatusColor() }]}>
+                {getStatusText()}
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.userActions}>
+            {userData.role === 'trainer' && !userData.is_approved && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.approveButton]}
+                onPress={() => handleUserAction(userData.id, 'approve')}
+              >
+                <CheckCircle size={16} color="#fff" />
+                <Text style={styles.actionButtonText}>Approve</Text>
+              </TouchableOpacity>
+            )}
+            
+            {!userData.is_restricted ? (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.restrictButton]}
+                onPress={() => handleUserAction(userData.id, 'restrict')}
+              >
+                <XCircle size={16} color="#fff" />
+                <Text style={styles.actionButtonText}>Restrict</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.unrestrictButton]}
+                onPress={() => handleUserAction(userData.id, 'unrestrict')}
+              >
+                <CheckCircle size={16} color="#fff" />
+                <Text style={styles.actionButtonText}>Unrestrict</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      );
+    };
+    
+    return (
+      <View style={styles.container}>
+        <View style={styles.adminHeader}>
+          <View style={styles.adminHeaderInfo}>
+            <View style={styles.adminIcon}>
+              <Shield size={24} color={Colors.light.primary} />
+            </View>
+            <View>
+              <Text style={styles.adminTitle}>User Management</Text>
+              <Text style={styles.adminSubtitle}>Manage trainers and students</Text>
+            </View>
+          </View>
+        </View>
+        
+        <FlatList
+          data={allUsers}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <UserCard user={item} />}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No users found</Text>
+            </View>
+          }
+        />
       </View>
     );
   }
@@ -648,5 +801,127 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     flex: 1,
     marginRight: 8,
+  },
+  // Admin styles
+  adminHeader: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    margin: 16,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  adminHeaderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  adminIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.light.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+  },
+  adminSubtitle: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginTop: 2,
+  },
+  userCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  userHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  userDetails: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.text,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginTop: 2,
+  },
+  userRole: {
+    fontSize: 12,
+    color: Colors.light.primary,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  userActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  approveButton: {
+    backgroundColor: '#10b981',
+  },
+  restrictButton: {
+    backgroundColor: '#ef4444',
+  },
+  unrestrictButton: {
+    backgroundColor: '#10b981',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

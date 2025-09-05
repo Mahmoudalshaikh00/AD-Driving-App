@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform, Animated, Easing } from 'react-native';
-import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
@@ -89,6 +89,226 @@ export default function StudentsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
+
+  // Admin Dashboard
+  if (user?.role === 'admin') {
+    const [adminStats, setAdminStats] = useState({
+      totalUsers: 0,
+      totalTrainers: 0,
+      totalStudents: 0,
+      pendingApprovals: 0,
+      restrictedUsers: 0,
+      totalReports: 0,
+      activeBookings: 0,
+      totalEvaluations: 0,
+    });
+
+    useEffect(() => {
+      // Mock admin stats - in real app, fetch from API
+      setAdminStats({
+        totalUsers: students.length + 15, // Adding mock trainers
+        totalTrainers: 15,
+        totalStudents: students.length,
+        pendingApprovals: 3,
+        restrictedUsers: 1,
+        totalReports: 2,
+        activeBookings: 12,
+        totalEvaluations: 45,
+      });
+    }, [students.length]);
+
+    const StatCard = ({ icon, title, value, color = Colors.light.primary, subtitle }: {
+      icon: React.ReactNode;
+      title: string;
+      value: number | string;
+      color?: string;
+      subtitle?: string;
+    }) => (
+      <View style={[styles.statCard, { borderLeftColor: color }]}>
+        <View style={styles.statHeader}>
+          <View style={[styles.statIcon, { backgroundColor: color + '15' }]}>
+            {icon}
+          </View>
+          <View style={styles.statInfo}>
+            <Text style={styles.statValue}>{value}</Text>
+            <Text style={styles.statTitle}>{title}</Text>
+            {subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
+          </View>
+        </View>
+      </View>
+    );
+
+    const QuickAction = ({ icon, title, onPress, color = Colors.light.primary }: {
+      icon: React.ReactNode;
+      title: string;
+      onPress: () => void;
+      color?: string;
+    }) => (
+      <TouchableOpacity style={styles.quickActionCard} onPress={onPress}>
+        <View style={[styles.quickActionIcon, { backgroundColor: color + '15' }]}>
+          {icon}
+        </View>
+        <Text style={styles.quickActionTitle}>{title}</Text>
+      </TouchableOpacity>
+    );
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.adminHeader}>
+          <View style={styles.adminHeaderInfo}>
+            <View style={styles.adminIcon}>
+              <Shield size={24} color={Colors.light.primary} />
+            </View>
+            <View>
+              <Text style={styles.adminTitle}>Admin Dashboard</Text>
+              <Text style={styles.adminSubtitle}>System Overview & Management</Text>
+            </View>
+          </View>
+        </View>
+
+        <FlatList
+          data={[
+            { key: 'stats' },
+            { key: 'actions' },
+            { key: 'recent' }
+          ]}
+          keyExtractor={(item) => item.key}
+          renderItem={({ item }) => {
+            if (item.key === 'stats') {
+              return (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Platform Statistics</Text>
+                  <View style={styles.statsGrid}>
+                    <StatCard
+                      icon={<Users size={20} color={Colors.light.primary} />}
+                      title="Total Users"
+                      value={adminStats.totalUsers}
+                      subtitle="Active accounts"
+                    />
+                    <StatCard
+                      icon={<User size={20} color="#10b981" />}
+                      title="Trainers"
+                      value={adminStats.totalTrainers}
+                      color="#10b981"
+                    />
+                    <StatCard
+                      icon={<Users size={20} color="#3b82f6" />}
+                      title="Students"
+                      value={adminStats.totalStudents}
+                      color="#3b82f6"
+                    />
+                    <StatCard
+                      icon={<Clock size={20} color="#f59e0b" />}
+                      title="Pending Approvals"
+                      value={adminStats.pendingApprovals}
+                      color="#f59e0b"
+                    />
+                    <StatCard
+                      icon={<XCircle size={20} color="#ef4444" />}
+                      title="Restricted Users"
+                      value={adminStats.restrictedUsers}
+                      color="#ef4444"
+                    />
+                    <StatCard
+                      icon={<AlertTriangle size={20} color="#f97316" />}
+                      title="Reports"
+                      value={adminStats.totalReports}
+                      color="#f97316"
+                    />
+                    <StatCard
+                      icon={<CalendarDays size={20} color="#8b5cf6" />}
+                      title="Active Bookings"
+                      value={adminStats.activeBookings}
+                      color="#8b5cf6"
+                    />
+                    <StatCard
+                      icon={<TrendingUp size={20} color="#06b6d4" />}
+                      title="Evaluations"
+                      value={adminStats.totalEvaluations}
+                      color="#06b6d4"
+                    />
+                  </View>
+                </View>
+              );
+            }
+
+            if (item.key === 'actions') {
+              return (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Quick Actions</Text>
+                  <View style={styles.quickActionsGrid}>
+                    <QuickAction
+                      icon={<Users size={24} color={Colors.light.primary} />}
+                      title="Manage Users"
+                      onPress={() => router.push('/evaluations')}
+                    />
+                    <QuickAction
+                      icon={<AlertTriangle size={24} color="#f97316" />}
+                      title="View Reports"
+                      onPress={() => router.push('/tasks')}
+                      color="#f97316"
+                    />
+                    <QuickAction
+                      icon={<Settings size={24} color="#6b7280" />}
+                      title="Settings"
+                      onPress={() => router.push('/schedule')}
+                      color="#6b7280"
+                    />
+                    <QuickAction
+                      icon={<CheckCircle size={24} color="#10b981" />}
+                      title="Approvals"
+                      onPress={() => Alert.alert('Approvals', 'Manage pending trainer approvals')}
+                      color="#10b981"
+                    />
+                  </View>
+                </View>
+              );
+            }
+
+            if (item.key === 'recent') {
+              return (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Recent Activity</Text>
+                  <View style={styles.activityList}>
+                    <View style={styles.activityItem}>
+                      <View style={[styles.activityIcon, { backgroundColor: '#10b981' + '15' }]}>
+                        <CheckCircle size={16} color="#10b981" />
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>New trainer approved</Text>
+                        <Text style={styles.activityTime}>2 hours ago</Text>
+                      </View>
+                    </View>
+                    <View style={styles.activityItem}>
+                      <View style={[styles.activityIcon, { backgroundColor: '#f97316' + '15' }]}>
+                        <AlertTriangle size={16} color="#f97316" />
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>User report received</Text>
+                        <Text style={styles.activityTime}>5 hours ago</Text>
+                      </View>
+                    </View>
+                    <View style={styles.activityItem}>
+                      <View style={[styles.activityIcon, { backgroundColor: Colors.light.primary + '15' }]}>
+                        <Users size={16} color={Colors.light.primary} />
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>New student registered</Text>
+                        <Text style={styles.activityTime}>1 day ago</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              );
+            }
+
+            return null;
+          }}
+          contentContainerStyle={styles.listContent}
+        />
       </View>
     );
   }
@@ -664,5 +884,163 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textLight,
     lineHeight: 24,
+  },
+  // Admin styles
+  adminHeader: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  adminHeaderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  adminIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.light.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+  },
+  adminSubtitle: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginTop: 2,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+    marginBottom: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  statCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    width: '48%',
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statInfo: {
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+  },
+  statTitle: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    fontWeight: '600',
+  },
+  statSubtitle: {
+    fontSize: 10,
+    color: Colors.light.textLight,
+    marginTop: 2,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickActionCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    width: '48%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  quickActionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  activityList: {
+    gap: 12,
+  },
+  activityItem: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    marginTop: 2,
   },
 });
