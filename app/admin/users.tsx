@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, ActivityIndicator, Switch, Modal } from 'react-native';
-import { Users, Search, Plus, Edit3, Trash2, Shield, User, Mail, Phone, Calendar, CheckCircle, XCircle, AlertTriangle, Save, X } from 'lucide-react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
+import { Users, Search, Edit3, Trash2, Shield, User, Phone, CheckCircle, XCircle, AlertTriangle, Save, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
-import { useAuth } from '@/hooks/useAuthStore';
+
+import { supabase } from '@/lib/supabase';
 import Colors from '@/constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type UserRole = 'admin' | 'instructor' | 'student';
 type UserStatus = 'active' | 'restricted' | 'pending';
 
-interface User {
+interface AdminUser {
   id: string;
   name: string;
   email: string;
@@ -18,91 +20,140 @@ interface User {
   createdAt: string;
   lastActive?: string;
   phone?: string;
+  trainer_id?: string;
+  is_approved?: boolean;
+  is_restricted?: boolean;
+  password?: string;
 }
 
 export default function AdminUsersScreen() {
   const router = useRouter();
-  const { students } = useStudentStore();
-  const { user: currentUser } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { refreshStudents } = useStudentStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<UserStatus | 'all'>('all');
-  const [isLoading, setIsLoading] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' });
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', role: 'student' as UserRole });
 
-  useEffect(() => {
-    // Load all users including students and mock instructors
-    const mockInstructors: User[] = [
-      {
-        id: '2',
-        name: 'John Smith',
-        email: 'john.smith@example.com',
-        role: 'instructor',
-        status: 'active',
-        createdAt: '2024-01-10',
-        lastActive: '2024-01-19',
-        phone: '+1234567890',
-      },
-      {
-        id: '3',
-        name: 'Sarah Johnson',
-        email: 'sarah.j@example.com',
-        role: 'instructor',
-        status: 'active', // Changed from pending to active (auto-approved)
-        createdAt: '2024-01-18',
-        phone: '+1234567891',
-      },
-      {
-        id: '4',
-        name: 'Mike Wilson',
-        email: 'mike.w@example.com',
-        role: 'instructor',
-        status: 'active', // Changed from restricted to active
-        createdAt: '2024-01-05',
-        lastActive: '2024-01-15',
-        phone: '+1234567892',
-      },
-    ];
+  const loadUsers = useCallback(async () => {
+    try {
+      console.log('🔄 Loading all users from database...');
+      
+      // Fetch all users from database
+      const result = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      const { data: dbUsers, error } = result;
 
-    const allUsers: User[] = [
-      // Admin user
-      {
+      if (error) {
+        console.error('❌ Error fetching users:', error);
+        throw error;
+      }
+
+      console.log('✅ Fetched users from database:', dbUsers?.length || 0);
+
+      // Add mock admin if not exists
+      const adminExists = dbUsers?.some((u: any) => u.email === 'mahmoud200276@gmail.com');
+      const mockAdmin: AdminUser = {
         id: 'admin-001',
         name: 'System Administrator',
         email: 'mahmoud200276@gmail.com',
         role: 'admin',
         status: 'active',
-        createdAt: '2024-01-15',
-        lastActive: '2024-01-20',
-      },
-      // Mock instructors
-      ...mockInstructors,
-      // Real students from the system
-      ...students.map(student => ({
-        id: student.id,
-        name: student.name,
-        email: student.email,
-        role: 'student' as UserRole,
-        status: 'active' as UserStatus, // All students are auto-approved
-        createdAt: student.created_at || '2024-01-01',
-        lastActive: '2024-01-19',
-        phone: (student as any).phone,
-      }))
-    ];
-    setUsers(allUsers);
-  }, [students]);
+        createdAt: '2024-01-15T00:00:00Z',
+        lastActive: new Date().toISOString(),
+        is_approved: true,
+        is_restricted: false
+      };
+
+      // Add mock instructors if database is empty
+      const mockInstructors: AdminUser[] = [
+        {
+          id: 'instructor-001',
+          name: 'John Smith',
+          email: 'john.smith@example.com',
+          role: 'instructor',
+          status: 'active',
+          createdAt: '2024-01-10T00:00:00Z',
+          lastActive: '2024-01-19T00:00:00Z',
+          phone: '+1234567890',
+          is_approved: true,
+          is_restricted: false
+        },
+        {
+          id: 'instructor-002',
+          name: 'Sarah Johnson',
+          email: 'sarah.j@example.com',
+          role: 'instructor',
+          status: 'active',
+          createdAt: '2024-01-18T00:00:00Z',
+          phone: '+1234567891',
+          is_approved: true,
+          is_restricted: false
+        },
+        {
+          id: 'instructor-003',
+          name: 'Mike Wilson',
+          email: 'mike.w@example.com',
+          role: 'instructor',
+          status: 'active',
+          createdAt: '2024-01-05T00:00:00Z',
+          lastActive: '2024-01-15T00:00:00Z',
+          phone: '+1234567892',
+          is_approved: true,
+          is_restricted: false
+        }
+      ];
+
+      // Convert database users to AdminUser format
+      const formattedUsers: AdminUser[] = (dbUsers || []).map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role as UserRole,
+        status: user.is_restricted ? 'restricted' : (user.is_approved ? 'active' : 'pending'),
+        createdAt: user.created_at || new Date().toISOString(),
+        lastActive: user.updated_at,
+        phone: user.phone,
+        trainer_id: user.trainer_id,
+        is_approved: user.is_approved,
+        is_restricted: user.is_restricted,
+        password: user.password
+      }));
+
+      // Combine all users
+      const allUsers = [
+        ...(!adminExists ? [mockAdmin] : []),
+        ...(formattedUsers.length === 0 ? mockInstructors : []),
+        ...formattedUsers
+      ];
+
+      setUsers(allUsers);
+      console.log('📊 Users loaded successfully:', allUsers.length);
+    } catch (error) {
+      console.error('🚨 Error loading users:', error);
+      Alert.alert('Error', 'Failed to load users. Please try again.');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
+                         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (user.phone && user.phone.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleUserAction = (userId: string, action: 'edit' | 'delete' | 'approve' | 'restrict' | 'activate') => {
+  const handleUserAction = async (userId: string, action: 'edit' | 'delete' | 'approve' | 'restrict' | 'activate' | 'view') => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
@@ -113,33 +164,114 @@ export default function AdminUsersScreen() {
           name: user.name,
           email: user.email,
           phone: user.phone || '',
+          role: user.role
         });
         break;
+      case 'view':
+        Alert.alert(
+          `User Details: ${user.name}`,
+          `Email: ${user.email}\nRole: ${user.role.toUpperCase()}\nStatus: ${user.status.toUpperCase()}\nCreated: ${new Date(user.createdAt).toLocaleDateString()}${user.phone ? `\nPhone: ${user.phone}` : ''}${user.trainer_id ? `\nTrainer ID: ${user.trainer_id}` : ''}`,
+          [{ text: 'OK' }]
+        );
+        break;
       case 'delete':
-        Alert.alert('Delete User', `Delete ${user.name}? This action cannot be undone.`, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: () => {
-            setUsers(prev => prev.filter(u => u.id !== userId));
-            Alert.alert('Success', `${user.name} has been deleted.`);
-          }}
-        ]);
+        if (user.role === 'admin') {
+          Alert.alert('Error', 'Cannot delete admin users.');
+          return;
+        }
+        Alert.alert(
+          'Delete User', 
+          `Are you sure you want to delete ${user.name}? This action cannot be undone.`, 
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Delete', 
+              style: 'destructive', 
+              onPress: async () => {
+                try {
+                  if (user.id.startsWith('instructor-') || user.id.startsWith('admin-')) {
+                    // Mock user - just remove from local state
+                    setUsers(prev => prev.filter(u => u.id !== userId));
+                  } else {
+                    // Real user - delete from database
+                    const deleteResult = await supabase
+                      .from('users')
+                      .delete()
+                      .eq('id', userId);
+                    
+                    const { error } = deleteResult;
+                    
+                    if (error) throw error;
+                    
+                    setUsers(prev => prev.filter(u => u.id !== userId));
+                    await refreshStudents();
+                  }
+                  Alert.alert('Success', `${user.name} has been deleted.`);
+                  await loadUsers(); // Refresh the list
+                } catch (error) {
+                  console.error('Error deleting user:', error);
+                  Alert.alert('Error', 'Failed to delete user. Please try again.');
+                }
+              }
+            }
+          ]
+        );
         break;
       case 'approve':
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active' } : u));
-        Alert.alert('Success', `${user.name} has been approved and is now active.`);
+        await updateUserStatus(userId, { is_approved: true, is_restricted: false });
         break;
       case 'restrict':
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'restricted' } : u));
-        Alert.alert('Success', `${user.name} has been restricted.`);
+        await updateUserStatus(userId, { is_restricted: true });
         break;
       case 'activate':
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active' } : u));
-        Alert.alert('Success', `${user.name} has been activated.`);
+        await updateUserStatus(userId, { is_approved: true, is_restricted: false });
         break;
     }
   };
 
-  const handleSaveEdit = () => {
+  const updateUserStatus = async (userId: string, updates: { is_approved?: boolean; is_restricted?: boolean }) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    try {
+      if (user.id.startsWith('instructor-') || user.id.startsWith('admin-')) {
+        // Mock user - just update local state
+        const newStatus = updates.is_restricted ? 'restricted' : (updates.is_approved ? 'active' : 'pending');
+        setUsers(prev => prev.map(u => 
+          u.id === userId 
+            ? { ...u, status: newStatus, is_approved: updates.is_approved ?? u.is_approved, is_restricted: updates.is_restricted ?? u.is_restricted }
+            : u
+        ));
+      } else {
+        // Real user - update in database
+        const updateResult = await supabase
+          .from('users')
+          .update(updates)
+          .eq('id', userId);
+        
+        const { error } = updateResult;
+        
+        if (error) throw error;
+        
+        const newStatus = updates.is_restricted ? 'restricted' : (updates.is_approved ? 'active' : 'pending');
+        setUsers(prev => prev.map(u => 
+          u.id === userId 
+            ? { ...u, status: newStatus, is_approved: updates.is_approved ?? u.is_approved, is_restricted: updates.is_restricted ?? u.is_restricted }
+            : u
+        ));
+        await refreshStudents();
+      }
+      
+      const statusText = updates.is_restricted ? 'restricted' : (updates.is_approved ? 'approved and activated' : 'updated');
+      Alert.alert('Success', `${user.name} has been ${statusText}.`);
+      await loadUsers(); // Refresh stats
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      Alert.alert('Error', 'Failed to update user status. Please try again.');
+    }
+  };
+
+  const handleSaveEdit = async () => {
     if (!editingUser) return;
     
     if (!editForm.name.trim() || !editForm.email.trim()) {
@@ -147,25 +279,53 @@ export default function AdminUsersScreen() {
       return;
     }
 
-    setUsers(prev => prev.map(u => 
-      u.id === editingUser.id 
-        ? { 
-            ...u, 
-            name: editForm.name.trim(),
-            email: editForm.email.trim(),
-            phone: editForm.phone.trim() || undefined
-          }
-        : u
-    ));
-    
-    setEditingUser(null);
-    setEditForm({ name: '', email: '', phone: '' });
-    Alert.alert('Success', 'User information updated successfully.');
+    try {
+      const updates = {
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        phone: editForm.phone.trim() || null,
+        role: editForm.role
+      };
+
+      if (editingUser.id.startsWith('instructor-') || editingUser.id.startsWith('admin-')) {
+        // Mock user - just update local state
+        setUsers(prev => prev.map(u => 
+          u.id === editingUser.id 
+            ? { ...u, ...updates, phone: updates.phone || undefined }
+            : u
+        ));
+      } else {
+        // Real user - update in database
+        const updateResult = await supabase
+          .from('users')
+          .update(updates)
+          .eq('id', editingUser.id);
+        
+        const { error } = updateResult;
+        
+        if (error) throw error;
+        
+        setUsers(prev => prev.map(u => 
+          u.id === editingUser.id 
+            ? { ...u, ...updates, phone: updates.phone || undefined }
+            : u
+        ));
+        await refreshStudents();
+      }
+      
+      setEditingUser(null);
+      setEditForm({ name: '', email: '', phone: '', role: 'student' });
+      Alert.alert('Success', 'User information updated successfully.');
+      await loadUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating user:', error);
+      Alert.alert('Error', 'Failed to update user information. Please try again.');
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingUser(null);
-    setEditForm({ name: '', email: '', phone: '' });
+    setEditForm({ name: '', email: '', phone: '', role: 'student' });
   };
 
   const getStatusColor = (status: UserStatus) => {
@@ -193,7 +353,7 @@ export default function AdminUsersScreen() {
     }
   };
 
-  const UserCard = ({ user }: { user: User }) => (
+  const UserCard = ({ user }: { user: AdminUser }) => (
     <View style={styles.userCard}>
       <View style={styles.userHeader}>
         <View style={styles.userIcon}>
@@ -281,7 +441,7 @@ export default function AdminUsersScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back</Text>

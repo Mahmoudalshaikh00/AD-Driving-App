@@ -268,16 +268,16 @@ export default function StudentsScreen() {
                       color="#f97316"
                     />
                     <QuickAction
+                      icon={<TrendingUp size={24} color="#8b5cf6" />}
+                      title="Analytics"
+                      onPress={() => router.push('/admin/analytics')}
+                      color="#8b5cf6"
+                    />
+                    <QuickAction
                       icon={<Settings size={24} color="#6b7280" />}
                       title="Settings"
                       onPress={() => router.push('/admin/settings')}
                       color="#6b7280"
-                    />
-                    <QuickAction
-                      icon={<CheckCircle size={24} color="#10b981" />}
-                      title="User Status"
-                      onPress={() => router.push('/admin/users')}
-                      color="#10b981"
                     />
                   </View>
                 </View>

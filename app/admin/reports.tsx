@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput } from 'react-native';
-import { AlertTriangle, Search, Eye, CheckCircle, XCircle, Clock, User, MessageSquare, Calendar } from 'lucide-react-native';
+import { AlertTriangle, Search, Eye, CheckCircle, XCircle, Clock, User, MessageSquare, Calendar, Shield } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ReportStatus = 'pending' | 'investigating' | 'resolved' | 'dismissed';
 type ReportType = 'harassment' | 'inappropriate_content' | 'spam' | 'safety_concern' | 'other';
@@ -19,10 +20,12 @@ interface Report {
   createdAt: string;
   updatedAt?: string;
   adminNotes?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export default function AdminReportsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('all');
   const [selectedType, setSelectedType] = useState<ReportType | 'all'>('all');
@@ -30,7 +33,7 @@ export default function AdminReportsScreen() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   useEffect(() => {
-    // Mock reports data - in real app, fetch from API
+    // Enhanced mock reports data with more realistic scenarios
     const mockReports: Report[] = [
       {
         id: '1',
@@ -39,9 +42,10 @@ export default function AdminReportsScreen() {
         reportedUserId: 'instructor2',
         reportedUserName: 'Bob Smith',
         type: 'inappropriate_content',
-        description: 'Instructor made inappropriate comments during the lesson.',
+        description: 'Instructor made inappropriate comments during the lesson and used unprofessional language.',
         status: 'pending',
         createdAt: '2024-01-20T10:30:00Z',
+        severity: 'high'
       },
       {
         id: '2',
@@ -50,11 +54,12 @@ export default function AdminReportsScreen() {
         reportedUserId: 'instructor1',
         reportedUserName: 'David Wilson',
         type: 'safety_concern',
-        description: 'Instructor was driving recklessly during the lesson and made me feel unsafe.',
+        description: 'Instructor was driving recklessly during the lesson, speeding and making unsafe lane changes. Made me feel very unsafe.',
         status: 'investigating',
         createdAt: '2024-01-19T14:15:00Z',
         updatedAt: '2024-01-19T16:00:00Z',
-        adminNotes: 'Contacted both parties for more information.',
+        adminNotes: 'Contacted both parties for more information. Reviewing driving records.',
+        severity: 'critical'
       },
       {
         id: '3',
@@ -63,11 +68,12 @@ export default function AdminReportsScreen() {
         reportedUserId: 'student3',
         reportedUserName: 'Frank Miller',
         type: 'harassment',
-        description: 'Student has been sending inappropriate messages and making unwanted advances.',
+        description: 'Student has been sending inappropriate messages and making unwanted advances. Has continued despite being asked to stop.',
         status: 'resolved',
         createdAt: '2024-01-18T09:45:00Z',
         updatedAt: '2024-01-19T11:30:00Z',
-        adminNotes: 'Student account suspended for 30 days. Warning issued.',
+        adminNotes: 'Student account suspended for 30 days. Warning issued. Monitoring for future incidents.',
+        severity: 'high'
       },
       {
         id: '4',
@@ -76,12 +82,39 @@ export default function AdminReportsScreen() {
         reportedUserId: 'instructor4',
         reportedUserName: 'Henry Taylor',
         type: 'spam',
-        description: 'Instructor keeps sending promotional messages for other services.',
+        description: 'Instructor keeps sending promotional messages for other services and trying to conduct business outside the platform.',
         status: 'dismissed',
         createdAt: '2024-01-17T16:20:00Z',
         updatedAt: '2024-01-18T10:00:00Z',
-        adminNotes: 'Reviewed messages. Content was within acceptable promotional guidelines.',
+        adminNotes: 'Reviewed messages. Content was within acceptable promotional guidelines. Advised instructor on platform policies.',
+        severity: 'low'
       },
+      {
+        id: '5',
+        reporterId: 'student5',
+        reporterName: 'Ivan Rodriguez',
+        reportedUserId: 'instructor5',
+        reportedUserName: 'Julia Martinez',
+        type: 'safety_concern',
+        description: 'Instructor arrived to lesson under the influence of alcohol. Could smell alcohol on their breath.',
+        status: 'investigating',
+        createdAt: '2024-01-21T08:30:00Z',
+        updatedAt: '2024-01-21T09:00:00Z',
+        adminNotes: 'URGENT: Instructor suspended immediately pending investigation. Police report filed.',
+        severity: 'critical'
+      },
+      {
+        id: '6',
+        reporterId: 'instructor6',
+        reporterName: 'Kevin Park',
+        reportedUserId: 'student6',
+        reportedUserName: 'Lisa Wong',
+        type: 'other',
+        description: 'Student consistently shows up late and unprepared for lessons. Has missed 3 lessons without notice.',
+        status: 'pending',
+        createdAt: '2024-01-20T15:45:00Z',
+        severity: 'medium'
+      }
     ];
     setReports(mockReports);
   }, []);
@@ -163,6 +196,16 @@ export default function AdminReportsScreen() {
     }
   };
 
+  const getSeverityColor = (severity: 'low' | 'medium' | 'high' | 'critical') => {
+    switch (severity) {
+      case 'low': return '#10b981';
+      case 'medium': return '#f59e0b';
+      case 'high': return '#f97316';
+      case 'critical': return '#ef4444';
+      default: return Colors.light.textLight;
+    }
+  };
+
   const getTypeColor = (type: ReportType) => {
     switch (type) {
       case 'harassment': return '#ef4444';
@@ -185,7 +228,10 @@ export default function AdminReportsScreen() {
 
   const ReportCard = ({ report }: { report: Report }) => (
     <TouchableOpacity 
-      style={styles.reportCard}
+      style={[
+        styles.reportCard,
+        report.severity === 'critical' && styles.criticalReport
+      ]}
       onPress={() => setSelectedReport(report)}
     >
       <View style={styles.reportHeader}>
@@ -193,13 +239,20 @@ export default function AdminReportsScreen() {
           <AlertTriangle size={20} color={getTypeColor(report.type)} />
         </View>
         <View style={styles.reportInfo}>
-          <Text style={styles.reportTitle}>
-            {report.type.replace('_', ' ').toUpperCase()}
-          </Text>
+          <View style={styles.reportTitleRow}>
+            <Text style={styles.reportTitle}>
+              {report.type.replace('_', ' ').toUpperCase()}
+            </Text>
+            <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(report.severity) + '15' }]}>
+              <Text style={[styles.severityText, { color: getSeverityColor(report.severity) }]}>
+                {report.severity.toUpperCase()}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.reportUsers}>
             {report.reporterName} → {report.reportedUserName}
           </Text>
-          <Text style={styles.reportDate} numberOfLines={1}>
+          <Text style={styles.reportDate}>
             {formatDate(report.createdAt)}
           </Text>
         </View>
@@ -256,7 +309,7 @@ export default function AdminReportsScreen() {
 
   if (selectedReport) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setSelectedReport(null)} style={styles.backButton}>
             <Text style={styles.backButtonText}>← Back</Text>
@@ -269,6 +322,11 @@ export default function AdminReportsScreen() {
             <View style={[styles.typeTag, { backgroundColor: getTypeColor(selectedReport.type) + '15' }]}>
               <Text style={[styles.typeTagText, { color: getTypeColor(selectedReport.type) }]}>
                 {selectedReport.type.replace('_', ' ').toUpperCase()}
+              </Text>
+            </View>
+            <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(selectedReport.severity) + '15' }]}>
+              <Text style={[styles.severityText, { color: getSeverityColor(selectedReport.severity) }]}>
+                {selectedReport.severity.toUpperCase()}
               </Text>
             </View>
             <View style={styles.statusContainer}>
@@ -352,12 +410,12 @@ export default function AdminReportsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Reports</Text>
+        <Text style={styles.title}>Reports & Issues</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -401,8 +459,8 @@ export default function AdminReportsScreen() {
           <Text style={styles.statLabel}>Pending</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{filteredReports.filter(r => r.status === 'investigating').length}</Text>
-          <Text style={styles.statLabel}>Investigating</Text>
+          <Text style={styles.statNumber}>{filteredReports.filter(r => r.severity === 'critical').length}</Text>
+          <Text style={styles.statLabel}>Critical</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{filteredReports.filter(r => r.status === 'resolved').length}</Text>
@@ -417,8 +475,9 @@ export default function AdminReportsScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <AlertTriangle size={48} color={Colors.light.textLight} />
+            <Shield size={48} color={Colors.light.textLight} />
             <Text style={styles.emptyText}>No reports found</Text>
+            <Text style={styles.emptySubtext}>All reports will appear here for review</Text>
           </View>
         }
       />
@@ -545,6 +604,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  criticalReport: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444',
+  },
   reportHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -562,11 +625,26 @@ const styles = StyleSheet.create({
   reportInfo: {
     flex: 1,
   },
+  reportTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   reportTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     color: Colors.light.text,
-    marginBottom: 4,
+  },
+  severityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  severityText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   reportUsers: {
     fontSize: 12,
@@ -624,6 +702,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   typeTag: {
     paddingHorizontal: 12,
@@ -709,5 +789,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textLight,
     marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

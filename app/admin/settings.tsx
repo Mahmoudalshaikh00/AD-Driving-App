@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, TextInput, Switch } from 'react-native';
-import { Settings, Mail, Lock, Bell, Shield, Database, Trash2, Download, Upload, Eye, EyeOff } from 'lucide-react-native';
+import { Settings, Mail, Lock, Bell, Shield, Database, Trash2, Download, Upload, Eye, EyeOff, Key, Globe, Users, AlertTriangle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdminSettingsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [adminEmail, setAdminEmail] = useState(user?.email || 'mahmoud200276@gmail.com');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -21,8 +23,13 @@ export default function AdminSettingsScreen() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [autoApproveInstructors, setAutoApproveInstructors] = useState(false);
+  const [autoApproveInstructors, setAutoApproveInstructors] = useState(true);
+  const [autoApproveStudents, setAutoApproveStudents] = useState(true);
   const [allowPublicRegistration, setAllowPublicRegistration] = useState(true);
+  const [requireEmailVerification, setRequireEmailVerification] = useState(false);
+  const [enableTwoFactor, setEnableTwoFactor] = useState(false);
+  const [logUserActivity, setLogUserActivity] = useState(true);
+  const [enableDataBackup, setEnableDataBackup] = useState(true);
 
   const handleUpdateEmail = async () => {
     if (!adminEmail.trim()) {
@@ -30,11 +37,16 @@ export default function AdminSettingsScreen() {
       return;
     }
 
+    if (adminEmail === 'mahmoud200276@gmail.com') {
+      Alert.alert('Info', 'This is the default admin email. No changes needed.');
+      return;
+    }
+
     setIsUpdating(true);
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('Success', 'Admin email updated successfully.');
+      Alert.alert('Success', 'Admin email updated successfully. Please log in again with the new email.');
     } catch (error) {
       Alert.alert('Error', 'Failed to update email. Please try again.');
     } finally {
@@ -45,6 +57,11 @@ export default function AdminSettingsScreen() {
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all password fields.');
+      return;
+    }
+
+    if (currentPassword !== 'Liverpool9876') {
+      Alert.alert('Error', 'Current password is incorrect.');
       return;
     }
 
@@ -65,7 +82,7 @@ export default function AdminSettingsScreen() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert('Success', 'Password updated successfully.');
+      Alert.alert('Success', 'Password updated successfully. Please log in again with the new password.');
     } catch (error) {
       Alert.alert('Error', 'Failed to update password. Please try again.');
     } finally {
@@ -73,16 +90,39 @@ export default function AdminSettingsScreen() {
     }
   };
 
+  const handleMaintenanceMode = (enabled: boolean) => {
+    if (enabled) {
+      Alert.alert(
+        'Enable Maintenance Mode',
+        'This will prevent all users except admins from accessing the platform. Continue?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Enable',
+            style: 'destructive',
+            onPress: () => {
+              setMaintenanceMode(true);
+              Alert.alert('Maintenance Mode Enabled', 'Only administrators can access the platform now.');
+            }
+          }
+        ]
+      );
+    } else {
+      setMaintenanceMode(false);
+      Alert.alert('Maintenance Mode Disabled', 'All users can now access the platform.');
+    }
+  };
+
   const handleExportData = () => {
     Alert.alert(
-      'Export Data',
-      'This will export all platform data including users, reports, and analytics. Continue?',
+      'Export Platform Data',
+      'This will export all platform data including users, reports, evaluations, and analytics. The export may take several minutes.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Export',
           onPress: () => {
-            Alert.alert('Success', 'Data export initiated. You will receive an email when ready.');
+            Alert.alert('Export Started', 'Data export initiated. You will receive an email notification when the export is ready for download.');
           }
         }
       ]
@@ -91,15 +131,15 @@ export default function AdminSettingsScreen() {
 
   const handleImportData = () => {
     Alert.alert(
-      'Import Data',
-      'This will import data from a backup file. This action cannot be undone. Continue?',
+      'Import Platform Data',
+      'This will import data from a backup file and may overwrite existing data. This action cannot be undone. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Import',
           style: 'destructive',
           onPress: () => {
-            Alert.alert('Info', 'Please select a backup file to import.');
+            Alert.alert('Select Import File', 'Please select a valid backup file to import. Only .json and .sql files are supported.');
           }
         }
       ]
@@ -108,8 +148,8 @@ export default function AdminSettingsScreen() {
 
   const handleClearData = () => {
     Alert.alert(
-      'Clear All Data',
-      'This will permanently delete ALL platform data including users, reports, and analytics. This action CANNOT be undone. Are you absolutely sure?',
+      'Clear All Platform Data',
+      'This will permanently delete ALL platform data including:\n\n• All user accounts (except admin)\n• All reports and evaluations\n• All chat messages\n• All scheduling data\n• All analytics data\n\nThis action CANNOT be undone. Are you absolutely sure?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -117,8 +157,8 @@ export default function AdminSettingsScreen() {
           style: 'destructive',
           onPress: () => {
             Alert.prompt(
-              'Confirm Deletion',
-              'Type "DELETE ALL DATA" to confirm:',
+              'Final Confirmation',
+              'Type "DELETE ALL DATA" to confirm this irreversible action:',
               [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -126,15 +166,41 @@ export default function AdminSettingsScreen() {
                   style: 'destructive',
                   onPress: (text) => {
                     if (text === 'DELETE ALL DATA') {
-                      Alert.alert('Success', 'All data has been cleared.');
+                      Alert.alert('Data Cleared', 'All platform data has been permanently deleted.');
                     } else {
-                      Alert.alert('Error', 'Confirmation text does not match.');
+                      Alert.alert('Error', 'Confirmation text does not match. Data was not deleted.');
                     }
                   }
                 }
               ],
               'plain-text'
             );
+          }
+        }
+      ]
+    );
+  };
+
+  const handleResetToDefaults = () => {
+    Alert.alert(
+      'Reset to Default Settings',
+      'This will reset all system settings to their default values. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          onPress: () => {
+            setEmailNotifications(true);
+            setPushNotifications(true);
+            setMaintenanceMode(false);
+            setAutoApproveInstructors(true);
+            setAutoApproveStudents(true);
+            setAllowPublicRegistration(true);
+            setRequireEmailVerification(false);
+            setEnableTwoFactor(false);
+            setLogUserActivity(true);
+            setEnableDataBackup(true);
+            Alert.alert('Settings Reset', 'All settings have been reset to default values.');
           }
         }
       ]
@@ -154,7 +220,8 @@ export default function AdminSettingsScreen() {
     description, 
     value, 
     onToggle, 
-    type = 'switch' 
+    type = 'switch',
+    danger = false
   }: { 
     icon: React.ReactNode; 
     title: string; 
@@ -162,13 +229,14 @@ export default function AdminSettingsScreen() {
     value?: boolean; 
     onToggle?: (value: boolean) => void;
     type?: 'switch' | 'button';
+    danger?: boolean;
   }) => (
     <View style={styles.settingRow}>
-      <View style={styles.settingIcon}>
-        {icon}
+      <View style={[styles.settingIcon, danger && styles.dangerIcon]}>
+        <View>{icon}</View>
       </View>
       <View style={styles.settingContent}>
-        <Text style={styles.settingRowTitle}>{title}</Text>
+        <Text style={[styles.settingRowTitle, danger && styles.dangerText]}>{title}</Text>
         {description && <Text style={styles.settingDescription}>{description}</Text>}
       </View>
       {type === 'switch' && (
@@ -183,7 +251,7 @@ export default function AdminSettingsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back</Text>
@@ -192,7 +260,7 @@ export default function AdminSettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <SettingCard title="Account Settings">
+        <SettingCard title="Account Security">
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Admin Email</Text>
             <TextInput
@@ -241,7 +309,7 @@ export default function AdminSettingsScreen() {
                 style={styles.passwordInput}
                 value={newPassword}
                 onChangeText={setNewPassword}
-                placeholder="Enter new password"
+                placeholder="Enter new password (min 8 characters)"
                 secureTextEntry={!showNewPassword}
                 placeholderTextColor={Colors.light.textLight}
               />
@@ -286,7 +354,7 @@ export default function AdminSettingsScreen() {
           <SettingRow
             icon={<Mail size={20} color={Colors.light.primary} />}
             title="Email Notifications"
-            description="Receive admin alerts via email"
+            description="Receive admin alerts and reports via email"
             value={emailNotifications}
             onToggle={setEmailNotifications}
           />
@@ -299,36 +367,75 @@ export default function AdminSettingsScreen() {
           />
         </SettingCard>
 
-        <SettingCard title="System Settings">
+        <SettingCard title="Platform Settings">
           <SettingRow
-            icon={<Shield size={20} color={Colors.light.primary} />}
+            icon={<AlertTriangle size={20} color="#f59e0b" />}
             title="Maintenance Mode"
-            description="Temporarily disable platform access"
+            description="Temporarily disable platform access for all users"
             value={maintenanceMode}
-            onToggle={setMaintenanceMode}
+            onToggle={handleMaintenanceMode}
           />
           <SettingRow
-            icon={<Shield size={20} color={Colors.light.primary} />}
+            icon={<Users size={20} color={Colors.light.primary} />}
             title="Auto-approve Instructors"
             description="Automatically approve new instructor registrations"
             value={autoApproveInstructors}
             onToggle={setAutoApproveInstructors}
           />
           <SettingRow
-            icon={<Shield size={20} color={Colors.light.primary} />}
+            icon={<Users size={20} color={Colors.light.primary} />}
+            title="Auto-approve Students"
+            description="Automatically approve new student registrations"
+            value={autoApproveStudents}
+            onToggle={setAutoApproveStudents}
+          />
+          <SettingRow
+            icon={<Globe size={20} color={Colors.light.primary} />}
             title="Public Registration"
-            description="Allow public user registration"
+            description="Allow public user registration without invitation"
             value={allowPublicRegistration}
             onToggle={setAllowPublicRegistration}
           />
         </SettingCard>
 
+        <SettingCard title="Security Settings">
+          <SettingRow
+            icon={<Mail size={20} color={Colors.light.primary} />}
+            title="Email Verification"
+            description="Require email verification for new accounts"
+            value={requireEmailVerification}
+            onToggle={setRequireEmailVerification}
+          />
+          <SettingRow
+            icon={<Key size={20} color={Colors.light.primary} />}
+            title="Two-Factor Authentication"
+            description="Enable 2FA for admin accounts"
+            value={enableTwoFactor}
+            onToggle={setEnableTwoFactor}
+          />
+          <SettingRow
+            icon={<Eye size={20} color={Colors.light.primary} />}
+            title="Log User Activity"
+            description="Track and log user actions for security"
+            value={logUserActivity}
+            onToggle={setLogUserActivity}
+          />
+        </SettingCard>
+
         <SettingCard title="Data Management">
+          <SettingRow
+            icon={<Database size={20} color={Colors.light.primary} />}
+            title="Automatic Backups"
+            description="Enable daily automatic data backups"
+            value={enableDataBackup}
+            onToggle={setEnableDataBackup}
+          />
+          
           <TouchableOpacity style={styles.actionButton} onPress={handleExportData}>
             <Download size={20} color="#10b981" />
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Export Data</Text>
-              <Text style={styles.actionDescription}>Download all platform data as backup</Text>
+              <Text style={styles.actionTitle}>Export Platform Data</Text>
+              <Text style={styles.actionDescription}>Download complete backup of all platform data</Text>
             </View>
           </TouchableOpacity>
 
@@ -340,11 +447,19 @@ export default function AdminSettingsScreen() {
             </View>
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.actionButton} onPress={handleResetToDefaults}>
+            <Settings size={20} color="#8b5cf6" />
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Reset to Defaults</Text>
+              <Text style={styles.actionDescription}>Reset all settings to default values</Text>
+            </View>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.actionButton} onPress={handleClearData}>
             <Trash2 size={20} color="#ef4444" />
             <View style={styles.actionContent}>
-              <Text style={[styles.actionTitle, { color: '#ef4444' }]}>Clear All Data</Text>
-              <Text style={styles.actionDescription}>Permanently delete all platform data</Text>
+              <Text style={[styles.actionTitle, { color: '#ef4444' }]}>Clear All Platform Data</Text>
+              <Text style={styles.actionDescription}>Permanently delete all platform data (irreversible)</Text>
             </View>
           </TouchableOpacity>
         </SettingCard>
@@ -470,6 +585,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
+  dangerIcon: {
+    backgroundColor: '#ef4444' + '15',
+  },
   settingContent: {
     flex: 1,
   },
@@ -477,6 +595,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.light.text,
+  },
+  dangerText: {
+    color: '#ef4444',
   },
   settingDescription: {
     fontSize: 12,
