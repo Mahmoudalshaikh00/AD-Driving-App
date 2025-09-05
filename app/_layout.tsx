@@ -40,6 +40,10 @@ function RootLayoutNav() {
       <Stack.Screen name="evaluations" options={{ title: "Evaluations" }} />
       <Stack.Screen name="schedule/[userId]" options={{ title: "Schedule" }} />
       <Stack.Screen name="chat/[studentId]" options={{ headerShown: false }} />
+      <Stack.Screen name="admin/users" options={{ title: "Manage Users" }} />
+      <Stack.Screen name="admin/reports" options={{ title: "Reports" }} />
+      <Stack.Screen name="admin/settings" options={{ title: "Admin Settings" }} />
+      <Stack.Screen name="admin/approvals" options={{ title: "Approvals" }} />
       <Stack.Screen name="+not-found" options={{ title: "Oops!" }} />
     </Stack>
   );
