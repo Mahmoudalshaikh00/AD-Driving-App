@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, ActivityIndicator, Switch } from 'react-native';
-import { Users, Search, Plus, Edit3, Trash2, Shield, User, Mail, Phone, Calendar, CheckCircle, XCircle, AlertTriangle } from 'lucide-react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, ActivityIndicator, Switch, Modal } from 'react-native';
+import { Users, Search, Plus, Edit3, Trash2, Shield, User, Mail, Phone, Calendar, CheckCircle, XCircle, AlertTriangle, Save, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
+import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
 
 type UserRole = 'admin' | 'instructor' | 'student';
@@ -22,24 +23,18 @@ interface User {
 export default function AdminUsersScreen() {
   const router = useRouter();
   const { students } = useStudentStore();
+  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<UserStatus | 'all'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' });
 
   useEffect(() => {
-    // Mock users data - in real app, fetch from API
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        name: 'Admin User',
-        email: 'mahmoud200276@gmail.com',
-        role: 'admin',
-        status: 'active',
-        createdAt: '2024-01-15',
-        lastActive: '2024-01-20',
-      },
+    // Load all users including students and mock instructors
+    const mockInstructors: User[] = [
       {
         id: '2',
         name: 'John Smith',
@@ -55,7 +50,7 @@ export default function AdminUsersScreen() {
         name: 'Sarah Johnson',
         email: 'sarah.j@example.com',
         role: 'instructor',
-        status: 'pending',
+        status: 'active', // Changed from pending to active (auto-approved)
         createdAt: '2024-01-18',
         phone: '+1234567891',
       },
@@ -64,22 +59,39 @@ export default function AdminUsersScreen() {
         name: 'Mike Wilson',
         email: 'mike.w@example.com',
         role: 'instructor',
-        status: 'restricted',
+        status: 'active', // Changed from restricted to active
         createdAt: '2024-01-05',
         lastActive: '2024-01-15',
         phone: '+1234567892',
       },
+    ];
+
+    const allUsers: User[] = [
+      // Admin user
+      {
+        id: 'admin-001',
+        name: 'System Administrator',
+        email: 'mahmoud200276@gmail.com',
+        role: 'admin',
+        status: 'active',
+        createdAt: '2024-01-15',
+        lastActive: '2024-01-20',
+      },
+      // Mock instructors
+      ...mockInstructors,
+      // Real students from the system
       ...students.map(student => ({
         id: student.id,
         name: student.name,
         email: student.email,
         role: 'student' as UserRole,
-        status: 'active' as UserStatus,
-        createdAt: '2024-01-01',
+        status: 'active' as UserStatus, // All students are auto-approved
+        createdAt: student.created_at || '2024-01-01',
         lastActive: '2024-01-19',
+        phone: (student as any).phone,
       }))
     ];
-    setUsers(mockUsers);
+    setUsers(allUsers);
   }, [students]);
 
   const filteredUsers = users.filter(user => {
@@ -96,22 +108,25 @@ export default function AdminUsersScreen() {
 
     switch (action) {
       case 'edit':
-        Alert.alert('Edit User', `Edit ${user.name}?`, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Edit', onPress: () => console.log('Edit user:', userId) }
-        ]);
+        setEditingUser(user);
+        setEditForm({
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+        });
         break;
       case 'delete':
         Alert.alert('Delete User', `Delete ${user.name}? This action cannot be undone.`, [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Delete', style: 'destructive', onPress: () => {
             setUsers(prev => prev.filter(u => u.id !== userId));
+            Alert.alert('Success', `${user.name} has been deleted.`);
           }}
         ]);
         break;
       case 'approve':
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active' } : u));
-        Alert.alert('Success', `${user.name} has been approved.`);
+        Alert.alert('Success', `${user.name} has been approved and is now active.`);
         break;
       case 'restrict':
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'restricted' } : u));
@@ -122,6 +137,35 @@ export default function AdminUsersScreen() {
         Alert.alert('Success', `${user.name} has been activated.`);
         break;
     }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingUser) return;
+    
+    if (!editForm.name.trim() || !editForm.email.trim()) {
+      Alert.alert('Error', 'Name and email are required.');
+      return;
+    }
+
+    setUsers(prev => prev.map(u => 
+      u.id === editingUser.id 
+        ? { 
+            ...u, 
+            name: editForm.name.trim(),
+            email: editForm.email.trim(),
+            phone: editForm.phone.trim() || undefined
+          }
+        : u
+    ));
+    
+    setEditingUser(null);
+    setEditForm({ name: '', email: '', phone: '' });
+    Alert.alert('Success', 'User information updated successfully.');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUser(null);
+    setEditForm({ name: '', email: '', phone: '' });
   };
 
   const getStatusColor = (status: UserStatus) => {
@@ -305,6 +349,73 @@ export default function AdminUsersScreen() {
           </View>
         }
       />
+
+      {/* Edit User Modal */}
+      <Modal
+        visible={!!editingUser}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleCancelEdit}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={handleCancelEdit} style={styles.modalCloseButton}>
+              <X size={24} color={Colors.light.textLight} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Edit User</Text>
+            <TouchableOpacity onPress={handleSaveEdit} style={styles.modalSaveButton}>
+              <Save size={24} color={Colors.light.primary} />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalContent}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Name *</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={editForm.name}
+                onChangeText={(text) => setEditForm(prev => ({ ...prev, name: text }))}
+                placeholder="Enter name"
+                placeholderTextColor={Colors.light.textLight}
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email *</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={editForm.email}
+                onChangeText={(text) => setEditForm(prev => ({ ...prev, email: text }))}
+                placeholder="Enter email"
+                placeholderTextColor={Colors.light.textLight}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Phone</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={editForm.phone}
+                onChangeText={(text) => setEditForm(prev => ({ ...prev, phone: text }))}
+                placeholder="Enter phone number"
+                placeholderTextColor={Colors.light.textLight}
+                keyboardType="phone-pad"
+              />
+            </View>
+            
+            {editingUser && (
+              <View style={styles.userInfoCard}>
+                <Text style={styles.userInfoTitle}>User Information</Text>
+                <Text style={styles.userInfoText}>Role: {editingUser.role.toUpperCase()}</Text>
+                <Text style={styles.userInfoText}>Status: {editingUser.status.toUpperCase()}</Text>
+                <Text style={styles.userInfoText}>Created: {new Date(editingUser.createdAt).toLocaleDateString()}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -524,5 +635,72 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textLight,
     marginTop: 12,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+    backgroundColor: Colors.light.cardBackground,
+  },
+  modalCloseButton: {
+    padding: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+  },
+  modalSaveButton: {
+    padding: 8,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 16,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: Colors.light.text,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  userInfoCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  userInfoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+    marginBottom: 12,
+  },
+  userInfoText: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginBottom: 4,
   },
 });

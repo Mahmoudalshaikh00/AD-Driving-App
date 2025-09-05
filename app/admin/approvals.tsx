@@ -35,17 +35,18 @@ export default function AdminApprovalsScreen() {
     const mockApprovals: PendingApproval[] = [
       {
         id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@example.com',
+        name: 'David Martinez',
+        email: 'david.martinez@example.com',
         phone: '+1234567890',
-        experience: '5 years of professional driving instruction with ABC Driving School. Specialized in nervous drivers and highway training.',
-        certifications: ['Certified Driving Instructor (CDI)', 'Defensive Driving Instructor', 'First Aid Certified'],
+        experience: '2 years of professional driving instruction. Recently completed advanced instructor certification.',
+        certifications: ['Certified Driving Instructor (CDI)', 'First Aid Certified'],
         submittedAt: '2024-01-20T09:30:00Z',
-        status: 'pending',
+        status: 'approved', // Auto-approved
+        adminNotes: 'Auto-approved by system. All new users are approved by default.',
         documents: {
-          license: 'driving_license_sarah.pdf',
-          certification: 'cdi_certificate_sarah.pdf',
-          background_check: 'background_check_sarah.pdf'
+          license: 'driving_license_david.pdf',
+          certification: 'cdi_certificate_david.pdf',
+          background_check: 'background_check_david.pdf'
         }
       },
       {
@@ -56,7 +57,8 @@ export default function AdminApprovalsScreen() {
         experience: '3 years teaching at XYZ Driving Academy. Experience with both manual and automatic vehicles.',
         certifications: ['Licensed Driving Instructor', 'Vehicle Safety Inspector'],
         submittedAt: '2024-01-19T14:15:00Z',
-        status: 'pending',
+        status: 'approved', // Auto-approved
+        adminNotes: 'Auto-approved by system. All new users are approved by default.',
         documents: {
           license: 'driving_license_michael.pdf',
           certification: 'instructor_license_michael.pdf'
@@ -338,7 +340,7 @@ export default function AdminApprovalsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Instructor Approvals</Text>
+        <Text style={styles.title}>User Applications</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -355,10 +357,10 @@ export default function AdminApprovalsScreen() {
       <View style={styles.filtersContainer}>
         <Text style={styles.filterLabel}>Status:</Text>
         <View style={styles.filterRow}>
-          <FilterButton title="Pending" isSelected={selectedStatus === 'pending'} onPress={() => setSelectedStatus('pending')} />
           <FilterButton title="All" isSelected={selectedStatus === 'all'} onPress={() => setSelectedStatus('all')} />
           <FilterButton title="Approved" isSelected={selectedStatus === 'approved'} onPress={() => setSelectedStatus('approved')} />
           <FilterButton title="Rejected" isSelected={selectedStatus === 'rejected'} onPress={() => setSelectedStatus('rejected')} />
+          <FilterButton title="Pending" isSelected={selectedStatus === 'pending'} onPress={() => setSelectedStatus('pending')} />
         </View>
       </View>
 
@@ -390,6 +392,7 @@ export default function AdminApprovalsScreen() {
           <View style={styles.emptyContainer}>
             <Clock size={48} color={Colors.light.textLight} />
             <Text style={styles.emptyText}>No applications found</Text>
+            <Text style={styles.emptySubtext}>All new users are auto-approved by default</Text>
           </View>
         }
       />
@@ -706,5 +709,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textLight,
     marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: Colors.light.textLight,
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

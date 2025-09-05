@@ -107,13 +107,16 @@ export default function StudentsScreen() {
     });
 
     useEffect(() => {
-      // Mock admin stats - in real app, fetch from API
+      // Calculate real admin stats based on actual data
+      const mockInstructors = 3; // John Smith, Sarah Johnson, Mike Wilson
+      const totalUsers = 1 + mockInstructors + students.length; // 1 admin + instructors + students
+      
       setAdminStats({
-        totalUsers: students.length + 15, // Adding mock trainers
-        totalTrainers: 15,
+        totalUsers: totalUsers,
+        totalTrainers: mockInstructors,
         totalStudents: students.length,
-        pendingApprovals: 3,
-        restrictedUsers: 1,
+        pendingApprovals: 0, // All users are auto-approved now
+        restrictedUsers: 0, // No restricted users by default
         totalReports: 2,
         activeBookings: 12,
         totalEvaluations: 45,
@@ -209,17 +212,19 @@ export default function StudentsScreen() {
                       onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
-                      icon={<Clock size={20} color="#f59e0b" />}
-                      title="Pending Approvals"
-                      value={adminStats.pendingApprovals}
-                      color="#f59e0b"
-                      onPress={() => router.push('/admin/approvals')}
+                      icon={<CheckCircle size={20} color="#10b981" />}
+                      title="Auto-Approved"
+                      value={adminStats.totalUsers - 1} // All users except admin
+                      color="#10b981"
+                      subtitle="All new users"
+                      onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
-                      icon={<XCircle size={20} color="#ef4444" />}
-                      title="Restricted Users"
-                      value={adminStats.restrictedUsers}
-                      color="#ef4444"
+                      icon={<Users size={20} color="#8b5cf6" />}
+                      title="Active Users"
+                      value={adminStats.totalUsers}
+                      color="#8b5cf6"
+                      subtitle="All approved"
                       onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
@@ -270,8 +275,8 @@ export default function StudentsScreen() {
                     />
                     <QuickAction
                       icon={<CheckCircle size={24} color="#10b981" />}
-                      title="Approvals"
-                      onPress={() => router.push('/admin/approvals')}
+                      title="User Status"
+                      onPress={() => router.push('/admin/users')}
                       color="#10b981"
                     />
                   </View>
@@ -289,17 +294,8 @@ export default function StudentsScreen() {
                         <CheckCircle size={16} color="#10b981" />
                       </View>
                       <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>New trainer approved</Text>
-                        <Text style={styles.activityTime}>2 hours ago</Text>
-                      </View>
-                    </View>
-                    <View style={styles.activityItem}>
-                      <View style={[styles.activityIcon, { backgroundColor: '#f97316' + '15' }]}>
-                        <AlertTriangle size={16} color="#f97316" />
-                      </View>
-                      <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>User report received</Text>
-                        <Text style={styles.activityTime}>5 hours ago</Text>
+                        <Text style={styles.activityTitle}>Auto-approval system activated</Text>
+                        <Text style={styles.activityTime}>System update</Text>
                       </View>
                     </View>
                     <View style={styles.activityItem}>
@@ -307,8 +303,17 @@ export default function StudentsScreen() {
                         <Users size={16} color={Colors.light.primary} />
                       </View>
                       <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>New student registered</Text>
-                        <Text style={styles.activityTime}>1 day ago</Text>
+                        <Text style={styles.activityTitle}>{students.length} students active</Text>
+                        <Text style={styles.activityTime}>All approved automatically</Text>
+                      </View>
+                    </View>
+                    <View style={styles.activityItem}>
+                      <View style={[styles.activityIcon, { backgroundColor: '#3b82f6' + '15' }]}>
+                        <Shield size={16} color="#3b82f6" />
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>Admin dashboard active</Text>
+                        <Text style={styles.activityTime}>Full control enabled</Text>
                       </View>
                     </View>
                   </View>
