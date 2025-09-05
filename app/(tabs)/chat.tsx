@@ -57,7 +57,7 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
     }
   }, []);
   
-  const addMessage = useCallback(async (message: ChatMessage, senderName?: string, recipientId?: string, sendNotificationFn?: (recipientId: string, senderName: string, messagePreview: string, chatUrl?: string, senderId?: string) => Promise<any>) => {
+  const addMessage = useCallback(async (message: ChatMessage) => {
     console.log('📤 Adding message:', message);
     
     // Add to local state immediately for optimistic update
@@ -82,21 +82,6 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
         }
       } else {
         console.log('✅ Message saved to database');
-      }
-      
-      // Send notification to recipient
-      if (senderName && recipientId && message.text && sendNotificationFn) {
-        const messagePreview = message.text.length > 50 
-          ? message.text.substring(0, 50) + '...' 
-          : message.text;
-        
-        await sendNotificationFn(
-          recipientId,
-          senderName,
-          messagePreview,
-          `/chat/${message.student_id}`,
-          message.sender_id
-        );
       }
     } catch (error) {
       console.error('🚨 Error in addMessage:', error);
@@ -220,13 +205,28 @@ function ChatScreenContent() {
       reportTitle: isReportMode ? (reportTitle || 'Lesson Report') : undefined,
     };
     
-    console.log('Sending message:', message);
+    console.log('📤 Sending message:', message);
     
     // Determine recipient and sender info for notifications
     const recipientId = isTrainer ? activeStudentId : trainerId;
     const senderName = user.name;
     
-    await addMessage(message, senderName, recipientId, sendMessageNotification);
+    console.log('📧 Creating notification for recipient:', { recipientId, senderName, senderId: user.id });
+    
+    // Create notification immediately for the recipient
+    const messagePreview = messageText ? 
+      (messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText) :
+      (attachments?.length ? 'Sent an image' : 'Sent a message');
+    
+    await sendMessageNotification(
+      recipientId,
+      senderName,
+      messagePreview,
+      `/chat/${activeStudentId}`,
+      user.id
+    );
+    
+    await addMessage(message);
     setText('');
     setIsReportMode(false);
     setReportTitle('');

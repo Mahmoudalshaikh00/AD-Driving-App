@@ -86,7 +86,6 @@ export default function TabLayout() {
         <Tabs.Screen 
           name="chat" 
           options={{ 
-            href: null, 
             headerShown: false,
             title: "Chat",
             tabBarIcon: ({ color }) => (
@@ -186,7 +185,6 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="chat" 
         options={{ 
-          href: null, 
           headerShown: false,
           title: "Chat",
           tabBarIcon: ({ color }) => (
