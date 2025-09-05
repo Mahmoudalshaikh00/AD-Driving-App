@@ -20,7 +20,6 @@ function uid() {
 const [ChatProvider, useChatStore] = createContextHook(() => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { sendMessageNotification } = useNotificationStore();
   
   const fetchMessages = useCallback(async (studentId: string, trainerId: string) => {
     if (!studentId || !trainerId) return;
@@ -58,7 +57,7 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
     }
   }, []);
   
-  const addMessage = useCallback(async (message: ChatMessage, senderName?: string, recipientId?: string) => {
+  const addMessage = useCallback(async (message: ChatMessage, senderName?: string, recipientId?: string, sendNotificationFn?: (recipientId: string, senderName: string, messagePreview: string, chatUrl?: string) => Promise<any>) => {
     console.log('📤 Adding message:', message);
     
     // Add to local state immediately for optimistic update
@@ -86,12 +85,12 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
       }
       
       // Send notification to recipient
-      if (senderName && recipientId && message.text) {
+      if (senderName && recipientId && message.text && sendNotificationFn) {
         const messagePreview = message.text.length > 50 
           ? message.text.substring(0, 50) + '...' 
           : message.text;
         
-        await sendMessageNotification(
+        await sendNotificationFn(
           recipientId,
           senderName,
           messagePreview,
@@ -101,7 +100,7 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
     } catch (error) {
       console.error('🚨 Error in addMessage:', error);
     }
-  }, [sendMessageNotification]);
+  }, []);
   
   const getMessagesForChat = useCallback((studentId: string, trainerId: string) => {
     return messages.filter(m => 
@@ -125,7 +124,7 @@ function ChatScreenContent() {
   const params = useLocalSearchParams<{ studentId?: string }>();
   const insets = useSafeAreaInsets();
   const { addMessage, getMessagesForChat, fetchMessages, loading: chatLoading } = useChatStore();
-  const { markAsReadByStudentAndType, unreadNotifications } = useNotificationStore();
+  const { markAsReadByStudentAndType, unreadNotifications, sendMessageNotification } = useNotificationStore();
   const [text, setText] = useState<string>('');
   const [isReportMode, setIsReportMode] = useState<boolean>(false);
   const [reportTitle, setReportTitle] = useState<string>('');
@@ -226,7 +225,7 @@ function ChatScreenContent() {
     const recipientId = isTrainer ? activeStudentId : trainerId;
     const senderName = user.name;
     
-    await addMessage(message, senderName, recipientId);
+    await addMessage(message, senderName, recipientId, sendMessageNotification);
     setText('');
     setIsReportMode(false);
     setReportTitle('');
