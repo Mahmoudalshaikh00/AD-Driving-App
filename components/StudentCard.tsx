@@ -118,8 +118,9 @@ export default function StudentCard({ student }: StudentCardProps) {
           <User size={24} color={Colors.light.primary} />
           <NotificationBadge 
             studentId={student.id} 
+            type="message"
             size="small" 
-            style={{ top: -6, right: -6 }}
+            style={{ top: -4, right: -4 }}
           />
         </View>
         <View style={styles.infoContainer}>

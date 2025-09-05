@@ -57,7 +57,7 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
     }
   }, []);
   
-  const addMessage = useCallback(async (message: ChatMessage, senderName?: string, recipientId?: string, sendNotificationFn?: (recipientId: string, senderName: string, messagePreview: string, chatUrl?: string) => Promise<any>) => {
+  const addMessage = useCallback(async (message: ChatMessage, senderName?: string, recipientId?: string, sendNotificationFn?: (recipientId: string, senderName: string, messagePreview: string, chatUrl?: string, senderId?: string) => Promise<any>) => {
     console.log('📤 Adding message:', message);
     
     // Add to local state immediately for optimistic update
@@ -94,7 +94,8 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
           recipientId,
           senderName,
           messagePreview,
-          `/chat/${message.student_id}`
+          `/chat/${message.student_id}`,
+          message.sender_id
         );
       }
     } catch (error) {

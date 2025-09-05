@@ -372,49 +372,69 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
   }, [notifications]);
 
   // Create test notifications for demonstration
-  const createTestNotifications = useCallback(async () => {
+  const createTestNotifications = useCallback(async (students?: any[]) => {
     if (!user) return;
     
     console.log('🧪 Creating test notifications for user:', user.id);
     
-    // Create test message notification
-    await createNotification(
-      'message',
-      'normal',
-      'New message from John Doe',
-      'Hey, how are you doing with the exercises?',
-      user.id,
-      'test-sender-1',
-      { senderName: 'John Doe', messagePreview: 'Hey, how are you doing with the exercises?' },
-      '/chat/test-sender-1',
-      24
-    );
-    
-    // Create test booking notification
-    await createNotification(
-      'booking_request',
-      'high',
-      'New lesson request',
-      'Jane Smith requested a lesson for tomorrow at 3 PM',
-      user.id,
-      'test-sender-2',
-      { studentName: 'Jane Smith', lessonTime: 'tomorrow at 3 PM' },
-      '/schedule',
-      72
-    );
-    
-    // Create test evaluation notification
-    await createNotification(
-      'evaluation_completed',
-      'normal',
-      'New evaluation',
-      'Your trainer completed your evaluation. Score: 8/10',
-      user.id,
-      'test-sender-3',
-      { trainerName: 'Your trainer', score: 8 },
-      '/evaluations',
-      168
-    );
+    // If we have students, create notifications from them
+    if (students && students.length > 0) {
+      const student1 = students[0];
+      const student2 = students[1] || students[0];
+      
+      // Create test message notifications from actual students
+      await createNotification(
+        'message',
+        'normal',
+        `New message from ${student1.name}`,
+        'Hey, I have a question about today\'s lesson!',
+        user.id,
+        student1.id,
+        { senderName: student1.name, messagePreview: 'Hey, I have a question about today\'s lesson!' },
+        `/chat/${student1.id}`,
+        24
+      );
+      
+      if (student2.id !== student1.id) {
+        await createNotification(
+          'message',
+          'normal',
+          `New message from ${student2.name}`,
+          'Thank you for the feedback on my performance!',
+          user.id,
+          student2.id,
+          { senderName: student2.name, messagePreview: 'Thank you for the feedback on my performance!' },
+          `/chat/${student2.id}`,
+          24
+        );
+      }
+      
+      // Create additional message from first student
+      await createNotification(
+        'message',
+        'normal',
+        `New message from ${student1.name}`,
+        'Can we schedule an extra session this week?',
+        user.id,
+        student1.id,
+        { senderName: student1.name, messagePreview: 'Can we schedule an extra session this week?' },
+        `/chat/${student1.id}`,
+        24
+      );
+    } else {
+      // Fallback to generic test notifications
+      await createNotification(
+        'message',
+        'normal',
+        'New message from John Doe',
+        'Hey, how are you doing with the exercises?',
+        user.id,
+        'test-sender-1',
+        { senderName: 'John Doe', messagePreview: 'Hey, how are you doing with the exercises?' },
+        '/chat/test-sender-1',
+        24
+      );
+    }
     
     console.log('✅ Test notifications created');
   }, [createNotification, user]);
@@ -424,7 +444,8 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
     recipientId: string, 
     senderName: string, 
     messagePreview: string,
-    chatUrl?: string
+    chatUrl?: string,
+    senderId?: string
   ) => {
     return createNotification(
       'message',
@@ -432,7 +453,7 @@ export const [NotificationProvider, useNotificationStore] = createContextHook(()
       `New message from ${senderName}`,
       messagePreview,
       recipientId,
-      user?.id,
+      senderId || user?.id,
       { senderName, messagePreview },
       chatUrl,
       24 // Expire in 24 hours

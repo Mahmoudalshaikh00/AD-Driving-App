@@ -363,7 +363,7 @@ export default function StudentsScreen() {
           <TouchableOpacity 
             style={[styles.addButton, { backgroundColor: Colors.light.secondary, marginBottom: 8 }]} 
             onPress={async () => {
-              await createTestNotifications();
+              await createTestNotifications(students);
               Alert.alert('Success', 'Test notifications created! Check the chat tab and student cards for notification badges.');
             }}
           >

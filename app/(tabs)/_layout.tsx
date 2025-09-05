@@ -90,22 +90,29 @@ export default function TabLayout() {
             headerShown: false,
             title: "Chat",
             tabBarIcon: ({ color }) => (
-              <View>
+              <View style={{ position: 'relative' }}>
                 <MessageSquare size={24} color={color} />
                 {unreadMessageCount > 0 && (
                   <View style={{
                     position: 'absolute',
-                    top: -4,
-                    right: -8,
-                    backgroundColor: Colors.light.danger,
+                    top: -6,
+                    right: -6,
+                    backgroundColor: '#FF3B30',
                     borderRadius: 10,
                     minWidth: 20,
                     height: 20,
                     alignItems: 'center',
                     justifyContent: 'center',
                     paddingHorizontal: 4,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 2,
+                    elevation: 3,
                   }}>
-                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800', includeFontPadding: false }}>
                       {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
                     </Text>
                   </View>
@@ -183,22 +190,29 @@ export default function TabLayout() {
           headerShown: false,
           title: "Chat",
           tabBarIcon: ({ color }) => (
-            <View>
+            <View style={{ position: 'relative' }}>
               <MessageSquare size={24} color={color} />
               {unreadMessageCount > 0 && (
                 <View style={{
                   position: 'absolute',
-                  top: -4,
-                  right: -8,
-                  backgroundColor: Colors.light.danger,
+                  top: -6,
+                  right: -6,
+                  backgroundColor: '#FF3B30',
                   borderRadius: 10,
                   minWidth: 20,
                   height: 20,
                   alignItems: 'center',
                   justifyContent: 'center',
                   paddingHorizontal: 4,
+                  borderWidth: 2,
+                  borderColor: '#fff',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 2,
+                  elevation: 3,
                 }}>
-                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800', includeFontPadding: false }}>
                     {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
                   </Text>
                 </View>
