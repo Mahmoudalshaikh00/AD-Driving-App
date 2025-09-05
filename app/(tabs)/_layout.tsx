@@ -1,8 +1,9 @@
 import { Tabs } from "expo-router";
-import React from "react";
-import { Users, ClipboardList, CalendarDays, User, LogOut } from "lucide-react-native";
+import React, { useMemo } from "react";
+import { Users, ClipboardList, CalendarDays, User, LogOut, MessageSquare } from "lucide-react-native";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useAuth } from "@/hooks/useAuthStore";
+import { useNotificationStore } from "@/hooks/useNotificationStore";
 import Colors from "@/constants/colors";
 
 function CircularIcon({ children, active }: { children: React.ReactNode; active?: boolean }) {
@@ -22,6 +23,12 @@ function CircularIcon({ children, active }: { children: React.ReactNode; active?
 
 export default function TabLayout() {
   const { user, signOut } = useAuth();
+  const { unreadNotifications } = useNotificationStore();
+  
+  // Count unread message notifications
+  const unreadMessageCount = useMemo(() => {
+    return unreadNotifications.filter(n => n.type === 'message').length;
+  }, [unreadNotifications]);
 
   if (user?.role === 'student') {
     return (
@@ -76,7 +83,37 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen name="tasks" options={{ href: null }} />
-        <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
+        <Tabs.Screen 
+          name="chat" 
+          options={{ 
+            href: null, 
+            headerShown: false,
+            title: "Chat",
+            tabBarIcon: ({ color }) => (
+              <View>
+                <MessageSquare size={24} color={color} />
+                {unreadMessageCount > 0 && (
+                  <View style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -8,
+                    backgroundColor: Colors.light.danger,
+                    borderRadius: 10,
+                    minWidth: 20,
+                    height: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 4,
+                  }}>
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ),
+          }} 
+        />
         <Tabs.Screen name="evaluations" options={{ href: null, headerShown: false }} />
       </Tabs>
     );
@@ -139,7 +176,37 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen 
+        name="chat" 
+        options={{ 
+          href: null, 
+          headerShown: false,
+          title: "Chat",
+          tabBarIcon: ({ color }) => (
+            <View>
+              <MessageSquare size={24} color={color} />
+              {unreadMessageCount > 0 && (
+                <View style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -8,
+                  backgroundColor: Colors.light.danger,
+                  borderRadius: 10,
+                  minWidth: 20,
+                  height: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 4,
+                }}>
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                    {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
+        }} 
+      />
       <Tabs.Screen name="evaluations" options={{ href: null, headerShown: false }} />
     </Tabs>
   );

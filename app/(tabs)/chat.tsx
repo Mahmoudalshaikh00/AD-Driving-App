@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, Keyboard, Modal, Dimensions } from 'react-native';
 import Colors from '@/constants/colors';
-import { ImagePlus, File, Send, NotebookPen, ChevronLeft, MessageSquare } from 'lucide-react-native';
+import { ImagePlus, File, Send, NotebookPen, ChevronLeft, MessageSquare, X } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuthStore';
 import { ChatMessage, MessageAttachment } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
@@ -125,12 +125,24 @@ function ChatScreenContent() {
   const params = useLocalSearchParams<{ studentId?: string }>();
   const insets = useSafeAreaInsets();
   const { addMessage, getMessagesForChat, fetchMessages, loading: chatLoading } = useChatStore();
-  const { markAsReadByStudentAndType } = useNotificationStore();
+  const { markAsReadByStudentAndType, unreadNotifications } = useNotificationStore();
   const [text, setText] = useState<string>('');
   const [isReportMode, setIsReportMode] = useState<boolean>(false);
   const [reportTitle, setReportTitle] = useState<string>('');
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  
+  // Count unread messages per student
+  const unreadCountByStudent = useMemo(() => {
+    const counts: Record<string, number> = {};
+    unreadNotifications.forEach(n => {
+      if (n.type === 'message' && n.sender_id) {
+        counts[n.sender_id] = (counts[n.sender_id] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [unreadNotifications]);
 
   const isTrainer = user?.role === 'trainer';
   const activeStudentId = isTrainer ? selectedStudentId : (user?.id ?? '');
@@ -276,8 +288,17 @@ function ChatScreenContent() {
                 ]}
                 testID={`chat-student-chip-${item.id}`}
               >
-                <View style={styles.studentAvatar}>
-                  <Text style={styles.studentInitial}>{item.name.charAt(0).toUpperCase()}</Text>
+                <View style={styles.studentAvatarContainer}>
+                  <View style={styles.studentAvatar}>
+                    <Text style={styles.studentInitial}>{item.name.charAt(0).toUpperCase()}</Text>
+                  </View>
+                  {unreadCountByStudent[item.id] > 0 && (
+                    <View style={styles.chipBadge}>
+                      <Text style={styles.chipBadgeText}>
+                        {unreadCountByStudent[item.id] > 99 ? '99+' : unreadCountByStudent[item.id]}
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={[
                   styles.studentName,
@@ -331,7 +352,9 @@ function ChatScreenContent() {
                     {item.text && <Text style={[styles.messageText, item.sender_id !== user?.id && { color: Colors.light.text }]}>{item.text}</Text>}
                     {item.attachments?.map((att: MessageAttachment) => (
                       att.type === 'image' ? (
-                        <Image key={att.id} source={{ uri: att.url }} style={styles.messageImage} />
+                        <TouchableOpacity key={att.id} onPress={() => setZoomedImage(att.url)}>
+                          <Image source={{ uri: att.url }} style={styles.messageImage} />
+                        </TouchableOpacity>
                       ) : (
                         <View key={att.id} style={styles.fileAttachment}>
                           <File size={16} color={item.sender_id === user?.id ? '#fff' : Colors.light.primary} />
@@ -409,6 +432,30 @@ function ChatScreenContent() {
           </>
         )}
       </View>
+      
+      {/* Image Zoom Modal */}
+      <Modal
+        visible={!!zoomedImage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setZoomedImage(null)}
+      >
+        <View style={styles.imageZoomOverlay}>
+          <TouchableOpacity 
+            style={styles.imageZoomClose} 
+            onPress={() => setZoomedImage(null)}
+          >
+            <X size={28} color="#fff" />
+          </TouchableOpacity>
+          {zoomedImage && (
+            <Image 
+              source={{ uri: zoomedImage }} 
+              style={styles.zoomedImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -495,6 +542,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f1ff',
     borderColor: Colors.light.primary,
   },
+  studentAvatarContainer: {
+    marginBottom: 6,
+  },
   studentAvatar: {
     width: 36,
     height: 36,
@@ -502,7 +552,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+  },
+  chipBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.light.danger,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.light.cardBackground,
+  },
+  chipBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   studentInitial: {
     color: '#fff',
@@ -741,5 +809,24 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: Colors.light.textLight,
     opacity: 0.5,
+  },
+  imageZoomOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageZoomClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 1,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+  },
+  zoomedImage: {
+    width: Dimensions.get('window').width - 40,
+    height: Dimensions.get('window').height - 200,
   },
 });
