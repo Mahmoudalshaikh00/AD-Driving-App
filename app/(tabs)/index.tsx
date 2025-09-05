@@ -359,17 +359,6 @@ export default function StudentsScreen() {
             <Plus size={20} color="#fff" />
             <Text style={styles.addButtonText}>Add Student</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.addButton, { backgroundColor: Colors.light.secondary, marginBottom: 8 }]} 
-            onPress={async () => {
-              await createTestNotifications(students);
-              Alert.alert('Success', 'Test notifications created! Check the chat tab and student cards for notification badges.');
-            }}
-          >
-            <MessageSquare size={20} color="#fff" />
-            <Text style={styles.addButtonText}>Create Test Notifications</Text>
-          </TouchableOpacity>
         </View>
       )}
 
