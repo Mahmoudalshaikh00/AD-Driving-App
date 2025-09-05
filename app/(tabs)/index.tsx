@@ -120,14 +120,19 @@ export default function StudentsScreen() {
       });
     }, [students.length]);
 
-    const StatCard = ({ icon, title, value, color = Colors.light.primary, subtitle }: {
+    const StatCard = ({ icon, title, value, color = Colors.light.primary, subtitle, onPress }: {
       icon: React.ReactNode;
       title: string;
       value: number | string;
       color?: string;
       subtitle?: string;
+      onPress?: () => void;
     }) => (
-      <View style={[styles.statCard, { borderLeftColor: color }]}>
+      <TouchableOpacity 
+        style={[styles.statCard, { borderLeftColor: color }]}
+        onPress={onPress}
+        disabled={!onPress}
+      >
         <View style={styles.statHeader}>
           <View style={[styles.statIcon, { backgroundColor: color + '15' }]}>
             {icon}
@@ -138,7 +143,7 @@ export default function StudentsScreen() {
             {subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
 
     const QuickAction = ({ icon, title, onPress, color = Colors.light.primary }: {
@@ -187,36 +192,42 @@ export default function StudentsScreen() {
                       title="Total Users"
                       value={adminStats.totalUsers}
                       subtitle="Active accounts"
+                      onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
                       icon={<User size={20} color="#10b981" />}
                       title="Trainers"
                       value={adminStats.totalTrainers}
                       color="#10b981"
+                      onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
                       icon={<Users size={20} color="#3b82f6" />}
                       title="Students"
                       value={adminStats.totalStudents}
                       color="#3b82f6"
+                      onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
                       icon={<Clock size={20} color="#f59e0b" />}
                       title="Pending Approvals"
                       value={adminStats.pendingApprovals}
                       color="#f59e0b"
+                      onPress={() => router.push('/admin/approvals')}
                     />
                     <StatCard
                       icon={<XCircle size={20} color="#ef4444" />}
                       title="Restricted Users"
                       value={adminStats.restrictedUsers}
                       color="#ef4444"
+                      onPress={() => router.push('/admin/users')}
                     />
                     <StatCard
                       icon={<AlertTriangle size={20} color="#f97316" />}
                       title="Reports"
                       value={adminStats.totalReports}
                       color="#f97316"
+                      onPress={() => router.push('/admin/reports')}
                     />
                     <StatCard
                       icon={<CalendarDays size={20} color="#8b5cf6" />}
@@ -243,24 +254,24 @@ export default function StudentsScreen() {
                     <QuickAction
                       icon={<Users size={24} color={Colors.light.primary} />}
                       title="Manage Users"
-                      onPress={() => router.push('/evaluations')}
+                      onPress={() => router.push('/admin/users')}
                     />
                     <QuickAction
                       icon={<AlertTriangle size={24} color="#f97316" />}
                       title="View Reports"
-                      onPress={() => router.push('/tasks')}
+                      onPress={() => router.push('/admin/reports')}
                       color="#f97316"
                     />
                     <QuickAction
                       icon={<Settings size={24} color="#6b7280" />}
                       title="Settings"
-                      onPress={() => router.push('/schedule')}
+                      onPress={() => router.push('/admin/settings')}
                       color="#6b7280"
                     />
                     <QuickAction
                       icon={<CheckCircle size={24} color="#10b981" />}
                       title="Approvals"
-                      onPress={() => Alert.alert('Approvals', 'Manage pending trainer approvals')}
+                      onPress={() => router.push('/admin/approvals')}
                       color="#10b981"
                     />
                   </View>
