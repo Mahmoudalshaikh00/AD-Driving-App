@@ -179,7 +179,7 @@ export default function StudentDetailsScreen() {
           testID="student-chat-button"
         >
           <View style={styles.actionCardIcon}>
-            <MessageSquare size={14} color={Colors.light.primary} />
+            <MessageSquare size={20} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="message" 
@@ -199,7 +199,7 @@ export default function StudentDetailsScreen() {
           testID="student-evaluations-button"
         >
           <View style={styles.actionCardIcon}>
-            <ClipboardList size={14} color={Colors.light.primary} />
+            <ClipboardList size={20} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="evaluation" 
@@ -219,7 +219,7 @@ export default function StudentDetailsScreen() {
           testID="student-schedule-button"
         >
           <View style={styles.actionCardIcon}>
-            <Calendar size={14} color={Colors.light.primary} />
+            <Calendar size={20} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="schedule" 
@@ -571,32 +571,35 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    flexDirection: 'column',
+    height: 60,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    paddingHorizontal: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   actionCardIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: Colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 3,
+    marginRight: 8,
     position: 'relative',
   },
   actionCardLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: Colors.light.text,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.light.primary,
     flexShrink: 1,
   },
   actionCardDescription: {
