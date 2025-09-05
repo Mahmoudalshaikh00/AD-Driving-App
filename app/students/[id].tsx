@@ -281,7 +281,7 @@ export default function StudentDetailsScreen() {
             testID={`student-task-${item.id}`}
           >
             <View style={styles.taskIconContainer}>
-              <ClipboardList size={16} color={Colors.light.primary} />
+              <ClipboardList size={20} color={Colors.light.primary} />
             </View>
             <View style={styles.taskInfo}>
               <View style={styles.taskHeader}>
@@ -492,23 +492,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 8,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   taskIconContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   taskInfo: {
     flex: 1,
@@ -517,26 +517,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   taskName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: Colors.light.text,
     flex: 1,
   },
   taskCompletion: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.light.primary,
     backgroundColor: Colors.light.background,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginLeft: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginLeft: 8,
   },
   taskCapital: {
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.light.textLight,
     fontWeight: '500',
   },
