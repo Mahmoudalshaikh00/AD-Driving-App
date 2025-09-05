@@ -143,7 +143,7 @@ export default function StudentDetailsScreen() {
       <View style={styles.container}>
       <View style={styles.studentInfoCard}>
         <View style={styles.avatarContainer}>
-          <User size={18} color={Colors.light.primary} />
+          <User size={24} color={Colors.light.primary} />
         </View>
         <View style={styles.studentDetails}>
           <View style={styles.studentHeaderRow}>
@@ -179,7 +179,7 @@ export default function StudentDetailsScreen() {
           testID="student-chat-button"
         >
           <View style={styles.actionCardIcon}>
-            <MessageSquare size={16} color={Colors.light.primary} />
+            <MessageSquare size={20} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="message" 
@@ -199,7 +199,7 @@ export default function StudentDetailsScreen() {
           testID="student-evaluations-button"
         >
           <View style={styles.actionCardIcon}>
-            <ClipboardList size={16} color={Colors.light.primary} />
+            <ClipboardList size={20} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="evaluation" 
@@ -219,7 +219,7 @@ export default function StudentDetailsScreen() {
           testID="student-schedule-button"
         >
           <View style={styles.actionCardIcon}>
-            <Calendar size={16} color={Colors.light.primary} />
+            <Calendar size={20} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="schedule" 
@@ -336,23 +336,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 14,
+    padding: 14,
     marginBottom: 12,
+    height: 80,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   avatarContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   studentDetails: {
     flex: 1,
@@ -388,14 +389,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.light.text,
-    marginBottom: 1,
+    marginBottom: 2,
   },
   contactInfo: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.light.textLight,
   },
   trainerInfo: {
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.light.textLight,
     marginTop: 2,
   },
@@ -435,33 +436,38 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   capitalButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: Colors.light.background,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: Colors.light.cardBackground,
     alignItems: 'center',
-    minWidth: 70,
+    minWidth: 100,
+    height: 80,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   capitalButtonActive: {
     backgroundColor: Colors.light.primary,
     borderColor: Colors.light.primary,
   },
   capitalButtonText: {
-    fontSize: 11,
-    color: Colors.light.textLight,
-    fontWeight: '500',
+    fontSize: 16,
+    color: Colors.light.text,
+    fontWeight: '600',
   },
   capitalButtonTextActive: {
     color: '#fff',
     fontWeight: '600',
   },
   capitalPercentage: {
-    fontSize: 9,
+    fontSize: 13,
     color: Colors.light.textLight,
     fontWeight: '500',
-    marginTop: 1,
+    marginTop: 4,
   },
   capitalPercentageActive: {
     color: '#fff',
@@ -567,35 +573,33 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    height: 48,
-    flexDirection: 'row',
+    height: 80,
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    paddingHorizontal: 8,
+    borderRadius: 14,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   actionCardIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 6,
+    marginBottom: 4,
     position: 'relative',
   },
   actionCardLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.light.primary,
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.light.text,
     flexShrink: 1,
   },
   actionCardDescription: {
