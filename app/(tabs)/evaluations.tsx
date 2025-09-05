@@ -256,18 +256,25 @@ export default function EvaluationsScreen() {
     setLoadingUsers(true);
     try {
       const { supabase } = await import('@/lib/supabase');
-      const { data, error } = await supabase
+      const queryBuilder = supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
       
+      // Convert thenable to Promise
+      const result = await new Promise<any>((resolve) => {
+        queryBuilder.then(resolve);
+      });
+      
+      const { data, error } = result;
+      
       if (!error && data) {
         // Add mock trainers for demo
         const mockTrainers = [
-          { id: 'trainer-1', name: 'John Smith', email: 'john@example.com', role: 'trainer', created_at: '2024-01-15', is_approved: true, is_restricted: false },
-          { id: 'trainer-2', name: 'Sarah Johnson', email: 'sarah@example.com', role: 'trainer', created_at: '2024-01-20', is_approved: true, is_restricted: false },
-          { id: 'trainer-3', name: 'Mike Wilson', email: 'mike@example.com', role: 'trainer', created_at: '2024-02-01', is_approved: false, is_restricted: false },
-          { id: 'trainer-4', name: 'Lisa Brown', email: 'lisa@example.com', role: 'trainer', created_at: '2024-02-10', is_approved: true, is_restricted: true },
+          { id: 'mock-trainer-1', name: 'John Smith', email: 'john@example.com', role: 'trainer', created_at: '2024-01-15', is_approved: true, is_restricted: false },
+          { id: 'mock-trainer-2', name: 'Sarah Johnson', email: 'sarah@example.com', role: 'trainer', created_at: '2024-01-20', is_approved: true, is_restricted: false },
+          { id: 'mock-trainer-3', name: 'Mike Wilson', email: 'mike@example.com', role: 'trainer', created_at: '2024-02-01', is_approved: false, is_restricted: false },
+          { id: 'mock-trainer-4', name: 'Lisa Brown', email: 'lisa@example.com', role: 'trainer', created_at: '2024-02-10', is_approved: true, is_restricted: true },
         ];
         setAllUsers([...data, ...mockTrainers]);
       }
