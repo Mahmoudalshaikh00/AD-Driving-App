@@ -143,7 +143,7 @@ export default function StudentDetailsScreen() {
       <View style={styles.container}>
       <View style={styles.studentInfoCard}>
         <View style={styles.avatarContainer}>
-          <User size={24} color={Colors.light.primary} />
+          <User size={18} color={Colors.light.primary} />
         </View>
         <View style={styles.studentDetails}>
           <View style={styles.studentHeaderRow}>
@@ -156,7 +156,7 @@ export default function StudentDetailsScreen() {
             </View>
             <View style={styles.studentHeaderRight}>
               <View style={styles.circularWrapper}>
-                <CircularProgress percent={overallPercentage} animatedValue={circleAnim} size={88} strokeWidth={8} />
+                <CircularProgress percent={overallPercentage} animatedValue={circleAnim} size={64} strokeWidth={6} />
                 <View style={styles.circularCenter} pointerEvents="none">
                   <Text style={styles.circularPercentText}>{overallPercentage}%</Text>
                 </View>
@@ -179,7 +179,7 @@ export default function StudentDetailsScreen() {
           testID="student-chat-button"
         >
           <View style={styles.actionCardIcon}>
-            <MessageSquare size={20} color={Colors.light.primary} />
+            <MessageSquare size={16} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="message" 
@@ -199,7 +199,7 @@ export default function StudentDetailsScreen() {
           testID="student-evaluations-button"
         >
           <View style={styles.actionCardIcon}>
-            <ClipboardList size={20} color={Colors.light.primary} />
+            <ClipboardList size={16} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="evaluation" 
@@ -219,7 +219,7 @@ export default function StudentDetailsScreen() {
           testID="student-schedule-button"
         >
           <View style={styles.actionCardIcon}>
-            <Calendar size={20} color={Colors.light.primary} />
+            <Calendar size={16} color={Colors.light.primary} />
             <NotificationBadge 
               studentId={id} 
               type="schedule" 
@@ -281,7 +281,7 @@ export default function StudentDetailsScreen() {
             testID={`student-task-${item.id}`}
           >
             <View style={styles.taskIconContainer}>
-              <ClipboardList size={20} color={Colors.light.primary} />
+              <ClipboardList size={16} color={Colors.light.primary} />
             </View>
             <View style={styles.taskInfo}>
               <View style={styles.taskHeader}>
@@ -313,8 +313,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
-    padding: 16,
-    paddingTop: 12,
+    padding: 12,
+    paddingTop: 10,
   },
   loadingContainer: {
     flex: 1,
@@ -336,23 +336,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   studentDetails: {
     flex: 1,
@@ -385,19 +385,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   studentName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: Colors.light.text,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   contactInfo: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.light.textLight,
   },
   trainerInfo: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.light.textLight,
-    marginTop: 4,
+    marginTop: 2,
   },
   actionRow: {
     flexDirection: 'row',
@@ -427,29 +427,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   capitalSelector: {
-    marginBottom: 16,
-    marginTop: 4,
+    marginBottom: 12,
+    marginTop: 2,
   },
   capitalScrollContent: {
     paddingHorizontal: 4,
     gap: 8,
   },
   capitalButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     backgroundColor: Colors.light.background,
     borderWidth: 1,
     borderColor: Colors.light.border,
     alignItems: 'center',
-    minWidth: 80,
+    minWidth: 70,
   },
   capitalButtonActive: {
     backgroundColor: Colors.light.primary,
     borderColor: Colors.light.primary,
   },
   capitalButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.light.textLight,
     fontWeight: '500',
   },
@@ -458,18 +458,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   capitalPercentage: {
-    fontSize: 10,
+    fontSize: 9,
     color: Colors.light.textLight,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: 1,
   },
   capitalPercentageActive: {
     color: '#fff',
     fontWeight: '600',
   },
   circularWrapper: {
-    width: 88,
-    height: 88,
+    width: 64,
+    height: 64,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   circularPercentText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '800',
     color: Colors.light.primary,
   },
@@ -492,23 +492,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 2,
     elevation: 1,
   },
   taskIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   taskInfo: {
     flex: 1,
@@ -520,23 +520,23 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   taskName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
     flex: 1,
   },
   taskCompletion: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Colors.light.primary,
     backgroundColor: Colors.light.background,
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: 8,
+    borderRadius: 6,
+    marginLeft: 6,
   },
   taskCapital: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.light.textLight,
     fontWeight: '500',
   },
@@ -559,23 +559,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   actionSection: {
-    marginBottom: 16,
+    marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
     overflow: 'hidden',
   },
   actionCard: {
     flex: 1,
-    height: 60,
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 14,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.light.border,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -583,17 +583,17 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   actionCardIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: Colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 6,
     position: 'relative',
   },
   actionCardLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.light.primary,
     flexShrink: 1,
