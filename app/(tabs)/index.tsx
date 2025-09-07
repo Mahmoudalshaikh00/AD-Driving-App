@@ -501,8 +501,8 @@ export default function StudentsScreen() {
                       const ev = myEvaluations.find((e: any) => e.taskId === item.id && e.subtaskId === st.id);
                       const val = ev?.rating ?? 0;
                       return (
-                        <View key={st.id} style={styles.subtaskRow}>
-                          <Text style={styles.subtaskName}>{st.name}</Text>
+                        <View key={st.id} style={styles.SubTaskRow}>
+                          <Text style={styles.SubTaskName}>{st.name}</Text>
                           <View pointerEvents="none">
                             <RatingInput value={val} onChange={() => {}} disabled size="small" />
                           </View>
@@ -816,8 +816,8 @@ const styles = StyleSheet.create({
   notesBox: { backgroundColor: Colors.light.background, borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: Colors.light.primary },
   notesTitle: { fontSize: 12, color: Colors.light.textLight, fontWeight: '600', marginBottom: 4 },
   notesText: { fontSize: 14, color: Colors.light.text, lineHeight: 20 },
-  subtaskRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.light.background, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
-  subtaskName: { fontSize: 14, color: Colors.light.text, flex: 1, marginRight: 8 },
+  SubTaskRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.light.background, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  SubTaskName: { fontSize: 14, color: Colors.light.text, flex: 1, marginRight: 8 },
   profileHeader: {
     alignItems: 'center',
     marginBottom: 16,

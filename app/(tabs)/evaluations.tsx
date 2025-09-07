@@ -197,8 +197,8 @@ const StudentView = React.memo(function StudentView({ userId, tasks, subtasks, e
                         const ev = myEvaluations.find(e => e.taskId === item.id && e.subtaskId === st.id);
                         const val = ev?.rating ?? 0;
                         return (
-                          <View key={st.id} style={styles.subtaskRow}>
-                            <Text style={styles.subtaskName}>{st.name}</Text>
+                          <View key={st.id} style={styles.SubTaskRow}>
+                            <Text style={styles.SubTaskName}>{st.name}</Text>
                             <RatingInput value={val} onChange={() => {}} disabled size="small" />
                           </View>
                         );
@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     lineHeight: 20,
   },
-  subtaskRow: {
+  SubTaskRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  subtaskName: {
+  SubTaskName: {
     fontSize: 14,
     color: Colors.light.text,
     flex: 1,

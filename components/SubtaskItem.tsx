@@ -32,7 +32,7 @@ export default function SubTaskItem({
   return (
     <View 
       style={styles.container}
-      testID={`subTask-item-${subTask.id}`}
+      testID={`SubTask-item-${subTask.id}`}
     >
       <View style={styles.infoContainer}>
         <View style={styles.nameContainer}>
