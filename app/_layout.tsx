@@ -45,6 +45,7 @@ function RootLayoutNav() {
       <Stack.Screen name="admin/reports" options={{ title: "Reports" }} />
       <Stack.Screen name="admin/settings" options={{ title: "Admin Settings" }} />
       <Stack.Screen name="admin/approvals" options={{ title: "Approvals" }} />
+      <Stack.Screen name="admin/tasks" options={{ title: "Task Manage" }} />
       <Stack.Screen name="admin/discount-codes" options={{ title: "Discount Codes" }} />
       <Stack.Screen name="subscription" options={{ title: "Subscription Plans" }} />
       <Stack.Screen name="+not-found" options={{ title: "Oops!" }} />
