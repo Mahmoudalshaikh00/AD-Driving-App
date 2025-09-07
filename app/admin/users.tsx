@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
-import { Users, Search, Edit3, Trash2, Shield, User, Phone, CheckCircle, XCircle, AlertTriangle, Save, X, Eye, EyeOff } from 'lucide-react-native';
+import { Users, Edit3, Trash2, Shield, User, Phone, CheckCircle, XCircle, AlertTriangle, Save, X, Eye, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
 
@@ -30,7 +30,7 @@ export default function AdminUsersScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { refreshStudents } = useStudentStore();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<UserStatus | 'all'>('all');
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -465,16 +465,7 @@ export default function AdminUsersScreen() {
         <Text style={styles.title}>Manage Users</Text>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Search size={20} color={Colors.light.textLight} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search users..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor={Colors.light.textLight}
-        />
-      </View>
+
 
       <View style={styles.filtersContainer}>
         <Text style={styles.filterLabel}>Role:</Text>
@@ -647,26 +638,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     flex: 1,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-    color: Colors.light.text,
-  },
+
   filtersContainer: {
     marginBottom: 16,
   },
