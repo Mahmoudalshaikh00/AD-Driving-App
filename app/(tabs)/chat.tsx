@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
 import { useNotificationStore } from '@/hooks/useNotificationStore';
+import { Stack } from 'expo-router';
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -238,12 +239,14 @@ function ChatScreenContent() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="chat-header">
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <KeyboardAvoidingView 
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="chat-header">
         <TouchableOpacity style={styles.backBtn} onPress={() => {
           // For trainer, navigate to student details when studentId is present
           if (isTrainer && params.studentId) {
@@ -458,7 +461,8 @@ function ChatScreenContent() {
           )}
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
