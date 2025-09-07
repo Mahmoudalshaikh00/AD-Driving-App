@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Plus, Search } from 'lucide-react-native';
+import { Plus, Search, Eye, EyeOff } from 'lucide-react-native';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useAuth } from '@/hooks/useAuthStore';
 import TaskCard from '@/components/TaskCard';
@@ -8,21 +8,29 @@ import Colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TasksScreen() {
-  const { tasks, loading, addTask, getTasksByInstructor, getVisibleTasksForInstructor } = useTaskStore();
+  const { tasks, loading, addTask, getTasksByInstructor, getVisibleTasksForInstructor, getDefaultTasks } = useTaskStore();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskSection, setNewTaskSection] = useState<1 | 2 | 3 | 4>(1);
+  const [showHiddenTasks, setShowHiddenTasks] = useState(false);
 
   // Filter tasks based on user role and instructor
   const availableTasks = useMemo(() => {
     if (!user) return [];
     
     if (user.role === 'instructor') {
-      // Instructors see their own tasks + visible default tasks
-      return getVisibleTasksForInstructor(user.id);
+      if (showHiddenTasks) {
+        // Show all tasks (including hidden ones) when toggle is on
+        const instructorTasks = getTasksByInstructor(user.id);
+        const defaultTasks = getDefaultTasks();
+        return [...defaultTasks, ...instructorTasks];
+      } else {
+        // Show only visible tasks when toggle is off
+        return getVisibleTasksForInstructor(user.id);
+      }
     } else if (user.role === 'admin') {
       // Admin sees all tasks
       return tasks;
@@ -33,7 +41,7 @@ export default function TasksScreen() {
       const defaultTasks = tasks.filter(task => !task.instructor_id);
       return [...defaultTasks, ...instructorTasks];
     }
-  }, [tasks, user, getTasksByInstructor, getVisibleTasksForInstructor]);
+  }, [tasks, user, getTasksByInstructor, getVisibleTasksForInstructor, getDefaultTasks, showHiddenTasks]);
 
   const filteredTasks = availableTasks.filter(task =>
     task.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,6 +80,22 @@ export default function TasksScreen() {
           placeholderTextColor={Colors.light.textLight}
         />
       </View>
+
+      {user?.role === 'instructor' && (
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={() => setShowHiddenTasks(!showHiddenTasks)}
+        >
+          {showHiddenTasks ? (
+            <EyeOff size={20} color={Colors.light.primary} />
+          ) : (
+            <Eye size={20} color={Colors.light.primary} />
+          )}
+          <Text style={styles.toggleButtonText}>
+            {showHiddenTasks ? 'Hide Hidden Tasks' : 'Show Hidden Tasks'}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {user?.role !== 'student' && (
         !isAddingTask ? (
@@ -295,5 +319,26 @@ const styles = StyleSheet.create({
   },
   sectionOptionTextActive: {
     color: '#fff',
+  },
+  toggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  toggleButtonText: {
+    color: Colors.light.primary,
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
   },
 });
