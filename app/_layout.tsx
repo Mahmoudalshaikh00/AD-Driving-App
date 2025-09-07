@@ -11,6 +11,7 @@ import { EvaluationProvider } from "@/hooks/useEvaluationStore";
 import { ScheduleProvider } from "@/hooks/useScheduleStore";
 import { AuthProvider, useAuth } from "@/hooks/useAuthStore";
 import { NotificationProvider } from "@/hooks/useNotificationStore";
+import { SubscriptionProvider } from "@/hooks/useSubscriptionStore";
 import LoginScreen from "@/components/LoginScreen";
 import Colors from "@/constants/colors";
 
@@ -44,6 +45,8 @@ function RootLayoutNav() {
       <Stack.Screen name="admin/reports" options={{ title: "Reports" }} />
       <Stack.Screen name="admin/settings" options={{ title: "Admin Settings" }} />
       <Stack.Screen name="admin/approvals" options={{ title: "Approvals" }} />
+      <Stack.Screen name="admin/discount-codes" options={{ title: "Discount Codes" }} />
+      <Stack.Screen name="subscription" options={{ title: "Subscription Plans" }} />
       <Stack.Screen name="+not-found" options={{ title: "Oops!" }} />
     </Stack>
   );
@@ -70,17 +73,19 @@ function AuthenticatedApp() {
   }
 
   return (
-    <NotificationProvider>
-      <StudentProvider>
-        <TaskProvider>
-          <EvaluationProvider>
-            <ScheduleProvider>
-              <RootLayoutNav />
-            </ScheduleProvider>
-          </EvaluationProvider>
-        </TaskProvider>
-      </StudentProvider>
-    </NotificationProvider>
+    <SubscriptionProvider>
+      <NotificationProvider>
+        <StudentProvider>
+          <TaskProvider>
+            <EvaluationProvider>
+              <ScheduleProvider>
+                <RootLayoutNav />
+              </ScheduleProvider>
+            </EvaluationProvider>
+          </TaskProvider>
+        </StudentProvider>
+      </NotificationProvider>
+    </SubscriptionProvider>
   );
 }
 

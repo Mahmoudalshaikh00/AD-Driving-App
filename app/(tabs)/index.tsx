@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform, Animated, Easing } from 'react-native';
-import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react-native';
+import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
@@ -278,6 +278,12 @@ export default function StudentsScreen() {
                       title="Settings"
                       onPress={() => router.push('/admin/settings')}
                       color="#6b7280"
+                    />
+                    <QuickAction
+                      icon={<Tag size={24} color="#f59e0b" />}
+                      title="Discount Codes"
+                      onPress={() => router.push('/admin/discount-codes')}
+                      color="#f59e0b"
                     />
                   </View>
                 </View>

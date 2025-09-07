@@ -18,5 +18,8 @@ export default {
     border: "#dfe6e9",
     tabIconDefault: "#bdc3c7",
     tabIconSelected: primaryColor,
+    success: secondaryColor,
+    error: dangerColor,
+    warning: accentColor,
   }
 };

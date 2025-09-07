@@ -195,3 +195,58 @@ export interface UserReport {
   resolved_by?: string;
   resolution_notes?: string;
 }
+
+export type SubscriptionPlan = 'free' | 'basic' | 'premium' | 'enterprise';
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending';
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  start_date: string;
+  end_date: string;
+  auto_renew: boolean;
+  price: number;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiscountCode {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  max_uses: number;
+  current_uses: number;
+  valid_from: string;
+  valid_until: string;
+  applicable_plans: SubscriptionPlan[];
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  user_id: string;
+  type: 'card' | 'paypal' | 'apple_pay' | 'google_pay';
+  last_four?: string;
+  brand?: string;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface Transaction {
+  id: string;
+  user_id: string;
+  subscription_id: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  payment_method_id: string;
+  discount_code_id?: string;
+  discount_amount?: number;
+  created_at: string;
+}

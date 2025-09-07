@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Users, ClipboardList, CalendarDays, User, LogOut, Shield, Settings, AlertTriangle, BarChart3 } from "lucide-react-native";
+import { Users, ClipboardList, CalendarDays, User, LogOut, Shield, Settings, AlertTriangle, BarChart3, UserCircle } from "lucide-react-native";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useAuth } from "@/hooks/useAuthStore";
 
@@ -206,6 +206,17 @@ export default function TabLayout() {
         options={{
           title: "Tasks",
           tabBarIcon: ({ color }) => <ClipboardList size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <CircularIcon active={focused}>
+              <UserCircle size={18} color={focused ? '#fff' : color} />
+            </CircularIcon>
+          ),
         }}
       />
 
