@@ -1,59 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform } from 'react-native';
-import { Plus, Search, Shield, AlertTriangle, CheckCircle, XCircle, Clock, User, ChevronLeft, LogOut } from 'lucide-react-native';
+import { Plus, Search, Shield, AlertTriangle, CheckCircle, XCircle, Clock, User, ChevronLeft, LogOut, Users, Phone, Edit3, Trash2 } from 'lucide-react-native';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useAuth } from '@/hooks/useAuthStore';
+import { useStudentStore } from '@/hooks/useStudentStore';
 import TaskCard from '@/components/TaskCard';
 import Colors from '@/constants/colors';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { supabase } from '@/lib/supabase';
+
+type UserRole = 'admin' | 'instructor' | 'student';
+type UserStatus = 'active' | 'restricted' | 'pending';
+
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  createdAt: string;
+  lastActive?: string;
+  phone?: string;
+  instructor_id?: string;
+  is_approved?: boolean;
+  is_restricted?: boolean;
+  password?: string;
+}
 
 export default function TasksScreen() {
   const { tasks, loading, addTask } = useTaskStore();
   const { user, signOut } = useAuth();
+  const { refreshStudents } = useStudentStore();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskSection, setNewTaskSection] = useState<1 | 2 | 3 | 4>(1);
   
-  // Mock reports data for admin
-  const [reports] = useState([
-    {
-      id: 'report-1',
-      reported_user_id: 'trainer-1',
-      reporter_id: 'student-1',
-      reason: 'Inappropriate behavior',
-      description: 'The trainer was unprofessional during the lesson and made inappropriate comments.',
-      status: 'pending' as const,
-      created_at: '2024-01-20T10:30:00Z',
-      reportedUser: { name: 'John Smith', email: 'john@example.com', role: 'trainer' },
-      reporter: { name: 'Alice Johnson', email: 'alice@example.com', role: 'student' }
-    },
-    {
-      id: 'report-2',
-      reported_user_id: 'student-2',
-      reporter_id: 'trainer-2',
-      reason: 'No-show',
-      description: 'Student did not show up for scheduled lesson without notice.',
-      status: 'reviewed' as const,
-      created_at: '2024-01-18T14:15:00Z',
-      resolved_at: '2024-01-19T09:00:00Z',
-      resolution_notes: 'Contacted student, rescheduled lesson.',
-      reportedUser: { name: 'Bob Wilson', email: 'bob@example.com', role: 'student' },
-      reporter: { name: 'Sarah Johnson', email: 'sarah@example.com', role: 'trainer' }
-    }
-  ]);
-  
-  const handleReportAction = (reportId: string, action: 'review' | 'resolve') => {
-    // Mock implementation - in real app, this would call API
-    console.log(`Report ${reportId} marked as ${action}`);
-  };
+  const loadUsers = useCallback(async () => {
+    try {
+      console.log('🔄 Loading all users from database...');
+      
+      // Fetch all users from database
+      const result = supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>;
+      const { data: dbUsers, error } = await result;
 
-  const filteredTasks = tasks.filter(task => 
-    task.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      if (error) {
+        console.error('❌ Error fetching users:', error);
+        throw error;
+      }
+
+      console.log('✅ Fetched users from database:', dbUsers?.length || 0);
+
+      // Add mock admin if not exists
+      const adminExists = dbUsers?.some((u: any) => u.email === 'mahmoud200276@gmail.com');
+      const mockAdmin: AdminUser = {
+        id: 'admin-001',
+        name: 'System Administrator',
+        email: 'mahmoud200276@gmail.com',
+        role: 'admin',
+        status: 'active',
+        createdAt: '2024-01-15T00:00:00Z',
+        lastActive: new Date().toISOString(),
+        is_approved: true,
+        is_restricted: false
+      };
+
+      // Add mock instructors if database is empty
+      const mockInstructors: AdminUser[] = [
+        {
+          id: 'instructor-001',
+          name: 'John Smith',
+          email: 'john.smith@example.com',
+          role: 'instructor',
+          status: 'active',
+          createdAt: '2024-01-10T00:00:00Z',
+          lastActive: '2024-01-19T00:00:00Z',
+          phone: '+1234567890',
+          is_approved: true,
+          is_restricted: false
+        },
+        {
+          id: 'instructor-002',
+          name: 'Sarah Johnson',
+          email: 'sarah.j@example.com',
+          role: 'instructor',
+          status: 'active',
+          createdAt: '2024-01-18T00:00:00Z',
+          phone: '+1234567891',
+          is_approved: true,
+          is_restricted: false
+        },
+        {
+          id: 'instructor-003',
+          name: 'Mike Wilson',
+          email: 'mike.w@example.com',
+          role: 'instructor',
+          status: 'active',
+          createdAt: '2024-01-05T00:00:00Z',
+          lastActive: '2024-01-15T00:00:00Z',
+          phone: '+1234567892',
+          is_approved: true,
+          is_restricted: false
+        }
+      ];
+
+      // Convert database users to AdminUser format
+      const formattedUsers: AdminUser[] = (dbUsers || []).map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role as UserRole,
+        status: user.is_restricted ? 'restricted' : (user.is_approved ? 'active' : 'pending'),
+        createdAt: user.created_at || new Date().toISOString(),
+        lastActive: user.updated_at,
+        phone: user.phone,
+        instructor_id: user.instructor_id,
+        is_approved: user.is_approved,
+        is_restricted: user.is_restricted,
+        password: user.password
+      }));
+
+      // Combine all users
+      const allUsers = [
+        ...(!adminExists ? [mockAdmin] : []),
+        ...(formattedUsers.length === 0 ? mockInstructors : []),
+        ...formattedUsers
+      ];
+
+      setUsers(allUsers);
+      console.log('📊 Users loaded successfully:', allUsers.length);
+    } catch (error) {
+      console.error('🚨 Error loading users:', error);
+      Alert.alert('Error', 'Failed to load users. Please try again.');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (user.phone && user.phone.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+    return matchesSearch && matchesRole;
+  });
 
   const handleAddTask = () => {
     if (newTaskName.trim()) {
@@ -96,6 +196,73 @@ export default function TasksScreen() {
     );
   };
 
+  const getStatusColor = (status: UserStatus) => {
+    switch (status) {
+      case 'active': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'restricted': return '#ef4444';
+      default: return Colors.light.textLight;
+    }
+  };
+
+  const getStatusIcon = (status: UserStatus) => {
+    switch (status) {
+      case 'active': return <CheckCircle size={16} color="#10b981" />;
+      case 'pending': return <AlertTriangle size={16} color="#f59e0b" />;
+      case 'restricted': return <XCircle size={16} color="#ef4444" />;
+    }
+  };
+
+  const getRoleIcon = (role: UserRole) => {
+    switch (role) {
+      case 'admin': return <Shield size={20} color={Colors.light.primary} />;
+      case 'instructor': return <User size={20} color="#10b981" />;
+      case 'student': return <Users size={20} color="#3b82f6" />;
+    }
+  };
+
+  const UserCard = ({ user }: { user: AdminUser }) => (
+    <View style={styles.userCard}>
+      <View style={styles.userHeader}>
+        <View style={styles.userIcon}>
+          {getRoleIcon(user.role)}
+        </View>
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
+          <View style={styles.userMeta}>
+            <Text style={[styles.userRole, { color: user.role === 'admin' ? Colors.light.primary : user.role === 'instructor' ? '#10b981' : '#3b82f6' }]}>
+              {user.role.toUpperCase()}
+            </Text>
+            <View style={styles.statusContainer}>
+              {getStatusIcon(user.status)}
+              <Text style={[styles.statusText, { color: getStatusColor(user.status) }]}>
+                {user.status.toUpperCase()}
+              </Text>
+            </View>
+          </View>
+          {user.phone && (
+            <View style={styles.phoneContainer}>
+              <Phone size={12} color={Colors.light.textLight} />
+              <Text style={styles.phoneText}>{user.phone}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+
+  const FilterButton = ({ title, isSelected, onPress }: { title: string; isSelected: boolean; onPress: () => void }) => (
+    <TouchableOpacity
+      style={[styles.filterButton, isSelected && styles.filterButtonActive]}
+      onPress={onPress}
+    >
+      <Text style={[styles.filterButtonText, isSelected && styles.filterButtonTextActive]}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -103,144 +270,14 @@ export default function TasksScreen() {
       </View>
     );
   }
-  
-  // Admin Reports View
-  if (user?.role === 'admin') {
-    const ReportCard = ({ report }: { report: any }) => {
-      const getStatusColor = () => {
-        switch (report.status) {
-          case 'pending': return '#f59e0b';
-          case 'reviewed': return '#3b82f6';
-          case 'resolved': return '#10b981';
-          default: return Colors.light.textLight;
-        }
-      };
-      
-      const getStatusIcon = () => {
-        switch (report.status) {
-          case 'pending': return <Clock size={16} color={getStatusColor()} />;
-          case 'reviewed': return <AlertTriangle size={16} color={getStatusColor()} />;
-          case 'resolved': return <CheckCircle size={16} color={getStatusColor()} />;
-          default: return <XCircle size={16} color={getStatusColor()} />;
-        }
-      };
-      
-      return (
-        <View style={styles.reportCard}>
-          <View style={styles.reportHeader}>
-            <View style={styles.reportInfo}>
-              <Text style={styles.reportReason}>{report.reason}</Text>
-              <Text style={styles.reportDate}>
-                {new Date(report.created_at).toLocaleDateString()}
-              </Text>
-            </View>
-            <View style={[styles.reportStatusBadge, { backgroundColor: getStatusColor() + '15' }]}>
-              {getStatusIcon()}
-              <Text style={[styles.reportStatusText, { color: getStatusColor() }]}>
-                {report.status.toUpperCase()}
-              </Text>
-            </View>
-          </View>
-          
-          <Text style={styles.reportDescription} numberOfLines={2}>
-            {report.description}
-          </Text>
-          
-          <View style={styles.reportUsers}>
-            <View style={styles.reportUser}>
-              <Text style={styles.reportUserLabel}>Reported:</Text>
-              <Text style={styles.reportUserName}>
-                {report.reportedUser.name} ({report.reportedUser.role})
-              </Text>
-            </View>
-            <View style={styles.reportUser}>
-              <Text style={styles.reportUserLabel}>Reporter:</Text>
-              <Text style={styles.reportUserName}>
-                {report.reporter.name} ({report.reporter.role})
-              </Text>
-            </View>
-          </View>
-          
-          {report.status === 'pending' && (
-            <View style={styles.reportActions}>
-              <TouchableOpacity
-                style={[styles.reportActionButton, styles.reviewButton]}
-                onPress={() => handleReportAction(report.id, 'review')}
-              >
-                <AlertTriangle size={16} color="#fff" />
-                <Text style={styles.reportActionText}>Review</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.reportActionButton, styles.resolveButton]}
-                onPress={() => handleReportAction(report.id, 'resolve')}
-              >
-                <CheckCircle size={16} color="#fff" />
-                <Text style={styles.reportActionText}>Resolve</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          
-          {report.resolution_notes && (
-            <View style={styles.resolutionContainer}>
-              <Text style={styles.resolutionTitle}>Resolution Notes:</Text>
-              <Text style={styles.resolutionText}>{report.resolution_notes}</Text>
-            </View>
-          )}
-        </View>
-      );
-    };
-    
-    return (
-      <View style={styles.container}>
-        <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="admin-reports-header">
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="admin-reports-back" accessibilityLabel="Back">
-            <ChevronLeft size={22} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>User Reports</Text>
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={styles.logoutHeaderBtn}
-            testID="logout-button"
-          >
-            <LogOut size={16} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.adminHeader}>
-          <View style={styles.adminHeaderInfo}>
-            <View style={styles.adminIcon}>
-              <Shield size={24} color={Colors.light.primary} />
-            </View>
-            <View>
-              <Text style={styles.adminTitle}>User Reports</Text>
-              <Text style={styles.adminSubtitle}>Monitor and manage user reports</Text>
-            </View>
-          </View>
-        </View>
-        
-        <FlatList
-          data={reports}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ReportCard report={item} />}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <AlertTriangle size={64} color={Colors.light.textLight} />
-              <Text style={styles.emptyText}>No reports found</Text>
-              <Text style={styles.emptySubtext}>All user reports will appear here</Text>
-            </View>
-          }
-        />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="tasks-header">
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="tasks-back" accessibilityLabel="Back">
+      <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="users-header">
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="users-back" accessibilityLabel="Back">
           <ChevronLeft size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tasks</Text>
+        <Text style={styles.headerTitle}>All Users</Text>
         <TouchableOpacity
           onPress={handleLogout}
           style={styles.logoutHeaderBtn}
@@ -250,85 +287,58 @@ export default function TasksScreen() {
         </TouchableOpacity>
       </View>
       <View style={styles.contentWrapper}>
-      <View style={styles.searchContainer}>
-        <Search size={20} color={Colors.light.textLight} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search tasks..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor={Colors.light.textLight}
-        />
-      </View>
-
-      {isAddingTask ? (
-        <View style={styles.addTaskForm}>
+        <View style={styles.searchContainer}>
+          <Search size={20} color={Colors.light.textLight} />
           <TextInput
-            style={styles.input}
-            placeholder="Task Name"
-            value={newTaskName}
-            onChangeText={setNewTaskName}
+            style={styles.searchInput}
+            placeholder="Search users..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
             placeholderTextColor={Colors.light.textLight}
-            autoFocus
           />
-          
-          <Text style={styles.sectionLabel}>Select Section:</Text>
-          <View style={styles.sectionSelector}>
-            {[1, 2, 3, 4].map((section) => (
-              <TouchableOpacity
-                key={section}
-                style={[
-                  styles.sectionOption,
-                  newTaskSection === section && styles.sectionOptionActive
-                ]}
-                onPress={() => setNewTaskSection(section as 1 | 2 | 3 | 4)}
-              >
-                <Text style={[
-                  styles.sectionOptionText,
-                  newTaskSection === section && styles.sectionOptionTextActive
-                ]}>
-                  {section}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.button, styles.cancelButton]} 
-              onPress={() => setIsAddingTask(false)}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.button, styles.saveButton]} 
-              onPress={handleAddTask}
-            >
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
+        </View>
+
+        <View style={styles.filtersContainer}>
+          <Text style={styles.filterLabel}>Role:</Text>
+          <View style={styles.filterRow}>
+            <FilterButton title="All" isSelected={selectedRole === 'all'} onPress={() => setSelectedRole('all')} />
+            <FilterButton title="Admin" isSelected={selectedRole === 'admin'} onPress={() => setSelectedRole('admin')} />
+            <FilterButton title="Instructor" isSelected={selectedRole === 'instructor'} onPress={() => setSelectedRole('instructor')} />
+            <FilterButton title="Student" isSelected={selectedRole === 'student'} onPress={() => setSelectedRole('student')} />
           </View>
         </View>
-      ) : (
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => setIsAddingTask(true)}
-        >
-          <Plus size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add Task</Text>
-        </TouchableOpacity>
-      )}
 
-      <FlatList
-        data={filteredTasks}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <TaskCard task={item} showActions={true} />}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No tasks found</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{filteredUsers.length}</Text>
+            <Text style={styles.statLabel}>Total</Text>
           </View>
-        }
-      />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{filteredUsers.filter(u => u.role === 'admin').length}</Text>
+            <Text style={styles.statLabel}>Admin</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{filteredUsers.filter(u => u.role === 'instructor').length}</Text>
+            <Text style={styles.statLabel}>Instructor</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{filteredUsers.filter(u => u.role === 'student').length}</Text>
+            <Text style={styles.statLabel}>Student</Text>
+          </View>
+        </View>
+
+        <FlatList
+          data={filteredUsers}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <UserCard user={item} />}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Users size={48} color={Colors.light.textLight} />
+              <Text style={styles.emptyText}>No users found</Text>
+            </View>
+          }
+        />
       </View>
     </View>
   );
@@ -507,158 +517,135 @@ const styles = StyleSheet.create({
   sectionOptionTextActive: {
     color: '#fff',
   },
-  // Admin styles
-  adminHeader: {
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 12,
-    padding: 16,
-    margin: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  // User card styles
+  filtersContainer: {
+    marginBottom: 16,
   },
-  adminHeaderInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  adminIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.light.primary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  adminTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-  },
-  adminSubtitle: {
+  filterLabel: {
     fontSize: 14,
-    color: Colors.light.textLight,
-    marginTop: 2,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 8,
+    marginTop: 8,
   },
-  reportCard: {
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: Colors.light.cardBackground,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  filterButtonText: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    fontWeight: '500',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  statsRow: {
+    flexDirection: 'row',
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
-  reportHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  reportInfo: {
+  statItem: {
     flex: 1,
+    alignItems: 'center',
   },
-  reportReason: {
-    fontSize: 16,
-    fontWeight: '600',
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: Colors.light.text,
   },
-  reportDate: {
+  statLabel: {
     fontSize: 12,
     color: Colors.light.textLight,
-    marginTop: 2,
+    marginTop: 4,
   },
-  reportStatusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  userCard: {
+    backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
-    gap: 4,
-  },
-  reportStatusText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  reportDescription: {
-    fontSize: 14,
-    color: Colors.light.text,
-    lineHeight: 20,
+    padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  reportUsers: {
-    gap: 6,
-    marginBottom: 12,
-  },
-  reportUser: {
+  userHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
-  reportUserLabel: {
-    fontSize: 12,
-    color: Colors.light.textLight,
-    fontWeight: '600',
-    width: 70,
-  },
-  reportUserName: {
-    fontSize: 12,
-    color: Colors.light.text,
-    flex: 1,
-  },
-  reportActions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  reportActionButton: {
-    flex: 1,
-    flexDirection: 'row',
+  userIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    gap: 6,
+    marginRight: 12,
   },
-  reviewButton: {
-    backgroundColor: '#3b82f6',
+  userInfo: {
+    flex: 1,
   },
-  resolveButton: {
-    backgroundColor: '#10b981',
-  },
-  reportActionText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  resolutionContainer: {
-    backgroundColor: Colors.light.background,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#10b981',
-  },
-  resolutionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: Colors.light.text,
     marginBottom: 4,
   },
-  resolutionText: {
-    fontSize: 12,
-    color: Colors.light.textLight,
-    lineHeight: 16,
-  },
-  emptySubtext: {
+  userEmail: {
     fontSize: 14,
     color: Colors.light.textLight,
-    textAlign: 'center',
-    marginTop: 8,
+    marginBottom: 8,
+  },
+  userMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 4,
+  },
+  userRole: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  phoneText: {
+    fontSize: 12,
+    color: Colors.light.textLight,
   },
 });
