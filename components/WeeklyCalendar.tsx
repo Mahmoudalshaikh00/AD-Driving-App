@@ -21,7 +21,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
   const { myBookings, myTrainerAvailability, studentColor, studentOfTrainer, trainerAvailability, removeAvailability, updateBookingStatus, studentBookings } = scheduleStore;
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
 
-  const isTrainer = user?.role === 'instructor';
+  const isInstructor = user?.role === 'instructor';
 
   const weekStart = useMemo(() => startOfWeek(currentWeek, { weekStartsOn: 1 }), [currentWeek]);
   
@@ -38,14 +38,14 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
   }, [weekStart]);
 
   const availability = useMemo(() => {
-    // If studentId is provided and user is trainer, show trainer's availability
+    // If studentId is provided and user is instructor, show instructor's availability
     // If studentId is provided and user is student, show trainer's availability for that student's trainer
-    if (studentId && isTrainer) {
+    if (studentId && isInstructor) {
       // For instructor viewing a specific student's schedule, show instructor's own availability
       return trainerAvailability();
     }
-    return isTrainer ? trainerAvailability() : myTrainerAvailability;
-  }, [isTrainer, trainerAvailability, myTrainerAvailability, studentId]);
+    return isInstructor ? trainerAvailability() : myTrainerAvailability;
+  }, [isInstructor, trainerAvailability, myTrainerAvailability, studentId]);
 
   const getBookingForSlot = useCallback((date: Date, hour: number, minute: number): Booking | undefined => {
     // If studentId is provided, show only that student's bookings
@@ -98,7 +98,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
     const continuousBooking = getContinuousBooking(date, hour);
     const availabilitySlot = getAvailabilityForSlot(date, hour);
     
-    if (continuousBooking && isTrainer) {
+    if (continuousBooking && isInstructor) {
       const { booking } = continuousBooking;
       const buttons = [
         { text: 'Cancel', style: 'cancel' as const },
@@ -146,7 +146,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
         `${studentOfTrainer(booking.student_id)?.name || 'Student'}\n${format(new Date(booking.start), 'MMM d, HH:mm')} - ${format(new Date(booking.end), 'HH:mm')}`,
         buttons
       );
-    } else if (availabilitySlot && isTrainer) {
+    } else if (availabilitySlot && isInstructor) {
       // Show options for availability (trainers only)
       const slot = availability.find(s => 
         new Date(s.start) <= setMinutes(setHours(date, hour), 0) && 
@@ -184,7 +184,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
           ]
         );
       }
-    } else if (availabilitySlot && !isTrainer) {
+    } else if (availabilitySlot && !isInstructor) {
       // For students, show trainer availability info (read-only)
       Alert.alert(
         'Instructor Available',
@@ -192,7 +192,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
         [{ text: 'OK' }]
       );
     }
-  }, [getContinuousBooking, getAvailabilityForSlot, isTrainer, studentOfTrainer, onEditAppointment, updateBookingStatus, availability, onEditAvailability, removeAvailability]);
+  }, [getContinuousBooking, getAvailabilityForSlot, isInstructor, studentOfTrainer, onEditAppointment, updateBookingStatus, availability, onEditAvailability, removeAvailability]);
 
   const renderTimeSlot = (date: Date, hour: number) => {
     const continuousBooking = getContinuousBooking(date, hour);
@@ -234,7 +234,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
       }
       
       if (booking.status === 'approved') {
-        backgroundColor = isTrainer ? studentColor(booking.student_id) : Colors.light.primary;
+        backgroundColor = isInstructor ? studentColor(booking.student_id) : Colors.light.primary;
         textColor = '#fff';
         borderColor = backgroundColor;
       } else if (booking.status === 'pending') {
@@ -308,7 +308,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
                 {format(new Date(continuousBooking.booking.start), 'HH:mm')}
               </Text>
               <View style={styles.bookingMiddle}>
-                {isTrainer && (
+                {isInstructor && (
                   <Text style={[styles.studentName, { color: textColor }]} numberOfLines={1}>
                     {studentOfTrainer(continuousBooking.booking.student_id)?.name || 'Student'}
                   </Text>
