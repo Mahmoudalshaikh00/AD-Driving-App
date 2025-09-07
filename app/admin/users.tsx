@@ -145,7 +145,8 @@ export default function AdminUsersScreen() {
   }, [loadUsers]);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = searchQuery === '' || 
+                         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (user.phone && user.phone.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;

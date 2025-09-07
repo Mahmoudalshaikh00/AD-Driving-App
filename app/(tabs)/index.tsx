@@ -27,9 +27,10 @@ export default function StudentsScreen() {
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [selectedCapital, setSelectedCapital] = useState<1 | 2 | 3 | 4>(1);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -49,7 +50,15 @@ export default function StudentsScreen() {
         if (error) {
           console.error('Error fetching users:', error);
         } else {
-          setAllUsers(data || []);
+          // Filter to only show students that belong to this instructor
+          if (user?.role === 'instructor') {
+            const instructorStudents = (data || []).filter((u: any) => 
+              u.role === 'student' && u.instructor_id === user.id
+            );
+            setAllUsers(instructorStudents);
+          } else {
+            setAllUsers(data || []);
+          }
         }
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -65,7 +74,7 @@ export default function StudentsScreen() {
     }
   }, [user]);
 
-  const studentsOnly = allUsers.filter(u => u.role === 'student');
+  const studentsOnly = allUsers;
 
   const filteredStudents = studentsOnly.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -136,7 +145,6 @@ export default function StudentsScreen() {
 
   // Admin Dashboard
   if (user?.role === 'admin') {
-
     const QuickAction = ({ icon, title, onPress, color = Colors.light.primary }: {
       icon: React.ReactNode;
       title: string;
@@ -219,6 +227,12 @@ export default function StudentsScreen() {
                       onPress={() => router.push('/admin/discount-codes')}
                       color="#f59e0b"
                     />
+                    <QuickAction
+                      icon={<ClipboardList size={24} color="#ec4899" />}
+                      title="Manage Tasks"
+                      onPress={() => router.push('/admin/tasks')}
+                      color="#ec4899"
+                    />
                   </View>
                 </View>
               );
@@ -272,9 +286,6 @@ export default function StudentsScreen() {
   if (user?.role === 'student') {
     const { tasks, subtasks } = taskStore;
     const { evaluations, getEvaluationNotes } = evalStore;
-
-    const [selectedCapital, setSelectedCapital] = useState<1 | 2 | 3 | 4>(1);
-    const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
     const currentStudent = students.find((s: any) => s.id === user.id);
 
