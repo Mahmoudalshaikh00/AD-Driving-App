@@ -21,7 +21,7 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
   const { myBookings, myTrainerAvailability, studentColor, studentOfTrainer, trainerAvailability, removeAvailability, updateBookingStatus, studentBookings } = scheduleStore;
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
 
-  const isTrainer = user?.role === 'trainer';
+  const isTrainer = user?.role === 'instructor';
 
   const weekStart = useMemo(() => startOfWeek(currentWeek, { weekStartsOn: 1 }), [currentWeek]);
   
