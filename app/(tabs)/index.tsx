@@ -65,13 +65,7 @@ export default function StudentsScreen() {
     }
   }, [user]);
 
-  const instructors = allUsers.filter(u => u.role === 'instructor');
   const studentsOnly = allUsers.filter(u => u.role === 'student');
-
-  const filteredInstructors = instructors.filter(instructor => 
-    instructor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    instructor.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const filteredStudents = studentsOnly.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -570,27 +564,13 @@ export default function StudentsScreen() {
       )}
 
       <FlatList
-        data={[
-          { type: 'section', title: 'Instructors' },
-          ...filteredInstructors.map(i => ({ ...i, type: 'instructor' })),
-          { type: 'section', title: 'Students' },
-          ...filteredStudents.map(s => ({ ...s, type: 'student' }))
-        ]}
-        keyExtractor={(item, index) => item.type === 'section' ? `section-${item.title}` : item.id}
-        renderItem={({ item }) => {
-          if (item.type === 'section') {
-            return (
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionHeaderText}>{item.title}</Text>
-              </View>
-            );
-          }
-          return <StudentCard student={item} />;
-        }}
+        data={filteredStudents}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <StudentCard student={item} />}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No users found</Text>
+            <Text style={styles.emptyText}>No students found</Text>
           </View>
         }
       />
