@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Shield, CheckCircle, XCircle, AlertTriangle, Mail, Phone, Calendar } from 'lucide-react-native';
+import { ChevronLeft, Shield, CheckCircle, XCircle, AlertTriangle, Mail, Phone, Calendar, LogOut } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
@@ -233,7 +233,7 @@ export default function EvaluationsScreen() {
   const { students, loading: studentsLoading } = useStudentStore();
   const { evaluations, getEvaluationNotes, loading: evaluationsLoading } = useEvaluationStore();
   const { tasks, subtasks, loading: tasksLoading } = useTaskStore();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   
   // Admin state
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -315,6 +315,35 @@ export default function EvaluationsScreen() {
 
   const handleStudentPress = (studentId: string) => {
     router.push(`/evaluations/${studentId}`);
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      (async () => {
+        const res = await signOut();
+        if (!res.success) {
+          Alert.alert('Error', res.error || 'Failed to logout');
+        }
+      })();
+      return;
+    }
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            const res = await signOut();
+            if (!res.success) {
+              Alert.alert('Error', res.error || 'Failed to logout');
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (studentsLoading || evaluationsLoading || tasksLoading || loadingUsers) {
@@ -403,6 +432,19 @@ export default function EvaluationsScreen() {
     
     return (
       <View style={styles.container}>
+        <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="admin-users-header">
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="admin-users-back" accessibilityLabel="Back">
+            <ChevronLeft size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>User Management</Text>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutHeaderBtn}
+            testID="logout-button"
+          >
+            <LogOut size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.adminHeader}>
           <View style={styles.adminHeaderInfo}>
             <View style={styles.adminIcon}>
@@ -438,7 +480,13 @@ export default function EvaluationsScreen() {
           <ChevronLeft size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Evaluations</Text>
-        <View style={{ width: 36 }} />
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={styles.logoutHeaderBtn}
+          testID="logout-button"
+        >
+          <LogOut size={16} color="#fff" />
+        </TouchableOpacity>
       </View>
       
       <View style={styles.contentCard} testID="evaluations-content-card">
@@ -478,6 +526,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  logoutHeaderBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingContainer: {
     flex: 1,

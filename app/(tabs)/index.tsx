@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform, Animated, Easing } from 'react-native';
-import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag } from 'lucide-react-native';
+import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag, ChevronLeft } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
@@ -9,6 +9,7 @@ import { useNotificationStore } from '@/hooks/useNotificationStore';
 import StudentCard from '@/components/StudentCard';
 import Colors from '@/constants/colors';
 import { Link, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import RatingInput from '@/components/RatingInput';
 
@@ -19,6 +20,7 @@ export default function StudentsScreen() {
   const { signOut, user } = useAuth();
   const { createTestNotifications } = useNotificationStore();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
@@ -165,6 +167,19 @@ export default function StudentsScreen() {
 
     return (
       <View style={styles.container}>
+        <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="admin-header">
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="admin-back" accessibilityLabel="Back">
+            <ChevronLeft size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Admin Dashboard</Text>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutHeaderBtn}
+            testID="logout-button"
+          >
+            <LogOut size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.adminHeader}>
           <View style={styles.adminHeaderInfo}>
             <View style={styles.adminIcon}>
@@ -416,6 +431,19 @@ export default function StudentsScreen() {
 
     return (
       <View style={styles.container}>
+        <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="student-header">
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="student-back" accessibilityLabel="Back">
+            <ChevronLeft size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Student Dashboard</Text>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutHeaderBtn}
+            testID="logout-button"
+          >
+            <LogOut size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.headerCard}>
           <View style={styles.headerInfo}>
             <View style={styles.profileIcon}>
@@ -524,6 +552,20 @@ export default function StudentsScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="instructor-header">
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="instructor-back" accessibilityLabel="Back">
+          <ChevronLeft size={22} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Students</Text>
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={styles.logoutHeaderBtn}
+          testID="logout-button"
+        >
+          <LogOut size={16} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.contentWrapper}>
       <View style={styles.topSection}>
         <View style={styles.searchContainer}>
           <Search size={20} color={Colors.light.textLight} />
@@ -615,6 +657,7 @@ export default function StudentsScreen() {
           </View>
         }
       />
+      </View>
     </View>
   );
 }
@@ -646,6 +689,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  logoutHeaderBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contentWrapper: {
+    flex: 1,
     padding: 16,
   },
   topSection: {
@@ -777,6 +853,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
     padding: 14,
+    margin: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -793,11 +870,11 @@ const styles = StyleSheet.create({
   circularWrapper: { width: 88, height: 88, justifyContent: 'center', alignItems: 'center', position: 'relative' },
   circularCenter: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   circularPercentText: { fontSize: 18, fontWeight: '800', color: Colors.light.primary },
-  actionSection: { marginBottom: 16, gap: 12, flexDirection: 'row', justifyContent: 'space-between' },
+  actionSection: { marginBottom: 16, marginHorizontal: 16, gap: 12, flexDirection: 'row', justifyContent: 'space-between' },
   actionCard: { flex: 1, height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.light.cardBackground, borderRadius: 14, borderWidth: 1, borderColor: Colors.light.border, paddingHorizontal: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
   actionCardIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: Colors.light.background, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   actionCardLabel: { fontSize: 14, fontWeight: '700', color: Colors.light.primary, flexShrink: 1 },
-  capitalSelector: { marginBottom: 16 },
+  capitalSelector: { marginBottom: 16, marginHorizontal: 16 },
   capitalScrollContent: { paddingHorizontal: 4, gap: 8 },
   capitalButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.light.background, borderWidth: 1, borderColor: Colors.light.border, alignItems: 'center', minWidth: 80 },
   capitalButtonActive: { backgroundColor: Colors.light.primary, borderColor: Colors.light.primary },
@@ -805,7 +882,7 @@ const styles = StyleSheet.create({
   capitalButtonTextActive: { color: '#fff', fontWeight: '600' },
   capitalPercentage: { fontSize: 10, color: Colors.light.textLight, fontWeight: '500', marginTop: 2 },
   capitalPercentageActive: { color: '#fff', fontWeight: '600' },
-  taskCard: { backgroundColor: Colors.light.cardBackground, borderRadius: 14, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
+  taskCard: { backgroundColor: Colors.light.cardBackground, borderRadius: 14, padding: 14, marginHorizontal: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 1 },
   taskHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   taskIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.light.background, alignItems: 'center', justifyContent: 'center' },
   taskName: { fontSize: 18, fontWeight: '700', color: Colors.light.text },
@@ -912,7 +989,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    margin: 16,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

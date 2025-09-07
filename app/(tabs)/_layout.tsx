@@ -31,31 +31,13 @@ export default function TabLayout() {
     return (
       <Tabs
         screenOptions={{
+          headerShown: false,
           tabBarActiveTintColor: Colors.light.primary,
           tabBarInactiveTintColor: Colors.light.tabIconDefault,
           tabBarStyle: {
             backgroundColor: Colors.light.cardBackground,
             borderTopColor: Colors.light.border,
           },
-          headerStyle: {
-            backgroundColor: Colors.light.primary,
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => signOut()}
-              style={{ marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12 }}
-              testID="logout-button"
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <LogOut size={16} color="#fff" />
-                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12 }}>Logout</Text>
-              </View>
-            </TouchableOpacity>
-          ),
         }}
       >
         <Tabs.Screen
@@ -87,7 +69,6 @@ export default function TabLayout() {
           name="schedule"
           options={{
             title: "Settings",
-            headerShown: false,
             tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
           }}
         />
@@ -101,32 +82,13 @@ export default function TabLayout() {
     return (
       <Tabs
         screenOptions={{
+          headerShown: false,
           tabBarActiveTintColor: Colors.light.primary,
           tabBarInactiveTintColor: Colors.light.tabIconDefault,
           tabBarStyle: {
             backgroundColor: Colors.light.cardBackground,
             borderTopColor: Colors.light.border,
           },
-          headerStyle: {
-            backgroundColor: Colors.light.primary,
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => signOut()}
-              style={{ marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12 }}
-              testID="logout-button"
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <LogOut size={16} color="#fff" />
-                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12 }}>Logout</Text>
-              </View>
-            </TouchableOpacity>
-          ),
-          
         }}
       >
         <Tabs.Screen
@@ -144,14 +106,13 @@ export default function TabLayout() {
           name="schedule"
           options={{
             title: "Schedule",
-            headerShown: false,
             tabBarIcon: ({ color }) => <CalendarDays size={24} color={color} />,
           }}
         />
 
 
         <Tabs.Screen name="tasks" options={{ href: null }} />
-        <Tabs.Screen name="evaluations" options={{ href: null, headerShown: false }} />
+        <Tabs.Screen name="evaluations" options={{ href: null }} />
         <Tabs.Screen name="chat" options={{ href: null }} />
       </Tabs>
     );
@@ -160,31 +121,13 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
         tabBarStyle: {
           backgroundColor: Colors.light.cardBackground,
           borderTopColor: Colors.light.border,
         },
-        headerStyle: {
-          backgroundColor: Colors.light.primary,
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => signOut()}
-            style={{ marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12 }}
-            testID="logout-button"
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <LogOut size={16} color="#fff" />
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12 }}>Logout</Text>
-            </View>
-          </TouchableOpacity>
-        ),
       }}
     >
       <Tabs.Screen
@@ -202,7 +145,6 @@ export default function TabLayout() {
         name="schedule"
         options={{
           title: "Schedule",
-          headerShown: false,
           tabBarIcon: ({ color }) => <CalendarDays size={24} color={color} />,
         }}
       />
@@ -214,7 +156,7 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen name="evaluations" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="evaluations" options={{ href: null }} />
       <Tabs.Screen name="chat" options={{ href: null }} />
     </Tabs>
   );

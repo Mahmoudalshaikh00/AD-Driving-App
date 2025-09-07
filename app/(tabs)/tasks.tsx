@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Plus, Search, Shield, AlertTriangle, CheckCircle, XCircle, Clock, User } from 'lucide-react-native';
+import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform } from 'react-native';
+import { Plus, Search, Shield, AlertTriangle, CheckCircle, XCircle, Clock, User, ChevronLeft, LogOut } from 'lucide-react-native';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useAuth } from '@/hooks/useAuthStore';
 import TaskCard from '@/components/TaskCard';
 import Colors from '@/constants/colors';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TasksScreen() {
   const { tasks, loading, addTask } = useTaskStore();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
@@ -61,6 +65,35 @@ export default function TasksScreen() {
       setNewTaskSection(1);
       setIsAddingTask(false);
     }
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      (async () => {
+        const res = await signOut();
+        if (!res.success) {
+          Alert.alert('Error', res.error || 'Failed to logout');
+        }
+      })();
+      return;
+    }
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            const res = await signOut();
+            if (!res.success) {
+              Alert.alert('Error', res.error || 'Failed to logout');
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -159,6 +192,19 @@ export default function TasksScreen() {
     
     return (
       <View style={styles.container}>
+        <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="admin-reports-header">
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="admin-reports-back" accessibilityLabel="Back">
+            <ChevronLeft size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>User Reports</Text>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutHeaderBtn}
+            testID="logout-button"
+          >
+            <LogOut size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.adminHeader}>
           <View style={styles.adminHeaderInfo}>
             <View style={styles.adminIcon}>
@@ -190,6 +236,20 @@ export default function TasksScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="tasks-header">
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="tasks-back" accessibilityLabel="Back">
+          <ChevronLeft size={22} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Tasks</Text>
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={styles.logoutHeaderBtn}
+          testID="logout-button"
+        >
+          <LogOut size={16} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.contentWrapper}>
       <View style={styles.searchContainer}>
         <Search size={20} color={Colors.light.textLight} />
         <TextInput
@@ -269,6 +329,7 @@ export default function TasksScreen() {
           </View>
         }
       />
+      </View>
     </View>
   );
 }
@@ -277,6 +338,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  logoutHeaderBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contentWrapper: {
+    flex: 1,
     padding: 16,
   },
   loadingContainer: {
@@ -418,7 +512,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    margin: 16,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
