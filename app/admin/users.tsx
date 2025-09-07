@@ -20,7 +20,7 @@ interface AdminUser {
   createdAt: string;
   lastActive?: string;
   phone?: string;
-  trainer_id?: string;
+  instructor_id?: string;
   is_approved?: boolean;
   is_restricted?: boolean;
   password?: string;
@@ -35,19 +35,17 @@ export default function AdminUsersScreen() {
   const [selectedStatus, setSelectedStatus] = useState<UserStatus | 'all'>('all');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', role: 'student' as UserRole });
+  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', role: 'student' as UserRole, password: '' });
 
   const loadUsers = useCallback(async () => {
     try {
       console.log('🔄 Loading all users from database...');
       
       // Fetch all users from database
-      const result = await supabase
+      const { data: dbUsers, error } = await supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      const { data: dbUsers, error } = result;
 
       if (error) {
         console.error('❌ Error fetching users:', error);
@@ -119,7 +117,7 @@ export default function AdminUsersScreen() {
         createdAt: user.created_at || new Date().toISOString(),
         lastActive: user.updated_at,
         phone: user.phone,
-        trainer_id: user.trainer_id,
+        instructor_id: user.instructor_id,
         is_approved: user.is_approved,
         is_restricted: user.is_restricted,
         password: user.password
@@ -164,13 +162,14 @@ export default function AdminUsersScreen() {
           name: user.name,
           email: user.email,
           phone: user.phone || '',
-          role: user.role
+          role: user.role,
+          password: user.password || ''
         });
         break;
       case 'view':
         Alert.alert(
           `User Details: ${user.name}`,
-          `Email: ${user.email}\nRole: ${user.role.toUpperCase()}\nStatus: ${user.status.toUpperCase()}\nCreated: ${new Date(user.createdAt).toLocaleDateString()}${user.phone ? `\nPhone: ${user.phone}` : ''}${user.trainer_id ? `\nTrainer ID: ${user.trainer_id}` : ''}`,
+          `Email: ${user.email}\nRole: ${user.role.toUpperCase()}\nStatus: ${user.status.toUpperCase()}\nCreated: ${new Date(user.createdAt).toLocaleDateString()}${user.phone ? `\nPhone: ${user.phone}` : ''}${user.instructor_id ? `\nInstructor ID: ${user.instructor_id}` : ''}${user.password ? `\nPassword: ${user.password}` : ''}`,
           [{ text: 'OK' }]
         );
         break;
@@ -194,12 +193,10 @@ export default function AdminUsersScreen() {
                     setUsers(prev => prev.filter(u => u.id !== userId));
                   } else {
                     // Real user - delete from database
-                    const deleteResult = await supabase
+                    const { error } = await supabase
                       .from('users')
                       .delete()
                       .eq('id', userId);
-                    
-                    const { error } = deleteResult;
                     
                     if (error) throw error;
                     
@@ -244,12 +241,10 @@ export default function AdminUsersScreen() {
         ));
       } else {
         // Real user - update in database
-        const updateResult = await supabase
+        const { error } = await supabase
           .from('users')
           .update(updates)
           .eq('id', userId);
-        
-        const { error } = updateResult;
         
         if (error) throw error;
         
@@ -280,12 +275,28 @@ export default function AdminUsersScreen() {
     }
 
     try {
-      const updates = {
+      // Validate email and password
+      if (!editForm.email.includes('@')) {
+        Alert.alert('Error', 'Email must contain "@" symbol.');
+        return;
+      }
+
+      if (editForm.password && (editForm.password.length === 0 || editForm.password[0] !== editForm.password[0].toUpperCase() || editForm.password[0] === editForm.password[0].toLowerCase())) {
+        Alert.alert('Error', 'Password must start with a capital letter.');
+        return;
+      }
+
+      const updates: any = {
         name: editForm.name.trim(),
         email: editForm.email.trim(),
         phone: editForm.phone.trim() || null,
         role: editForm.role
       };
+
+      // Only include password if it's provided
+      if (editForm.password.trim()) {
+        updates.password = editForm.password.trim();
+      }
 
       if (editingUser.id.startsWith('instructor-') || editingUser.id.startsWith('admin-')) {
         // Mock user - just update local state
@@ -296,12 +307,10 @@ export default function AdminUsersScreen() {
         ));
       } else {
         // Real user - update in database
-        const updateResult = await supabase
+        const { error } = await supabase
           .from('users')
           .update(updates)
           .eq('id', editingUser.id);
-        
-        const { error } = updateResult;
         
         if (error) throw error;
         
@@ -314,7 +323,7 @@ export default function AdminUsersScreen() {
       }
       
       setEditingUser(null);
-      setEditForm({ name: '', email: '', phone: '', role: 'student' });
+      setEditForm({ name: '', email: '', phone: '', role: 'student', password: '' });
       Alert.alert('Success', 'User information updated successfully.');
       await loadUsers(); // Refresh the list
     } catch (error) {
@@ -325,7 +334,7 @@ export default function AdminUsersScreen() {
 
   const handleCancelEdit = () => {
     setEditingUser(null);
-    setEditForm({ name: '', email: '', phone: '', role: 'student' });
+    setEditForm({ name: '', email: '', phone: '', role: 'student', password: '' });
   };
 
   const getStatusColor = (status: UserStatus) => {
@@ -563,6 +572,19 @@ export default function AdminUsersScreen() {
                 placeholderTextColor={Colors.light.textLight}
                 keyboardType="phone-pad"
               />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={editForm.password}
+                onChangeText={(text) => setEditForm(prev => ({ ...prev, password: text }))}
+                placeholder="Enter new password (leave empty to keep current)"
+                placeholderTextColor={Colors.light.textLight}
+                secureTextEntry
+              />
+              <Text style={styles.passwordHint}>Password must start with a capital letter</Text>
             </View>
             
             {editingUser && (
@@ -862,5 +884,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.textLight,
     marginBottom: 4,
+  },
+  passwordHint: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });

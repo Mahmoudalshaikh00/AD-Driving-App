@@ -14,7 +14,7 @@ import { User, UserPlus, Lock, Mail, Shield } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
 
-type LoginMode = 'select' | 'trainer' | 'student' | 'admin' | 'signup';
+type LoginMode = 'select' | 'instructor' | 'student' | 'admin' | 'signup';
 
 export default function LoginScreen() {
   const [mode, setMode] = useState<LoginMode>('select');
@@ -26,9 +26,27 @@ export default function LoginScreen() {
   
   const { signIn, signUp } = useAuth();
 
+  const validateEmail = (email: string): boolean => {
+    return email.includes('@');
+  };
+
+  const validatePassword = (password: string): boolean => {
+    return password.length > 0 && password[0] === password[0].toUpperCase() && password[0] !== password[0].toLowerCase();
+  };
+
   const handleSignIn = async () => {
     if (!email || !password) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError('Email must contain "@" symbol');
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setError('Password must start with a capital letter');
       return;
     }
 
@@ -57,10 +75,20 @@ export default function LoginScreen() {
       return;
     }
 
+    if (!validateEmail(email)) {
+      setError('Email must contain "@" symbol');
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setError('Password must start with a capital letter');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     
-    const result = await signUp(email, password, name, 'trainer');
+    const result = await signUp(email, password, name, 'instructor');
     
     setIsLoading(false);
     
@@ -68,7 +96,7 @@ export default function LoginScreen() {
       setError(result.error || 'Sign up failed');
     } else {
       Alert.alert('Success', 'Account created successfully! Please sign in.');
-      setMode('trainer');
+      setMode('instructor');
       setEmail('');
       setPassword('');
       setName('');
@@ -98,12 +126,12 @@ export default function LoginScreen() {
               style={styles.roleButton}
               onPress={() => {
                 resetForm();
-                setMode('trainer');
+                setMode('instructor');
               }}
-              testID="trainer-button"
+              testID="instructor-button"
             >
               <User size={24} color={Colors.light.primary} />
-              <Text style={styles.roleButtonText}>I&apos;m a Trainer</Text>
+              <Text style={styles.roleButtonText}>I&apos;m an Instructor</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -147,7 +175,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           <View style={styles.iconContainer}>
-            {mode === 'trainer' || mode === 'signup' ? (
+            {mode === 'instructor' || mode === 'signup' ? (
               <User size={64} color={Colors.light.primary} />
             ) : mode === 'admin' ? (
               <Shield size={64} color={Colors.light.primary} />
@@ -157,12 +185,12 @@ export default function LoginScreen() {
           </View>
           
           <Text style={styles.title}>
-            {mode === 'signup' ? 'Create Trainer Account' : 
-             mode === 'trainer' ? 'Trainer Login' : 
+            {mode === 'signup' ? 'Create Instructor Account' : 
+             mode === 'instructor' ? 'Instructor Login' : 
              mode === 'admin' ? 'Admin Panel' : 'Student Login'}
           </Text>
           <Text style={styles.subtitle}>
-            {mode === 'signup' ? 'Sign up as a new trainer' :
+            {mode === 'signup' ? 'Sign up as a new instructor' :
              mode === 'admin' ? 'Access administrative functions' :
              'Enter your credentials to continue'}
           </Text>
@@ -230,7 +258,7 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
           
-          {mode === 'trainer' && (
+          {mode === 'instructor' && (
             <TouchableOpacity
               style={styles.linkButton}
               onPress={() => {
@@ -240,7 +268,7 @@ export default function LoginScreen() {
               testID="signup-link"
             >
               <Text style={styles.linkText}>
-                New trainer? Create an account
+                New instructor? Create an account
               </Text>
             </TouchableOpacity>
           )}

@@ -77,7 +77,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     return () => subscription.unsubscribe();
   }, [fetchUserProfile]);
 
-  const signUp = useCallback(async (email: string, password: string, name: string, role: 'trainer' | 'student' | 'admin', trainerId?: string) => {
+  const signUp = useCallback(async (email: string, password: string, name: string, role: 'instructor' | 'student' | 'admin', instructorId?: string) => {
     try {
       console.log('🔐 Auth store: Starting sign up process for:', email, 'role:', role);
       const { data, error } = await supabase.auth.signUp({
@@ -101,7 +101,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             name,
             email,
             role,
-            trainer_id: trainerId || null,
+            instructor_id: instructorId || null,
             password, // Include password for mock database
             is_approved: true, // Auto-approve by default
             is_restricted: false, // Not restricted by default
@@ -209,8 +209,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       return { success: false, error: 'You must be logged in to create student accounts' };
     }
     
-    if (authState.user.role !== 'trainer') {
-      return { success: false, error: 'Only trainers are allowed to create student accounts.' };
+    if (authState.user.role !== 'instructor') {
+      return { success: false, error: 'Only instructors are allowed to create student accounts.' };
     }
 
     console.log('👨‍🎓 Auth store: Creating student account for:', email);

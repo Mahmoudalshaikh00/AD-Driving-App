@@ -16,8 +16,8 @@ interface MockUser {
   email: string;
   password: string;
   name: string;
-  role: 'trainer' | 'student';
-  trainer_id?: string;
+  role: 'instructor' | 'student';
+  instructor_id?: string;
   created_at: string;
 }
 
@@ -29,7 +29,7 @@ interface MockSession {
 interface MockChatMessage {
   id: string;
   student_id: string;
-  trainer_id: string;
+  instructor_id: string;
   sender_id: string;
   text?: string;
   attachments?: any[];
@@ -543,21 +543,21 @@ const initializeMockData = async () => {
 
   // Seed base demo data if storage empty
   if (users.length === 0) {
-    const defaultTrainer1: MockUser = {
-      id: 'trainer-1',
-      email: 'trainer1@example.com',
-      password: 'password123',
-      name: 'Demo Trainer 1',
-      role: 'trainer',
+    const defaultInstructor1: MockUser = {
+      id: 'instructor-1',
+      email: 'instructor1@example.com',
+      password: 'Password123',
+      name: 'Demo Instructor 1',
+      role: 'instructor',
       created_at: new Date().toISOString(),
     };
     
-    const defaultTrainer2: MockUser = {
-      id: 'trainer-2',
-      email: 'trainer2@example.com',
-      password: 'password123',
-      name: 'Demo Trainer 2',
-      role: 'trainer',
+    const defaultInstructor2: MockUser = {
+      id: 'instructor-2',
+      email: 'instructor2@example.com',
+      password: 'Password123',
+      name: 'Demo Instructor 2',
+      role: 'instructor',
       created_at: new Date().toISOString(),
     };
     
@@ -567,7 +567,7 @@ const initializeMockData = async () => {
       password: 'password123',
       name: 'Demo Student 1',
       role: 'student',
-      trainer_id: 'trainer-1',
+      instructor_id: 'instructor-1',
       created_at: new Date().toISOString(),
     };
     
@@ -577,31 +577,31 @@ const initializeMockData = async () => {
       password: 'password123',
       name: 'Demo Student 2',
       role: 'student',
-      trainer_id: 'trainer-2',
+      instructor_id: 'instructor-2',
       created_at: new Date().toISOString(),
     };
     
-    await saveMockUsers([defaultTrainer1, defaultTrainer2, defaultStudent1, defaultStudent2]);
+    await saveMockUsers([defaultInstructor1, defaultInstructor2, defaultStudent1, defaultStudent2]);
     console.log('📝 Mock data initialized with demo accounts:');
-    console.log('Trainer 1: trainer1@example.com / password123');
-    console.log('Trainer 2: trainer2@example.com / password123');
-    console.log('Student 1: student1@example.com / password123 (belongs to Trainer 1)');
-    console.log('Student 2: student2@example.com / password123 (belongs to Trainer 2)');
+    console.log('Instructor 1: instructor1@example.com / Password123');
+    console.log('Instructor 2: instructor2@example.com / Password123');
+    console.log('Student 1: student1@example.com / password123 (belongs to Instructor 1)');
+    console.log('Student 2: student2@example.com / password123 (belongs to Instructor 2)');
   } else {
     // Ensure a friendly demo instructor account always exists
     const hasInstructor = users.some(u => u.email === 'instructor@example.com');
     if (!hasInstructor) {
       const instructor: MockUser = {
-        id: 'trainer-instructor',
+        id: 'instructor-instructor',
         email: 'instructor@example.com',
-        password: 'password123',
+        password: 'Password123',
         name: 'Instructor',
-        role: 'trainer',
+        role: 'instructor',
         created_at: new Date().toISOString(),
       };
       const updated = [...users, instructor];
       await saveMockUsers(updated);
-      console.log('🆕 Added default instructor account: instructor@example.com / password123');
+      console.log('🆕 Added default instructor account: instructor@example.com / Password123');
     }
   }
 };
@@ -621,24 +621,24 @@ export type Database = {
           id: string;
           name: string;
           email: string;
-          role: 'trainer' | 'student';
-          trainer_id: string | null;
+          role: 'instructor' | 'student';
+          instructor_id: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           email: string;
-          role: 'trainer' | 'student';
-          trainer_id?: string | null;
+          role: 'instructor' | 'student';
+          instructor_id?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           email?: string;
-          role?: 'trainer' | 'student';
-          trainer_id?: string | null;
+          role?: 'instructor' | 'student';
+          instructor_id?: string | null;
           created_at?: string;
         };
       };
@@ -646,7 +646,7 @@ export type Database = {
         Row: {
           id: string;
           student_id: string;
-          trainer_id: string;
+          instructor_id: string;
           date: string;
           score: number;
           feedback: string;
@@ -655,7 +655,7 @@ export type Database = {
         Insert: {
           id?: string;
           student_id: string;
-          trainer_id: string;
+          instructor_id: string;
           date?: string;
           score: number;
           feedback: string;
@@ -664,7 +664,7 @@ export type Database = {
         Update: {
           id?: string;
           student_id?: string;
-          trainer_id?: string;
+          instructor_id?: string;
           date?: string;
           score?: number;
           feedback?: string;
@@ -675,7 +675,7 @@ export type Database = {
         Row: {
           id: string;
           student_id: string;
-          trainer_id: string;
+          instructor_id: string;
           title: string;
           content: string;
           created_at: string;
@@ -683,7 +683,7 @@ export type Database = {
         Insert: {
           id?: string;
           student_id: string;
-          trainer_id: string;
+          instructor_id: string;
           title: string;
           content: string;
           created_at?: string;
@@ -691,7 +691,7 @@ export type Database = {
         Update: {
           id?: string;
           student_id?: string;
-          trainer_id?: string;
+          instructor_id?: string;
           title?: string;
           content?: string;
           created_at?: string;

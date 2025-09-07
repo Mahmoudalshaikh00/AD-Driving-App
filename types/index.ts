@@ -2,8 +2,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'trainer' | 'student' | 'admin';
-  trainer_id?: string;
+  role: 'instructor' | 'student' | 'admin';
+  instructor_id?: string;
   created_at: string;
   is_approved?: boolean;
   is_restricted?: boolean;
@@ -11,11 +11,11 @@ export interface User {
 
 export interface Student extends User {
   role: 'student';
-  trainer_id: string;
+  instructor_id: string;
 }
 
-export interface Trainer extends User {
-  role: 'trainer';
+export interface Instructor extends User {
+  role: 'instructor';
 }
 
 export interface Admin extends User {
@@ -38,7 +38,7 @@ export interface Subtask {
 export interface Evaluation {
   id: string;
   student_id: string;
-  trainer_id: string;
+  instructor_id: string;
   date: string;
   score: number;
   feedback: string;
@@ -48,7 +48,7 @@ export interface Evaluation {
 export interface Report {
   id: string;
   student_id: string;
-  trainer_id: string;
+  instructor_id: string;
   title: string;
   content: string;
   created_at: string;
@@ -81,7 +81,7 @@ export type BookingStatus = 'pending' | 'approved' | 'rejected';
 
 export interface AvailabilitySlot {
   id: string;
-  trainer_id: string;
+  instructor_id: string;
   start: string; // ISO
   end: string;   // ISO
 }
@@ -89,12 +89,12 @@ export interface AvailabilitySlot {
 export interface Booking {
   id: string;
   student_id: string;
-  trainer_id: string;
+  instructor_id: string;
   start: string; // ISO
   end: string;   // ISO
   status: BookingStatus;
   created_at: string;
-  created_by: 'trainer' | 'student';
+  created_by: 'instructor' | 'student';
 }
 
 export interface TimeSlot {
@@ -130,7 +130,7 @@ export interface MessageAttachment {
 export interface ChatMessage {
   id: string;
   student_id: string;
-  trainer_id: string;
+  instructor_id: string;
   sender_id: string;
   text?: string;
   attachments?: MessageAttachment[];
@@ -174,7 +174,7 @@ export interface NotificationSettings {
 
 export interface AdminStats {
   totalUsers: number;
-  totalTrainers: number;
+  totalInstructors: number;
   totalStudents: number;
   pendingApprovals: number;
   restrictedUsers: number;
