@@ -279,8 +279,8 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 11,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: 11,
   },
   filterHeaderContent: {
     flexDirection: 'row',
@@ -383,8 +383,8 @@ const styles = StyleSheet.create({
   progressSummary: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 11,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   progressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   progressTitle: {
     fontSize: 13,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   overallProgress: {
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 7,
   },
   overallPercentage: {
     fontSize: 20,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   contentCard: { 
     backgroundColor: Colors.light.cardBackground, 
     borderRadius: 12, 
-    padding: 16,
+    padding: 11,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
