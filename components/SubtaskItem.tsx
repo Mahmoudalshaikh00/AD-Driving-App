@@ -44,15 +44,23 @@ export default function SubTaskItem({
               borderWidth: 2
             }
           ]}>
-            <Check 
-              size={12} 
-              color={rating > 0 ? Colors.light.secondary : Colors.light.textLight} 
-            />
-            {rating === 5 && (
+            {rating === 5 ? (
+              <View style={styles.doubleCheckContainer}>
+                <Check 
+                  size={10} 
+                  color={Colors.light.secondary}
+                  style={styles.firstCheck}
+                />
+                <Check 
+                  size={10} 
+                  color={Colors.light.secondary}
+                  style={styles.secondCheck}
+                />
+              </View>
+            ) : (
               <Check 
                 size={12} 
-                color={Colors.light.secondary}
-                style={styles.secondCheckmark}
+                color={rating > 0 ? Colors.light.secondary : Colors.light.textLight} 
               />
             )}
           </View>
@@ -92,14 +100,19 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doubleCheckContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
-  secondCheckmark: {
-    position: 'absolute',
-    left: 10,
+  firstCheck: {
+    marginRight: -3,
+  },
+  secondCheck: {
+    marginLeft: -3,
   },
   name: {
     fontSize: 16,
