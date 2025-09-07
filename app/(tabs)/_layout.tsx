@@ -1,8 +1,10 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Users, ClipboardList, CalendarDays, User, LogOut, Shield, Settings, AlertTriangle, BarChart3, UserCircle } from "lucide-react-native";
+import { Users, ClipboardList, CalendarDays, User, LogOut, Settings, AlertTriangle, BarChart3, MessageCircle } from "lucide-react-native";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useAuth } from "@/hooks/useAuthStore";
+import { useNotificationStore } from "@/hooks/useNotificationStore";
+import { NotificationBadge } from "@/components/NotificationBadge";
 
 import Colors from "@/constants/colors";
 
@@ -23,6 +25,7 @@ function CircularIcon({ children, active }: { children: React.ReactNode; active?
 
 export default function TabLayout() {
   const { user, signOut } = useAuth();
+  const { getTotalUnreadMessageCount } = useNotificationStore();
 
   // Admin tabs
   if (user?.role === 'admin') {
@@ -88,7 +91,18 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
           }}
         />
-        <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
+        <Tabs.Screen
+          name="chat"
+          options={{
+            title: "Chat",
+            tabBarIcon: ({ color }) => (
+              <View>
+                <MessageCircle size={24} color={color} />
+                <NotificationBadge count={getTotalUnreadMessageCount()} size="small" />
+              </View>
+            ),
+          }}
+        />
       </Tabs>
     );
   }
@@ -145,8 +159,19 @@ export default function TabLayout() {
           }}
         />
 
+        <Tabs.Screen
+          name="chat"
+          options={{
+            title: "Chat",
+            tabBarIcon: ({ color }) => (
+              <View>
+                <MessageCircle size={24} color={color} />
+                <NotificationBadge count={getTotalUnreadMessageCount()} size="small" />
+              </View>
+            ),
+          }}
+        />
         <Tabs.Screen name="tasks" options={{ href: null }} />
-        <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
         <Tabs.Screen name="evaluations" options={{ href: null, headerShown: false }} />
       </Tabs>
     );
@@ -209,18 +234,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="chat"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color, focused }) => (
-            <CircularIcon active={focused}>
-              <UserCircle size={18} color={focused ? '#fff' : color} />
-            </CircularIcon>
+          title: "Chat",
+          tabBarIcon: ({ color }) => (
+            <View>
+              <MessageCircle size={24} color={color} />
+              <NotificationBadge count={getTotalUnreadMessageCount()} size="small" />
+            </View>
           ),
         }}
       />
-
-      <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="evaluations" options={{ href: null, headerShown: false }} />
     </Tabs>
   );
