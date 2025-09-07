@@ -351,56 +351,60 @@ export default function AdminTasksScreen() {
           )}
         </View>
         
-        {taskSubtasks.length > 0 && (
+        {(taskSubtasks.length > 0 || selectedTab === 'admin') && (
           <View style={styles.subtasksContainer}>
-            <Text style={styles.subtasksTitle}>SubTasks ({taskSubtasks.length})</Text>
-            {taskSubtasks.map(subtask => (
-              <View key={subtask.id} style={styles.subtaskItem}>
-                <View style={styles.subtaskInfo}>
-                  <Text style={[styles.subtaskName, subtask.isHidden && styles.hiddenText]}>
-                    {subtask.name}
-                  </Text>
-                  {subtask.isHidden && (
-                    <Text style={styles.hiddenLabel}>Hidden</Text>
-                  )}
-                  <Text style={styles.subtaskCreatedBy}>
-                    Created by {subtask.createdByName}
-                  </Text>
-                </View>
-                
-                {selectedTab === 'admin' && subtask.createdBy === 'admin' && (
-                  <View style={styles.subtaskActions}>
-                    <TouchableOpacity
-                      style={styles.smallActionButton}
-                      onPress={() => {
-                        setEditingSubtask(subtask);
-                        setSubtaskForm({ name: subtask.name, taskId: subtask.taskId });
-                      }}
-                    >
-                      <Edit3 size={12} color={Colors.light.primary} />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={styles.smallActionButton}
-                      onPress={() => handleToggleSubtaskVisibility(subtask)}
-                    >
-                      {subtask.isHidden ? (
-                        <Eye size={12} color="#10b981" />
-                      ) : (
-                        <EyeOff size={12} color="#f59e0b" />
+            {taskSubtasks.length > 0 && (
+              <>
+                <Text style={styles.subtasksTitle}>SubTasks ({taskSubtasks.length})</Text>
+                {taskSubtasks.map(subtask => (
+                  <View key={subtask.id} style={styles.subtaskItem}>
+                    <View style={styles.subtaskInfo}>
+                      <Text style={[styles.subtaskName, subtask.isHidden && styles.hiddenText]}>
+                        {subtask.name}
+                      </Text>
+                      {subtask.isHidden && (
+                        <Text style={styles.hiddenLabel}>Hidden</Text>
                       )}
-                    </TouchableOpacity>
+                      <Text style={styles.subtaskCreatedBy}>
+                        Created by {subtask.createdByName}
+                      </Text>
+                    </View>
                     
-                    <TouchableOpacity
-                      style={styles.smallActionButton}
-                      onPress={() => handleDeleteSubtask(subtask)}
-                    >
-                      <Trash2 size={12} color="#ef4444" />
-                    </TouchableOpacity>
+                    {selectedTab === 'admin' && subtask.createdBy === 'admin' && (
+                      <View style={styles.subtaskActions}>
+                        <TouchableOpacity
+                          style={styles.smallActionButton}
+                          onPress={() => {
+                            setEditingSubtask(subtask);
+                            setSubtaskForm({ name: subtask.name, taskId: subtask.taskId });
+                          }}
+                        >
+                          <Edit3 size={12} color={Colors.light.primary} />
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          style={styles.smallActionButton}
+                          onPress={() => handleToggleSubtaskVisibility(subtask)}
+                        >
+                          {subtask.isHidden ? (
+                            <Eye size={12} color="#10b981" />
+                          ) : (
+                            <EyeOff size={12} color="#f59e0b" />
+                          )}
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          style={styles.smallActionButton}
+                          onPress={() => handleDeleteSubtask(subtask)}
+                        >
+                          <Trash2 size={12} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
-                )}
-              </View>
-            ))}
+                ))}
+              </>
+            )}
             
             {selectedTab === 'admin' && (
               <TouchableOpacity
