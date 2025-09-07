@@ -458,13 +458,6 @@ export default function AdminUsersScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Manage Users</Text>
-      </View>
-
 
 
       <View style={styles.filtersContainer}>
