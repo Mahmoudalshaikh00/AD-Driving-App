@@ -43,10 +43,11 @@ export default function AdminUsersScreen() {
       console.log('🔄 Loading all users from database...');
       
       // Fetch all users from database
-      const { data: dbUsers, error } = await supabase
+      const result = supabase
         .from('users')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as unknown as Promise<{ data: any[] | null; error: any }>;
+      const { data: dbUsers, error } = await result;
 
       if (error) {
         console.error('❌ Error fetching users:', error);
@@ -194,10 +195,11 @@ export default function AdminUsersScreen() {
                     setUsers(prev => prev.filter(u => u.id !== userId));
                   } else {
                     // Real user - delete from database
-                    const { error } = await supabase
+                    const deleteResult = supabase
                       .from('users')
                       .delete()
-                      .eq('id', userId);
+                      .eq('id', userId) as unknown as Promise<{ data: any; error: any }>;
+                    const { error } = await deleteResult;
                     
                     if (error) throw error;
                     
@@ -242,10 +244,11 @@ export default function AdminUsersScreen() {
         ));
       } else {
         // Real user - update in database
-        const { error } = await supabase
+        const updateResult = supabase
           .from('users')
           .update(updates)
-          .eq('id', userId);
+          .eq('id', userId) as unknown as Promise<{ data: any; error: any }>;
+        const { error } = await updateResult;
         
         if (error) throw error;
         
@@ -308,10 +311,11 @@ export default function AdminUsersScreen() {
         ));
       } else {
         // Real user - update in database
-        const { error } = await supabase
+        const updateResult = supabase
           .from('users')
           .update(updates)
-          .eq('id', editingUser.id);
+          .eq('id', editingUser.id) as unknown as Promise<{ data: any; error: any }>;
+        const { error } = await updateResult;
         
         if (error) throw error;
         
