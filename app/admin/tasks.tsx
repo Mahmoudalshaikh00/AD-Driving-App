@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
-import { Plus, Edit3, Trash2, Eye, EyeOff, ChevronLeft, LogOut, Settings, Users, Save, X } from 'lucide-react-native';
+import { Plus, Edit3, Trash2, Eye, EyeOff, ChevronLeft, LogOut, Settings, Users, Save, X, ChevronDown, ChevronRight } from 'lucide-react-native';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useAuth } from '@/hooks/useAuthStore';
 import { useRouter } from 'expo-router';
@@ -297,6 +297,7 @@ export default function AdminTasksScreen() {
 
   const TaskCard = ({ task }: { task: AdminTask }) => {
     const taskSubtasks = currentSubtasks.filter(s => s.taskId === task.id);
+    const [isSubtasksExpanded, setIsSubtasksExpanded] = useState(false);
     
     return (
       <View style={styles.taskCard}>
@@ -355,8 +356,18 @@ export default function AdminTasksScreen() {
           <View style={styles.subtasksContainer}>
             {taskSubtasks.length > 0 && (
               <>
-                <Text style={styles.subtasksTitle}>SubTasks ({taskSubtasks.length})</Text>
-                {taskSubtasks.map(subtask => (
+                <TouchableOpacity 
+                  style={styles.subtasksHeader}
+                  onPress={() => setIsSubtasksExpanded(!isSubtasksExpanded)}
+                >
+                  <Text style={styles.subtasksTitle}>SubTasks ({taskSubtasks.length})</Text>
+                  {isSubtasksExpanded ? (
+                    <ChevronDown size={16} color={Colors.light.textLight} />
+                  ) : (
+                    <ChevronRight size={16} color={Colors.light.textLight} />
+                  )}
+                </TouchableOpacity>
+                {isSubtasksExpanded && taskSubtasks.map(subtask => (
                   <View key={subtask.id} style={styles.subtaskItem}>
                     <View style={styles.subtaskInfo}>
                       <Text style={[styles.subtaskName, subtask.isHidden && styles.hiddenText]}>
@@ -876,11 +887,16 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.light.border,
     paddingTop: 12,
   },
+  subtasksHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   subtasksTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
-    marginBottom: 8,
   },
   subtaskItem: {
     flexDirection: 'row',
