@@ -5,19 +5,19 @@ import { Subtask } from '@/types';
 import Colors from '@/constants/colors';
 import RatingInput from './RatingInput';
 
-interface SubtaskItemProps {
-  subtask: Subtask;
+interface SubTaskItemProps {
+  subTask: Subtask;
   studentId: string;
-  onRatingChange: (subtaskId: string, rating: number) => void;
+  onRatingChange: (subTaskId: string, rating: number) => void;
   latestRating?: number;
 }
 
-export default function SubtaskItem({ 
-  subtask, 
+export default function SubTaskItem({ 
+  subTask, 
   studentId, 
   onRatingChange,
   latestRating
-}: SubtaskItemProps) {
+}: SubTaskItemProps) {
   const [rating, setRating] = useState<number>(latestRating || 0);
   
   useEffect(() => {
@@ -26,13 +26,13 @@ export default function SubtaskItem({
 
   const handleRatingChange = (newRating: number) => {
     setRating(newRating);
-    onRatingChange(subtask.id, newRating);
+    onRatingChange(subTask.id, newRating);
   };
 
   return (
     <View 
       style={styles.container}
-      testID={`subtask-item-${subtask.id}`}
+      testID={`subTask-item-${subTask.id}`}
     >
       <View style={styles.infoContainer}>
         <View style={styles.nameContainer}>
@@ -56,7 +56,7 @@ export default function SubtaskItem({
               />
             )}
           </View>
-          <Text style={styles.name}>{subtask.name}</Text>
+          <Text style={styles.name}>{subTask.name}</Text>
         </View>
         <RatingInput 
           value={rating} 

@@ -9,59 +9,59 @@ export default function TaskDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getTaskById, getSubtasksByTaskId, loading, addSubtask, updateSubtask, deleteSubtask } = useTaskStore();
   
-  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
-  const [newSubtaskName, setNewSubtaskName] = useState('');
-  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
-  const [editSubtaskName, setEditSubtaskName] = useState('');
+  const [isAddingSubTask, setIsAddingSubTask] = useState(false);
+  const [newSubTaskName, setNewSubTaskName] = useState('');
+  const [editingSubTaskId, setEditingSubTaskId] = useState<string | null>(null);
+  const [editSubTaskName, setEditSubTaskName] = useState('');
   
   const task = getTaskById(id);
-  const subtasks = getSubtasksByTaskId(id);
+  const subTasks = getSubtasksByTaskId(id);
 
-  const handleAddSubtask = () => {
-    if (newSubtaskName.trim()) {
+  const handleAddSubTask = () => {
+    if (newSubTaskName.trim()) {
       addSubtask({
-        name: newSubtaskName.trim(),
+        name: newSubTaskName.trim(),
         taskId: id,
       });
-      setNewSubtaskName('');
-      setIsAddingSubtask(false);
+      setNewSubTaskName('');
+      setIsAddingSubTask(false);
     }
   };
 
-  const handleEditSubtask = (subtaskId: string, currentName: string) => {
-    setEditingSubtaskId(subtaskId);
-    setEditSubtaskName(currentName);
+  const handleEditSubTask = (subTaskId: string, currentName: string) => {
+    setEditingSubTaskId(subTaskId);
+    setEditSubTaskName(currentName);
   };
 
-  const handleSaveSubtask = (subtaskId: string) => {
-    if (editSubtaskName.trim()) {
-      const subtask = subtasks.find(s => s.id === subtaskId);
-      if (subtask) {
+  const handleSaveSubTask = (subTaskId: string) => {
+    if (editSubTaskName.trim()) {
+      const subTask = subTasks.find(s => s.id === subTaskId);
+      if (subTask) {
         updateSubtask({
-          ...subtask,
-          name: editSubtaskName.trim(),
+          ...subTask,
+          name: editSubTaskName.trim(),
         });
       }
-      setEditingSubtaskId(null);
-      setEditSubtaskName('');
+      setEditingSubTaskId(null);
+      setEditSubTaskName('');
     }
   };
 
   const handleCancelEdit = () => {
-    setEditingSubtaskId(null);
-    setEditSubtaskName('');
+    setEditingSubTaskId(null);
+    setEditSubTaskName('');
   };
 
-  const handleDeleteSubtask = (subtaskId: string, subtaskName: string) => {
+  const handleDeleteSubTask = (subTaskId: string, subTaskName: string) => {
     Alert.alert(
-      'Delete Subtask',
-      `Are you sure you want to delete "${subtaskName}"? This will also delete all related evaluations.`,
+      'Delete SubTask',
+      `Are you sure you want to delete "${subTaskName}"? This will also delete all related evaluations.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteSubtask(subtaskId),
+          onPress: () => deleteSubtask(subTaskId),
         },
       ]
     );
@@ -87,31 +87,31 @@ export default function TaskDetailsScreen() {
     <View style={styles.container}>
       <View style={styles.taskInfoCard}>
         <Text style={styles.taskName}>{task.name}</Text>
-        <Text style={styles.subtaskCount}>
-          {subtasks.length} {subtasks.length === 1 ? 'subtask' : 'subtasks'}
+        <Text style={styles.subTaskCount}>
+          {subTasks.length} {subTasks.length === 1 ? 'SubTask' : 'SubTasks'}
         </Text>
       </View>
 
-      {isAddingSubtask ? (
-        <View style={styles.addSubtaskForm}>
+      {isAddingSubTask ? (
+        <View style={styles.addSubTaskForm}>
           <TextInput
             style={styles.input}
-            placeholder="Subtask Name"
-            value={newSubtaskName}
-            onChangeText={setNewSubtaskName}
+            placeholder="SubTask Name"
+            value={newSubTaskName}
+            onChangeText={setNewSubTaskName}
             placeholderTextColor={Colors.light.textLight}
             autoFocus
           />
           <View style={styles.buttonRow}>
             <TouchableOpacity 
               style={[styles.button, styles.cancelButton]} 
-              onPress={() => setIsAddingSubtask(false)}
+              onPress={() => setIsAddingSubTask(false)}
             >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.button, styles.saveButton]} 
-              onPress={handleAddSubtask}
+              onPress={handleAddSubTask}
             >
               <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
@@ -120,30 +120,30 @@ export default function TaskDetailsScreen() {
       ) : (
         <TouchableOpacity 
           style={styles.addButton} 
-          onPress={() => setIsAddingSubtask(true)}
+          onPress={() => setIsAddingSubTask(true)}
         >
           <Plus size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add Subtask</Text>
+          <Text style={styles.addButtonText}>Add SubTask</Text>
         </TouchableOpacity>
       )}
 
-      <Text style={styles.sectionTitle}>Subtasks</Text>
+      <Text style={styles.sectionTitle}>SubTasks</Text>
       
       <FlatList
-        data={subtasks}
+        data={subTasks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          const isEditing = editingSubtaskId === item.id;
+          const isEditing = editingSubTaskId === item.id;
           
           if (isEditing) {
             return (
-              <View style={styles.subtaskItem}>
-                <View style={styles.subtaskContent}>
+              <View style={styles.subTaskItem}>
+                <View style={styles.subTaskContent}>
                   <TextInput
                     style={styles.editInput}
-                    value={editSubtaskName}
-                    onChangeText={setEditSubtaskName}
-                    placeholder="Subtask Name"
+                    value={editSubTaskName}
+                    onChangeText={setEditSubTaskName}
+                    placeholder="SubTask Name"
                     placeholderTextColor={Colors.light.textLight}
                     autoFocus
                   />
@@ -151,7 +151,7 @@ export default function TaskDetailsScreen() {
                 <View style={styles.actionContainer}>
                   <TouchableOpacity 
                     style={styles.actionButton} 
-                    onPress={() => handleSaveSubtask(item.id)}
+                    onPress={() => handleSaveSubTask(item.id)}
                   >
                     <Save size={18} color={Colors.light.secondary} />
                   </TouchableOpacity>
@@ -167,20 +167,20 @@ export default function TaskDetailsScreen() {
           }
           
           return (
-            <View style={styles.subtaskItem}>
-              <View style={styles.subtaskContent}>
-                <Text style={styles.subtaskName}>{item.name}</Text>
+            <View style={styles.subTaskItem}>
+              <View style={styles.subTaskContent}>
+                <Text style={styles.subTaskName}>{item.name}</Text>
               </View>
               <View style={styles.actionContainer}>
                 <TouchableOpacity 
                   style={styles.actionButton} 
-                  onPress={() => handleEditSubtask(item.id, item.name)}
+                  onPress={() => handleEditSubTask(item.id, item.name)}
                 >
                   <Edit2 size={18} color={Colors.light.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.actionButton} 
-                  onPress={() => handleDeleteSubtask(item.id, item.name)}
+                  onPress={() => handleDeleteSubTask(item.id, item.name)}
                 >
                   <Trash2 size={18} color={Colors.light.danger} />
                 </TouchableOpacity>
@@ -191,9 +191,9 @@ export default function TaskDetailsScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No subtasks available</Text>
+            <Text style={styles.emptyText}>No SubTasks available</Text>
             <Text style={styles.emptySubtext}>
-              Add subtasks to evaluate students on this task
+              Add SubTasks to evaluate students on this task
             </Text>
           </View>
         }
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     marginBottom: 4,
   },
-  subtaskCount: {
+  subTaskCount: {
     fontSize: 16,
     color: Colors.light.textLight,
   },
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  addSubtaskForm: {
+  addSubTaskForm: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
     padding: 16,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: Colors.light.text,
   },
-  subtaskItem: {
+  subTaskItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.cardBackground,
@@ -327,10 +327,10 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-  subtaskContent: {
+  subTaskContent: {
     flex: 1,
   },
-  subtaskName: {
+  subTaskName: {
     fontSize: 16,
     fontWeight: '500',
     color: Colors.light.text,

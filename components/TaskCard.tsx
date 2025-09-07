@@ -55,7 +55,7 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
   const handleDelete = () => {
     Alert.alert(
       'Delete Task',
-      `Are you sure you want to delete "${task.name}"? This will also delete all its subtasks and evaluations.`,
+      `Are you sure you want to delete "${task.name}"? This will also delete all its SubTasks and evaluations.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

@@ -5,7 +5,7 @@ import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
 import { useAuth } from '@/hooks/useAuthStore';
-import SubtaskItem from '@/components/SubtaskItem';
+import SubTaskItem from '@/components/SubtaskItem';
 import Colors from '@/constants/colors';
 import { CheckCircle, Save } from 'lucide-react-native';
 
@@ -24,7 +24,7 @@ export default function EvaluateStudentScreen() {
   
   const student = getStudentById(studentId);
   const task = getTaskById(taskId);
-  const subtasks = getSubtasksByTaskId(taskId);
+  const subTasks = getSubtasksByTaskId(taskId);
 
   const initializedRef = useRef<string>('');
 
@@ -35,15 +35,15 @@ export default function EvaluateStudentScreen() {
     const key = `${studentId}-${taskId}`;
     if (initializedRef.current === key) return;
     
-    const currentSubtasks = getSubtasksByTaskId(taskId);
-    if (currentSubtasks.length === 0) return;
+    const currentSubTasks = getSubtasksByTaskId(taskId);
+    if (currentSubTasks.length === 0) return;
     
     const initialRatings: Record<string, number> = {};
     
-    currentSubtasks.forEach(subtask => {
-      const latestEval = getLatestEvaluation(studentId, taskId, subtask.id);
+    currentSubTasks.forEach(subTask => {
+      const latestEval = getLatestEvaluation(studentId, taskId, subTask.id);
       if (latestEval) {
-        initialRatings[subtask.id] = latestEval.rating;
+        initialRatings[subTask.id] = latestEval.rating;
       }
     });
     
@@ -58,13 +58,13 @@ export default function EvaluateStudentScreen() {
     initializedRef.current = key;
   }, [studentId, taskId, tasksLoading]);
 
-  const handleRatingChange = async (subtaskId: string, rating: number) => {
-    console.log('Rating change requested:', { subtaskId, rating, studentId, taskId });
+  const handleRatingChange = async (subTaskId: string, rating: number) => {
+    console.log('Rating change requested:', { subTaskId, rating, studentId, taskId });
     
     // Update local state immediately for responsive UI
     setRatings(prev => ({
       ...prev,
-      [subtaskId]: rating
+      [subTaskId]: rating
     }));
     
     // Save the evaluation immediately (this will overwrite existing rating)
@@ -72,16 +72,16 @@ export default function EvaluateStudentScreen() {
       const result = await addEvaluation({
         studentId,
         taskId,
-        subtaskId,
+        subtaskId: subTaskId,
         rating,
       });
-      console.log(`✅ Saved rating ${rating} for subtask ${subtaskId}:`, result);
+      console.log(`✅ Saved rating ${rating} for SubTask ${subTaskId}:`, result);
     } catch (error) {
       console.error('❌ Failed to save evaluation:', error);
       // Revert the local state if save failed
       setRatings(prev => {
         const reverted = { ...prev };
-        delete reverted[subtaskId];
+        delete reverted[subTaskId];
         return reverted;
       });
     }
@@ -148,15 +148,15 @@ export default function EvaluateStudentScreen() {
       </View>
 
       <Text style={styles.instructions}>
-        Rate each subtask from 1-5 stars
+        Rate each SubTask from 1-5 stars
       </Text>
       
       <FlatList
-        data={subtasks}
+        data={subTasks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <SubtaskItem
-            subtask={item}
+          <SubTaskItem
+            subTask={item}
             studentId={studentId}
             onRatingChange={handleRatingChange}
             latestRating={ratings[item.id] || 0}
@@ -165,9 +165,9 @@ export default function EvaluateStudentScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No subtasks available</Text>
+            <Text style={styles.emptyText}>No SubTasks available</Text>
             <Text style={styles.emptySubtext}>
-              Add subtasks to this task first
+              Add SubTasks to this task first
             </Text>
           </View>
         }
