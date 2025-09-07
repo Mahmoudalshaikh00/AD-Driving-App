@@ -31,6 +31,8 @@ export default function StudentsScreen() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [selectedCapital, setSelectedCapital] = useState<1 | 2 | 3 | 4>(1);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [circleAnim] = useState(new Animated.Value(0));
+  const [trainerName, setTrainerName] = useState<string>('');
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -301,71 +303,74 @@ export default function StudentsScreen() {
     );
   }
 
-  if (user?.role === 'student') {
-    // Safely access taskStore and evalStore with defaults
-    const tasks = taskStore?.tasks || [];
-    const subtasks = taskStore?.subtasks || [];
-    const evaluations = evalStore?.evaluations || [];
-    const getEvaluationNotes = evalStore?.getEvaluationNotes || (() => null);
+  // Prepare data for student view (must be done before conditional returns)
+  const tasks = taskStore?.tasks || [];
+  const subtasks = taskStore?.subtasks || [];
+  const evaluations = evalStore?.evaluations || [];
+  const getEvaluationNotes = evalStore?.getEvaluationNotes || (() => null);
+  
+  const currentStudent = user?.role === 'student' ? {
+    ...user,
+    instructor_id: user.instructor_id || null
+  } : null;
+  
+  const myEvaluations = user?.role === 'student' ? evaluations.filter((e: any) => e.studentId === user.id) : [];
+  const capitalTasks = tasks.filter((t: any) => t.capital === selectedCapital);
+  
+  const taskCompletion: Record<string, number> = useMemo(() => {
+    if (user?.role !== 'student') return {};
+    const map: Record<string, number> = {};
+    capitalTasks.forEach((task: any) => {
+      const taskSubs = subtasks.filter((s: any) => s.taskId === task.id);
+      const possible = taskSubs.length * 5;
+      const earned = taskSubs.reduce((sum: number, s: any) => {
+        const found = myEvaluations.find((ev: any) => ev.taskId === task.id && ev.subtaskId === s.id);
+        return sum + (found?.rating ?? 0);
+      }, 0);
+      map[task.id] = possible > 0 ? Math.round((earned / possible) * 100) : 0;
+    });
+    return map;
+  }, [capitalTasks, subtasks, myEvaluations, user]);
 
-    // Use the user object directly as the current student
-    const currentStudent = {
-      ...user,
-      instructor_id: user.instructor_id || null
-    };
-
-    const myEvaluations = evaluations.filter((e: any) => e.studentId === user.id);
-
-    const capitalTasks = tasks.filter((t: any) => t.capital === selectedCapital);
-
-    const taskCompletion: Record<string, number> = useMemo(() => {
-      const map: Record<string, number> = {};
-      capitalTasks.forEach((task: any) => {
-        const taskSubs = subtasks.filter((s: any) => s.taskId === task.id);
-        const possible = taskSubs.length * 5;
-        const earned = taskSubs.reduce((sum: number, s: any) => {
-          const found = myEvaluations.find((ev: any) => ev.taskId === task.id && ev.subtaskId === s.id);
-          return sum + (found?.rating ?? 0);
-        }, 0);
-        map[task.id] = possible > 0 ? Math.round((earned / possible) * 100) : 0;
-      });
-      return map;
-    }, [capitalTasks, subtasks, myEvaluations]);
-
-    const capitalPercentages: Record<1 | 2 | 3 | 4, number> = useMemo(() => {
-      const result: Record<1 | 2 | 3 | 4, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
-      ([1, 2, 3, 4] as Array<1 | 2 | 3 | 4>).forEach((c) => {
-        const tasksInCapital = tasks.filter((t: any) => t.capital === c);
-        const subs = subtasks.filter((s: any) => tasksInCapital.some((t: any) => t.id === s.taskId));
-        const possible = subs.length * 5;
-        const earned = subs.reduce((sum: number, s: any) => {
-          const ev = myEvaluations.find((e: any) => e.subtaskId === s.id);
-          return sum + (ev?.rating ?? 0);
-        }, 0);
-        result[c] = possible > 0 ? Math.round((earned / possible) * 100) : 0;
-      });
-      return result;
-    }, [tasks, subtasks, myEvaluations]);
-
-    const overallPercent = useMemo(() => {
-      const allSubs = subtasks.filter((s: any) => tasks.some((t: any) => t.id === s.taskId));
-      const possible = allSubs.length * 5;
-      const earned = allSubs.reduce((sum: number, s: any) => {
+  const capitalPercentages: Record<1 | 2 | 3 | 4, number> = useMemo(() => {
+    if (user?.role !== 'student') return { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const result: Record<1 | 2 | 3 | 4, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    ([1, 2, 3, 4] as Array<1 | 2 | 3 | 4>).forEach((c) => {
+      const tasksInCapital = tasks.filter((t: any) => t.capital === c);
+      const subs = subtasks.filter((s: any) => tasksInCapital.some((t: any) => t.id === s.taskId));
+      const possible = subs.length * 5;
+      const earned = subs.reduce((sum: number, s: any) => {
         const ev = myEvaluations.find((e: any) => e.subtaskId === s.id);
         return sum + (ev?.rating ?? 0);
       }, 0);
-      return possible > 0 ? Math.round((earned / possible) * 100) : 0;
-    }, [subtasks, tasks, myEvaluations]);
+      result[c] = possible > 0 ? Math.round((earned / possible) * 100) : 0;
+    });
+    return result;
+  }, [tasks, subtasks, myEvaluations, user]);
 
-    const [circleAnim] = useState(new Animated.Value(0));
-    useEffect(() => {
+  const overallPercent = useMemo(() => {
+    if (user?.role !== 'student') return 0;
+    const allSubs = subtasks.filter((s: any) => tasks.some((t: any) => t.id === s.taskId));
+    const possible = allSubs.length * 5;
+    const earned = allSubs.reduce((sum: number, s: any) => {
+      const ev = myEvaluations.find((e: any) => e.subtaskId === s.id);
+      return sum + (ev?.rating ?? 0);
+    }, 0);
+    return possible > 0 ? Math.round((earned / possible) * 100) : 0;
+  }, [subtasks, tasks, myEvaluations, user]);
+
+  // Animation effect for student progress circle
+  useEffect(() => {
+    if (user?.role === 'student') {
       circleAnim.stopAnimation();
       Animated.timing(circleAnim, { toValue: overallPercent, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
-    }, [overallPercent]);
+    }
+  }, [overallPercent, user, circleAnim]);
 
-    const [trainerName, setTrainerName] = useState<string>('');
-    useEffect(() => {
-      let mounted = true;
+  // Fetch trainer name for student
+  useEffect(() => {
+    let mounted = true;
+    if (user?.role === 'student' && currentStudent) {
       (async () => {
         try {
           if (!currentStudent?.instructor_id) { if (mounted) setTrainerName(''); return; }
@@ -377,12 +382,15 @@ export default function StudentsScreen() {
           if (mounted) setTrainerName('');
         }
       })();
-      return () => { mounted = false; };
-    }, [currentStudent?.instructor_id]);
+    }
+    return () => { mounted = false; };
+  }, [currentStudent, user]);
 
-    const onToggleTask = (taskId: string, isOpen: boolean) => {
-      setExpandedTaskId(isOpen ? null : taskId);
-    };
+  const onToggleTask = (taskId: string, isOpen: boolean) => {
+    setExpandedTaskId(isOpen ? null : taskId);
+  };
+
+  if (user?.role === 'student') {
 
     return (
       <View style={styles.container}>
