@@ -17,7 +17,7 @@ export default function StudentEvaluationsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { getStudentById } = useStudentStore();
-  const { tasks, subtasks, loading: tasksLoading } = useTaskStore();
+  const { tasks, subtasks, loading: tasksLoading, getTasksByInstructor, getDefaultTasks } = useTaskStore();
   const { getEvaluationsByStudentId, getEvaluationNotes, loading: evaluationsLoading } = useEvaluationStore();
   const { markAsReadByStudentAndType } = useNotificationStore();
   const insets = useSafeAreaInsets();
@@ -27,16 +27,14 @@ export default function StudentEvaluationsScreen() {
   
   const student = getStudentById(studentId);
   const studentEvaluations = getEvaluationsByStudentId(studentId);
-  const isTrainer = user?.role === 'trainer';
+  const isInstructor = user?.role === 'instructor';
   
   // Mark evaluation notifications as read when entering this screen
   React.useEffect(() => {
-    if (studentId && isTrainer) {
+    if (studentId && isInstructor) {
       markAsReadByStudentAndType(studentId, 'evaluation');
-    } else if (user?.trainer_id) {
-      markAsReadByStudentAndType(user.trainer_id, 'evaluation');
     }
-  }, [studentId, isTrainer, user?.trainer_id, markAsReadByStudentAndType]);
+  }, [studentId, isInstructor, markAsReadByStudentAndType]);
   
   // Filter evaluations by selected task
   const filteredEvaluations = useMemo(() => {
@@ -56,12 +54,20 @@ export default function StudentEvaluationsScreen() {
     return subtasks.find(s => s.id === subtaskId);
   };
 
+  // Get filtered tasks for current instructor
+  const filteredTasks = useMemo(() => {
+    if (!user || user.role !== 'instructor') return tasks;
+    const instructorTasks = getTasksByInstructor(user.id);
+    const defaultTasks = getDefaultTasks();
+    return [...instructorTasks, ...defaultTasks];
+  }, [tasks, user, getTasksByInstructor, getDefaultTasks]);
+
   // Calculate percentage completion for each capital based on star ratings
   const capitalPercentages = useMemo(() => {
     const percentages: Record<1 | 2 | 3 | 4, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
     
     [1, 2, 3, 4].forEach(capital => {
-      const capitalTasks = tasks.filter(task => task.capital === capital);
+      const capitalTasks = filteredTasks.filter(task => task.capital === capital);
       if (capitalTasks.length === 0) {
         percentages[capital as 1 | 2 | 3 | 4] = 0;
         return;
@@ -87,7 +93,7 @@ export default function StudentEvaluationsScreen() {
     });
     
     return percentages;
-  }, [tasks, subtasks, studentEvaluations]);
+  }, [filteredTasks, subtasks, studentEvaluations]);
 
   // Calculate overall percentage
   const overallPercentage = useMemo(() => {
@@ -190,7 +196,7 @@ export default function StudentEvaluationsScreen() {
                   ]}>All</Text>
                 </TouchableOpacity>
                 
-                {tasks.filter(task => {
+                {filteredTasks.filter(task => {
                   // Only show tasks that have evaluations for this student
                   return studentEvaluations.some(evaluation => evaluation.taskId === task.id);
                 }).map(task => (
@@ -220,7 +226,7 @@ export default function StudentEvaluationsScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => {
               const taskNotes = getEvaluationNotes(studentId, item.taskId);
-              const task = tasks.find(t => t.id === item.taskId);
+              const task = filteredTasks.find(t => t.id === item.taskId);
               return (
                 <EvaluationHistoryItem
                   evaluation={item}

@@ -15,7 +15,7 @@ export default function StudentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getStudentById } = useStudentStore();
-  const { tasks, subtasks, loading: tasksLoading } = useTaskStore();
+  const { tasks, subtasks, loading: tasksLoading, getTasksByInstructor, getDefaultTasks } = useTaskStore();
   const { getEvaluationsByStudentId } = useEvaluationStore();
   const { markAsReadByStudentAndType } = useNotificationStore();
   
@@ -25,7 +25,15 @@ export default function StudentDetailsScreen() {
   const student = getStudentById(id);
   const studentEvaluations = getEvaluationsByStudentId(id);
   
-  const filteredTasks = tasks.filter(task => task.capital === selectedCapital);
+  // Get filtered tasks for current instructor
+  const instructorTasks = useMemo(() => {
+    if (!user || user.role !== 'instructor') return tasks;
+    const instructorOwnTasks = getTasksByInstructor(user.id);
+    const defaultTasks = getDefaultTasks();
+    return [...instructorOwnTasks, ...defaultTasks];
+  }, [tasks, user, getTasksByInstructor, getDefaultTasks]);
+  
+  const filteredTasks = instructorTasks.filter(task => task.capital === selectedCapital);
   
   const taskCompletionPercentages = useMemo(() => {
     const percentages: Record<string, number> = {};
@@ -58,7 +66,7 @@ export default function StudentDetailsScreen() {
     const percentages: Record<1 | 2 | 3 | 4, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
     
     [1, 2, 3, 4].forEach(capital => {
-      const capitalTasks = tasks.filter(task => task.capital === capital);
+      const capitalTasks = instructorTasks.filter(task => task.capital === capital);
       if (capitalTasks.length === 0) {
         percentages[capital as 1 | 2 | 3 | 4] = 0;
         return;
@@ -84,7 +92,7 @@ export default function StudentDetailsScreen() {
     });
     
     return percentages;
-  }, [tasks, subtasks, studentEvaluations]);
+  }, [instructorTasks, subtasks, studentEvaluations]);
 
   const overallPercentage = useMemo(() => {
     const values = Object.values(capitalPercentages);
