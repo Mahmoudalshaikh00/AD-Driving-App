@@ -87,6 +87,7 @@ export default function TabLayout() {
           name="schedule"
           options={{
             title: "Settings",
+            headerShown: false,
             tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
           }}
         />
