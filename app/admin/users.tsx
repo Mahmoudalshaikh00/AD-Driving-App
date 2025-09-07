@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
-import { Users, Search, Edit3, Trash2, Shield, User, Phone, CheckCircle, XCircle, AlertTriangle, Save, X } from 'lucide-react-native';
+import { Users, Search, Edit3, Trash2, Shield, User, Phone, CheckCircle, XCircle, AlertTriangle, Save, X, Eye, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
 
@@ -36,6 +36,7 @@ export default function AdminUsersScreen() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', role: 'student' as UserRole, password: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -324,6 +325,7 @@ export default function AdminUsersScreen() {
       
       setEditingUser(null);
       setEditForm({ name: '', email: '', phone: '', role: 'student', password: '' });
+      setShowPassword(false);
       Alert.alert('Success', 'User information updated successfully.');
       await loadUsers(); // Refresh the list
     } catch (error) {
@@ -335,6 +337,7 @@ export default function AdminUsersScreen() {
   const handleCancelEdit = () => {
     setEditingUser(null);
     setEditForm({ name: '', email: '', phone: '', role: 'student', password: '' });
+    setShowPassword(false);
   };
 
   const getStatusColor = (status: UserStatus) => {
@@ -576,14 +579,26 @@ export default function AdminUsersScreen() {
             
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Password</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={editForm.password}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, password: text }))}
-                placeholder="Enter new password (leave empty to keep current)"
-                placeholderTextColor={Colors.light.textLight}
-                secureTextEntry
-              />
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={editForm.password}
+                  onChangeText={(text) => setEditForm(prev => ({ ...prev, password: text }))}
+                  placeholder="Enter new password (leave empty to keep current)"
+                  placeholderTextColor={Colors.light.textLight}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  style={styles.passwordToggle}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={Colors.light.textLight} />
+                  ) : (
+                    <Eye size={20} color={Colors.light.textLight} />
+                  )}
+                </TouchableOpacity>
+              </View>
               <Text style={styles.passwordHint}>Password must start with a capital letter</Text>
             </View>
             
@@ -890,5 +905,23 @@ const styles = StyleSheet.create({
     color: Colors.light.textLight,
     marginTop: 4,
     fontStyle: 'italic',
+  },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  passwordToggle: {
+    padding: 12,
   },
 });
