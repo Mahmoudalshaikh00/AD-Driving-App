@@ -21,17 +21,17 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   
-  const fetchMessages = useCallback(async (studentId: string, trainerId: string) => {
-    if (!studentId || !trainerId) return;
+  const fetchMessages = useCallback(async (studentId: string, instructorId: string) => {
+    if (!studentId || !instructorId) return;
     
     setLoading(true);
     try {
-      console.log('📨 Fetching messages for student:', studentId, 'trainer:', trainerId);
+      console.log('📨 Fetching messages for student:', studentId, 'instructor:', instructorId);
       const query = supabase
         .from('chat_messages')
         .select('*')
         .eq('student_id', studentId)
-        .eq('trainer_id', trainerId)
+        .eq('instructor_id', instructorId)
         .order('created_at', { ascending: false });
       
       const { data, error } = await new Promise<any>((resolve) => {
@@ -88,9 +88,9 @@ const [ChatProvider, useChatStore] = createContextHook(() => {
     }
   }, []);
   
-  const getMessagesForChat = useCallback((studentId: string, trainerId: string) => {
+  const getMessagesForChat = useCallback((studentId: string, instructorId: string) => {
     return messages.filter(m => 
-      m.student_id === studentId && m.trainer_id === trainerId
+      m.student_id === studentId && m.instructor_id === instructorId
     );
   }, [messages]);
   
@@ -129,9 +129,9 @@ function ChatScreenContent() {
     return counts;
   }, [unreadNotifications]);
 
-  const isTrainer = user?.role === 'trainer';
+  const isTrainer = user?.role === 'instructor';
   const activeStudentId = isTrainer ? selectedStudentId : (user?.id ?? '');
-  const trainerId = user?.role === 'trainer' ? user.id : (user?.trainer_id ?? '');
+  const instructorId = user?.role === 'instructor' ? user.id : (user?.instructor_id ?? '');
 
   // Auto-select student when coming from student details
   useEffect(() => {
@@ -143,25 +143,25 @@ function ChatScreenContent() {
 
   // Fetch messages when chat participants are determined
   useEffect(() => {
-    if (activeStudentId && trainerId) {
-      console.log('🔄 Fetching messages for chat:', { activeStudentId, trainerId });
-      fetchMessages(activeStudentId, trainerId);
+    if (activeStudentId && instructorId) {
+      console.log('🔄 Fetching messages for chat:', { activeStudentId, instructorId });
+      fetchMessages(activeStudentId, instructorId);
       
       // Mark message notifications as read when entering chat
       if (isTrainer) {
         console.log('📖 Marking message notifications as read for student:', activeStudentId);
         markAsReadByStudentAndType(activeStudentId, 'message');
       } else {
-        console.log('📖 Marking message notifications as read for trainer:', trainerId);
-        markAsReadByStudentAndType(trainerId, 'message');
+        console.log('📖 Marking message notifications as read for instructor:', instructorId);
+        markAsReadByStudentAndType(instructorId, 'message');
       }
     }
-  }, [activeStudentId, trainerId, fetchMessages, markAsReadByStudentAndType, isTrainer]);
+  }, [activeStudentId, instructorId, fetchMessages, markAsReadByStudentAndType, isTrainer]);
 
   const filtered = useMemo(() => {
-    if (!activeStudentId || !trainerId) return [] as ChatMessage[];
-    return getMessagesForChat(activeStudentId, trainerId);
-  }, [activeStudentId, trainerId, getMessagesForChat]);
+    if (!activeStudentId || !instructorId) return [] as ChatMessage[];
+    return getMessagesForChat(activeStudentId, instructorId);
+  }, [activeStudentId, instructorId, getMessagesForChat]);
 
   const selectedStudent = useMemo(() => {
     if (!isTrainer || !selectedStudentId) return null;
@@ -182,8 +182,8 @@ function ChatScreenContent() {
   };
 
   const sendMessage = async (txt?: string, attachments?: MessageAttachment[]) => {
-    if (!user || !trainerId || !activeStudentId) {
-      console.log('Cannot send message - missing user, trainer or student ID');
+    if (!user || !instructorId || !activeStudentId) {
+      console.log('Cannot send message - missing user, instructor or student ID');
       return;
     }
     
@@ -196,7 +196,7 @@ function ChatScreenContent() {
     const message: ChatMessage = {
       id: uid(),
       student_id: activeStudentId,
-      trainer_id: trainerId,
+      instructor_id: instructorId,
       sender_id: user.id,
       text: messageText || undefined,
       attachments: attachments?.length ? attachments : undefined,
@@ -208,7 +208,7 @@ function ChatScreenContent() {
     console.log('📤 Sending message:', message);
     
     // Determine recipient and sender info for notifications
-    const recipientId = isTrainer ? activeStudentId : trainerId;
+    const recipientId = isTrainer ? activeStudentId : instructorId;
     const senderName = user.name;
     
     console.log('📧 Creating notification for recipient:', { recipientId, senderName, senderId: user.id });
@@ -263,7 +263,7 @@ function ChatScreenContent() {
           ) : !isTrainer ? (
             <>
               <Text style={styles.headerTitle}>Chat</Text>
-              <Text style={styles.headerSubtitle}>with your trainer</Text>
+              <Text style={styles.headerSubtitle}>with your instructor</Text>
             </>
           ) : (
             <Text style={styles.headerTitle}>Chat</Text>

@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
+import { useAuth } from '@/hooks/useAuthStore';
 import SubtaskItem from '@/components/SubtaskItem';
 import Colors from '@/constants/colors';
 import { CheckCircle, Save } from 'lucide-react-native';
@@ -11,6 +12,7 @@ import { CheckCircle, Save } from 'lucide-react-native';
 export default function EvaluateStudentScreen() {
   const { studentId, taskId } = useLocalSearchParams<{ studentId: string; taskId: string }>();
   
+  const { user } = useAuth();
   const { getStudentById } = useStudentStore();
   const { getTaskById, getSubtasksByTaskId, loading: tasksLoading } = useTaskStore();
   const { addEvaluation, getLatestEvaluation, addEvaluationNotes, getEvaluationNotes } = useEvaluationStore();
@@ -57,6 +59,8 @@ export default function EvaluateStudentScreen() {
   }, [studentId, taskId, tasksLoading]);
 
   const handleRatingChange = async (subtaskId: string, rating: number) => {
+    console.log('Rating change requested:', { subtaskId, rating, studentId, taskId });
+    
     // Update local state immediately for responsive UI
     setRatings(prev => ({
       ...prev,
@@ -65,15 +69,21 @@ export default function EvaluateStudentScreen() {
     
     // Save the evaluation immediately (this will overwrite existing rating)
     try {
-      await addEvaluation({
+      const result = await addEvaluation({
         studentId,
         taskId,
         subtaskId,
         rating,
       });
-      console.log(`Saved rating ${rating} for subtask ${subtaskId}`);
+      console.log(`✅ Saved rating ${rating} for subtask ${subtaskId}:`, result);
     } catch (error) {
-      console.error('Failed to save evaluation:', error);
+      console.error('❌ Failed to save evaluation:', error);
+      // Revert the local state if save failed
+      setRatings(prev => {
+        const reverted = { ...prev };
+        delete reverted[subtaskId];
+        return reverted;
+      });
     }
   };
 
@@ -102,6 +112,15 @@ export default function EvaluateStudentScreen() {
       setSaving(false);
     }
   };
+
+  // Check if user is an instructor
+  if (!user || user.role !== 'instructor') {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Access denied. Only instructors can evaluate students.</Text>
+      </View>
+    );
+  }
 
   if (!student || !task) {
     return (

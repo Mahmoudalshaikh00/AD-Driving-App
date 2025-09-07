@@ -46,7 +46,7 @@ export default function ScheduleScreen() {
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
 
-  const isTrainer = user?.role === 'trainer';
+  const isTrainer = user?.role === 'instructor';
   const isAdmin = user?.role === 'admin';
   const pendingBookings = myBookings.filter(b => b.status === 'pending');
   
@@ -86,11 +86,11 @@ export default function ScheduleScreen() {
       students.forEach(student => {
         markAsReadByStudentAndType(student.id, 'schedule');
       });
-    } else if (user?.trainer_id) {
-      // For students, mark trainer's schedule notifications as read
-      markAsReadByStudentAndType(user.trainer_id, 'schedule');
+    } else if (user?.instructor_id) {
+      // For students, mark instructor's schedule notifications as read
+      markAsReadByStudentAndType(user.instructor_id, 'schedule');
     }
-  }, [isTrainer, students, user?.trainer_id, markAsReadByStudentAndType]);
+  }, [isTrainer, students, user?.instructor_id, markAsReadByStudentAndType]);
 
 
   const handleAppointmentCreate = (studentId: string, date: Date, startHour: number, startMinute: number, endHour: number, endMinute: number) => {
@@ -284,13 +284,10 @@ export default function ScheduleScreen() {
   };
 
   const renderAvailabilitySlots = () => {
-    // Only show availability for students, not trainers
-    if (isTrainer) return null;
-    
     const availabilitySlots = myTrainerAvailability;
     if (availabilitySlots.length === 0) return null;
 
-    const title = 'Instructor Availability';
+    const title = isTrainer ? 'My Availability Slots' : 'Instructor Availability';
 
     return (
       <View style={styles.availabilityContainer}>
@@ -310,6 +307,17 @@ export default function ScheduleScreen() {
                     {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
                   </Text>
                 </View>
+                {isTrainer && (
+                  <TouchableOpacity
+                    style={styles.editAvailabilityButton}
+                    onPress={() => {
+                      setEditingAvailability(slot.id);
+                      setShowAvailabilityModal(true);
+                    }}
+                  >
+                    <Text style={styles.editButtonText}>Edit</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             );
           })}
@@ -900,5 +908,17 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     color: Colors.light.textLight,
+  },
+  editAvailabilityButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
