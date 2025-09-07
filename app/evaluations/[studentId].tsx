@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
-    padding: 11,
+    padding: 12,
     marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 11,
+    padding: 12,
   },
   filterHeaderContent: {
     flexDirection: 'row',
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   progressSummary: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
-    padding: 11,
+    padding: 12,
     marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -437,14 +437,13 @@ const styles = StyleSheet.create({
   contentCard: { 
     backgroundColor: Colors.light.cardBackground, 
     borderRadius: 12, 
-    padding: 9,
+    padding: 12,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
-    transform: [{ scale: 0.8 }],
   },
   evaluationsCard: {
     backgroundColor: Colors.light.cardBackground,
