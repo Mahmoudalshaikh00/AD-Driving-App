@@ -117,6 +117,7 @@ export default function TasksScreen() {
         renderItem={({ item }) => (
           <TaskCard
             task={item}
+            showActions={true}
           />
         )}
         contentContainerStyle={styles.listContent}
