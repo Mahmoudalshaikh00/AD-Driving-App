@@ -14,7 +14,7 @@ export default function EvaluateStudentScreen() {
   
   const { user } = useAuth();
   const { getStudentById } = useStudentStore();
-  const { getTaskById, getSubtasksByTaskId, loading: tasksLoading, getTasksByInstructor, getDefaultTasks } = useTaskStore();
+  const { getTaskById, getSubtasksByTaskId, loading: tasksLoading, getVisibleTasksForInstructor } = useTaskStore();
   const { addEvaluation, getLatestEvaluation, addEvaluationNotes, getEvaluationNotes } = useEvaluationStore();
   
   const [ratings, setRatings] = useState<Record<string, number>>({});
@@ -23,13 +23,11 @@ export default function EvaluateStudentScreen() {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   
   const student = getStudentById(studentId);
-  // Get filtered tasks for current instructor
+  // Get visible tasks for current instructor (respects hidden tasks)
   const filteredTasks = React.useMemo(() => {
     if (!user || user.role !== 'instructor') return [];
-    const instructorTasks = getTasksByInstructor(user.id);
-    const defaultTasks = getDefaultTasks();
-    return [...instructorTasks, ...defaultTasks];
-  }, [user, getTasksByInstructor, getDefaultTasks]);
+    return getVisibleTasksForInstructor(user.id);
+  }, [user, getVisibleTasksForInstructor]);
 
   const task = filteredTasks.find(t => t.id === taskId);
   const subTasks = getSubtasksByTaskId(taskId);

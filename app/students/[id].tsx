@@ -15,7 +15,7 @@ export default function StudentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getStudentById } = useStudentStore();
-  const { tasks, subtasks, loading: tasksLoading, getTasksByInstructor, getDefaultTasks } = useTaskStore();
+  const { tasks, subtasks, loading: tasksLoading, getVisibleTasksForInstructor } = useTaskStore();
   const { getEvaluationsByStudentId } = useEvaluationStore();
   const { markAsReadByStudentAndType } = useNotificationStore();
   
@@ -25,13 +25,11 @@ export default function StudentDetailsScreen() {
   const student = getStudentById(id);
   const studentEvaluations = getEvaluationsByStudentId(id);
   
-  // Get filtered tasks for current instructor
+  // Get visible tasks for current instructor (respects hidden tasks)
   const instructorTasks = useMemo(() => {
     if (!user || user.role !== 'instructor') return tasks;
-    const instructorOwnTasks = getTasksByInstructor(user.id);
-    const defaultTasks = getDefaultTasks();
-    return [...instructorOwnTasks, ...defaultTasks];
-  }, [tasks, user, getTasksByInstructor, getDefaultTasks]);
+    return getVisibleTasksForInstructor(user.id);
+  }, [tasks, user, getVisibleTasksForInstructor]);
   
   const filteredTasks = instructorTasks.filter(task => task.capital === selectedCapital);
   

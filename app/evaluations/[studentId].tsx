@@ -17,7 +17,7 @@ export default function StudentEvaluationsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { getStudentById } = useStudentStore();
-  const { tasks, subtasks, loading: tasksLoading, getTasksByInstructor, getDefaultTasks } = useTaskStore();
+  const { tasks, subtasks, loading: tasksLoading, getVisibleTasksForInstructor } = useTaskStore();
   const { getEvaluationsByStudentId, getEvaluationNotes, loading: evaluationsLoading } = useEvaluationStore();
   const { markAsReadByStudentAndType } = useNotificationStore();
   const insets = useSafeAreaInsets();
@@ -54,13 +54,11 @@ export default function StudentEvaluationsScreen() {
     return subtasks.find(s => s.id === subtaskId);
   };
 
-  // Get filtered tasks for current instructor
+  // Get visible tasks for current instructor (respects hidden tasks)
   const filteredTasks = useMemo(() => {
     if (!user || user.role !== 'instructor') return tasks;
-    const instructorTasks = getTasksByInstructor(user.id);
-    const defaultTasks = getDefaultTasks();
-    return [...instructorTasks, ...defaultTasks];
-  }, [tasks, user, getTasksByInstructor, getDefaultTasks]);
+    return getVisibleTasksForInstructor(user.id);
+  }, [tasks, user, getVisibleTasksForInstructor]);
 
   // Calculate percentage completion for each capital based on star ratings
   const capitalPercentages = useMemo(() => {
