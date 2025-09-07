@@ -41,6 +41,10 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
     } else if (user?.role === 'student') {
       // For students, set themselves as the only "student" in the list
       setStudents([user as Student]);
+      setLoading(false);
+    } else {
+      // For other roles (admin), just set loading to false
+      setLoading(false);
     }
   }, [user, fetchStudents]);
 

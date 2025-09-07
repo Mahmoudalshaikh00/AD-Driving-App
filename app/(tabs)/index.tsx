@@ -14,10 +14,10 @@ import Svg, { Circle } from 'react-native-svg';
 import RatingInput from '@/components/RatingInput';
 
 export default function StudentsScreen() {
-  const { students, loading, createStudent } = useStudentStore();
+  const { signOut, user } = useAuth();
+  const { students, loading, createStudent, refreshStudents } = useStudentStore();
   const taskStore = useTaskStore();
   const evalStore = useEvaluationStore();
-  const { signOut, user } = useAuth();
   const { createTestNotifications } = useNotificationStore();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -69,10 +69,12 @@ export default function StudentsScreen() {
 
     if (user?.role === 'instructor') {
       fetchAllUsers();
+      // Also refresh the students from the store
+      refreshStudents();
     } else {
       setLoadingUsers(false);
     }
-  }, [user]);
+  }, [user, refreshStudents]);
 
   const studentsOnly = allUsers;
 
@@ -93,6 +95,22 @@ export default function StudentsScreen() {
           setNewStudentPassword('');
           setIsAddingStudent(false);
           Alert.alert('Success', 'Student account created successfully!');
+          
+          // Refresh both the local state and the store
+          const { supabase } = await import('@/lib/supabase');
+          const freshResult = await new Promise<any>((resolve) => {
+            supabase
+              .from('users')
+              .select('*')
+              .eq('role', 'student')
+              .eq('instructor_id', user?.id)
+              .order('name')
+              .then(resolve);
+          });
+          
+          if (!freshResult.error && freshResult.data) {
+            setAllUsers(freshResult.data);
+          }
         } else {
           Alert.alert('Error', result.error || 'Failed to create student account');
         }
@@ -284,10 +302,17 @@ export default function StudentsScreen() {
   }
 
   if (user?.role === 'student') {
-    const { tasks, subtasks } = taskStore;
-    const { evaluations, getEvaluationNotes } = evalStore;
+    // Safely access taskStore and evalStore with defaults
+    const tasks = taskStore?.tasks || [];
+    const subtasks = taskStore?.subtasks || [];
+    const evaluations = evalStore?.evaluations || [];
+    const getEvaluationNotes = evalStore?.getEvaluationNotes || (() => null);
 
-    const currentStudent = students.find((s: any) => s.id === user.id);
+    // Use the user object directly as the current student
+    const currentStudent = {
+      ...user,
+      instructor_id: user.instructor_id || null
+    };
 
     const myEvaluations = evaluations.filter((e: any) => e.studentId === user.id);
 
