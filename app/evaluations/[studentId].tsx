@@ -145,7 +145,7 @@ export default function StudentEvaluationsScreen() {
             <View style={styles.capitalGrid}>
               {[1, 2, 3, 4].map(capital => (
                 <View key={capital} style={styles.capitalProgressItem}>
-                  <Text style={styles.capitalLabel}>Capital {capital}</Text>
+                  <Text style={styles.capitalLabel}>Section {capital}</Text>
                   <Text style={styles.capitalPercentage}>
                     {capitalPercentages[capital as 1 | 2 | 3 | 4]}%
                   </Text>
@@ -437,13 +437,14 @@ const styles = StyleSheet.create({
   contentCard: { 
     backgroundColor: Colors.light.cardBackground, 
     borderRadius: 12, 
-    padding: 11,
+    padding: 9,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
+    transform: [{ scale: 0.8 }],
   },
   evaluationsCard: {
     backgroundColor: Colors.light.cardBackground,
