@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ClipboardList, Edit2, Trash2, Save, X } from 'lucide-react-native';
-import { Task } from '@/types';
+import { Task, User } from '@/types';
 import Colors from '@/constants/colors';
 import { useTaskStore } from '@/hooks/useTaskStore';
 
@@ -10,9 +10,10 @@ interface TaskCardProps {
   task: Task;
   studentId?: string;
   showActions?: boolean;
+  currentUser?: User | null;
 }
 
-export default function TaskCard({ task, studentId, showActions = false }: TaskCardProps) {
+export default function TaskCard({ task, studentId, showActions = false, currentUser }: TaskCardProps) {
   const router = useRouter();
   const { updateTask, deleteTask } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
@@ -129,15 +130,19 @@ export default function TaskCard({ task, studentId, showActions = false }: TaskC
         <Text style={styles.name}>{task.name}</Text>
         <Text style={styles.section}>Section {task.capital}</Text>
       </View>
-      {showActions && (
-        <View style={styles.actionContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
-            <Edit2 size={18} color={Colors.light.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-            <Trash2 size={18} color={Colors.light.danger} />
-          </TouchableOpacity>
-        </View>
+      {showActions && currentUser && (
+        // Only show actions for tasks created by the current instructor (not default tasks)
+        (currentUser.role === 'admin' || 
+         (currentUser.role === 'instructor' && task.instructor_id === currentUser.id)) && (
+          <View style={styles.actionContainer}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+              <Edit2 size={18} color={Colors.light.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
+              <Trash2 size={18} color={Colors.light.danger} />
+            </TouchableOpacity>
+          </View>
+        )
       )}
     </TouchableOpacity>
   );

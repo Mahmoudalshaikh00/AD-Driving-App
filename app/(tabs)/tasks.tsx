@@ -21,14 +21,19 @@ export default function TasksScreen() {
     if (!user) return [];
     
     if (user.role === 'instructor') {
-      // Instructors only see their own tasks (not default tasks)
-      return getTasksByInstructor(user.id);
+      // Instructors see their own tasks + default tasks
+      const instructorTasks = getTasksByInstructor(user.id);
+      const defaultTasks = tasks.filter(task => !task.instructor_id);
+      return [...defaultTasks, ...instructorTasks];
     } else if (user.role === 'admin') {
       // Admin sees all tasks
       return tasks;
     } else {
-      // Students see tasks from their instructor only (not default tasks)
-      return user.instructor_id ? getTasksByInstructor(user.instructor_id) : [];
+      // Students see default tasks + tasks from their instructor
+      if (!user.instructor_id) return tasks.filter(task => !task.instructor_id);
+      const instructorTasks = getTasksByInstructor(user.instructor_id);
+      const defaultTasks = tasks.filter(task => !task.instructor_id);
+      return [...defaultTasks, ...instructorTasks];
     }
   }, [tasks, user, getTasksByInstructor]);
 
@@ -139,6 +144,7 @@ export default function TasksScreen() {
           <TaskCard
             task={item}
             showActions={true}
+            currentUser={user}
           />
         )}
         contentContainerStyle={styles.listContent}

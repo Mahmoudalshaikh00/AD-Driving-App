@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTaskStore } from '@/hooks/useTaskStore';
+import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react-native';
 
 export default function TaskDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getTaskById, getSubtasksByTaskId, loading, addSubtask, updateSubtask, deleteSubtask } = useTaskStore();
+  const { user } = useAuth();
   
   const [isAddingSubTask, setIsAddingSubTask] = useState(false);
   const [newSubTaskName, setNewSubTaskName] = useState('');
@@ -16,6 +18,12 @@ export default function TaskDetailsScreen() {
   
   const task = getTaskById(id);
   const subTasks = getSubtasksByTaskId(id);
+  
+  // Check if current user can edit this task
+  const canEdit = user && (
+    user.role === 'admin' || 
+    (user.role === 'instructor' && task?.instructor_id === user.id)
+  );
 
   const handleAddSubTask = () => {
     if (newSubTaskName.trim()) {
@@ -92,39 +100,41 @@ export default function TaskDetailsScreen() {
         </Text>
       </View>
 
-      {isAddingSubTask ? (
-        <View style={styles.addSubTaskForm}>
-          <TextInput
-            style={styles.input}
-            placeholder="SubTask Name"
-            value={newSubTaskName}
-            onChangeText={setNewSubTaskName}
-            placeholderTextColor={Colors.light.textLight}
-            autoFocus
-          />
-          <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.button, styles.cancelButton]} 
-              onPress={() => setIsAddingSubTask(false)}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.button, styles.saveButton]} 
-              onPress={handleAddSubTask}
-            >
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
+      {canEdit && (
+        isAddingSubTask ? (
+          <View style={styles.addSubTaskForm}>
+            <TextInput
+              style={styles.input}
+              placeholder="SubTask Name"
+              value={newSubTaskName}
+              onChangeText={setNewSubTaskName}
+              placeholderTextColor={Colors.light.textLight}
+              autoFocus
+            />
+            <View style={styles.buttonRow}>
+              <TouchableOpacity 
+                style={[styles.button, styles.cancelButton]} 
+                onPress={() => setIsAddingSubTask(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.button, styles.saveButton]} 
+                onPress={handleAddSubTask}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      ) : (
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => setIsAddingSubTask(true)}
-        >
-          <Plus size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add SubTask</Text>
-        </TouchableOpacity>
+        ) : (
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => setIsAddingSubTask(true)}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Add SubTask</Text>
+          </TouchableOpacity>
+        )
       )}
 
       <Text style={styles.sectionTitle}>SubTasks</Text>
@@ -171,20 +181,22 @@ export default function TaskDetailsScreen() {
               <View style={styles.subTaskContent}>
                 <Text style={styles.subTaskName}>{item.name}</Text>
               </View>
-              <View style={styles.actionContainer}>
-                <TouchableOpacity 
-                  style={styles.actionButton} 
-                  onPress={() => handleEditSubTask(item.id, item.name)}
-                >
-                  <Edit2 size={18} color={Colors.light.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.actionButton} 
-                  onPress={() => handleDeleteSubTask(item.id, item.name)}
-                >
-                  <Trash2 size={18} color={Colors.light.danger} />
-                </TouchableOpacity>
-              </View>
+              {canEdit && (
+                <View style={styles.actionContainer}>
+                  <TouchableOpacity 
+                    style={styles.actionButton} 
+                    onPress={() => handleEditSubTask(item.id, item.name)}
+                  >
+                    <Edit2 size={18} color={Colors.light.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.actionButton} 
+                    onPress={() => handleDeleteSubTask(item.id, item.name)}
+                  >
+                    <Trash2 size={18} color={Colors.light.danger} />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           );
         }}
