@@ -445,16 +445,6 @@ export default function AdminTasksScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(10, insets.top + 6) }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ChevronLeft size={22} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Admin Tasks</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-          <LogOut size={16} color="#fff" />
-        </TouchableOpacity>
-      </View>
-      
       <View style={styles.content}>
         <View style={styles.tabContainer}>
           <TouchableOpacity
@@ -692,36 +682,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.light.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  logoutButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   content: {
     flex: 1,
     padding: 16,
