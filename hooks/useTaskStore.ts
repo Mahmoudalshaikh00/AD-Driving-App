@@ -364,6 +364,14 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
     return newTask;
   };
 
+  const getTasksByInstructor = (instructorId: string) => {
+    return tasks.filter(task => task.instructor_id === instructorId);
+  };
+
+  const getDefaultTasks = () => {
+    return tasks.filter(task => !task.instructor_id);
+  };
+
   const updateTask = async (updatedTask: Task) => {
     const updatedTasks = tasks.map(task => 
       task.id === updatedTask.id ? updatedTask : task
@@ -431,5 +439,7 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
     deleteSubtask,
     getTaskById,
     getSubtasksByTaskId,
+    getTasksByInstructor,
+    getDefaultTasks,
   };
 });

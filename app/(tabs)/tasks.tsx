@@ -1,28 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Plus, Search } from 'lucide-react-native';
 import { useTaskStore } from '@/hooks/useTaskStore';
+import { useAuth } from '@/hooks/useAuthStore';
 import TaskCard from '@/components/TaskCard';
 import Colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TasksScreen() {
-  const { tasks, loading, addTask } = useTaskStore();
+  const { tasks, loading, addTask, getTasksByInstructor, getDefaultTasks } = useTaskStore();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskSection, setNewTaskSection] = useState<1 | 2 | 3 | 4>(1);
 
-  const filteredTasks = tasks.filter(task =>
+  // Filter tasks based on user role and instructor
+  const availableTasks = useMemo(() => {
+    if (!user) return [];
+    
+    if (user.role === 'instructor') {
+      // Show only tasks created by this instructor
+      return getTasksByInstructor(user.id);
+    } else if (user.role === 'admin') {
+      // Admin sees all tasks
+      return tasks;
+    } else {
+      // Students see default tasks (no instructor_id) and tasks from their instructor
+      const defaultTasks = getDefaultTasks();
+      const instructorTasks = user.instructor_id ? getTasksByInstructor(user.instructor_id) : [];
+      return [...defaultTasks, ...instructorTasks];
+    }
+  }, [tasks, user, getTasksByInstructor, getDefaultTasks]);
+
+  const filteredTasks = availableTasks.filter(task =>
     task.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddTask = () => {
-    if (newTaskName.trim()) {
+    if (newTaskName.trim() && user) {
       addTask({
         name: newTaskName.trim(),
         capital: newTaskSection,
+        instructor_id: user.role === 'instructor' ? user.id : undefined,
       });
       setNewTaskName('');
       setNewTaskSection(1);
@@ -51,64 +72,66 @@ export default function TasksScreen() {
         />
       </View>
 
-      {!isAddingTask ? (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setIsAddingTask(true)}
-        >
-          <Plus size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add New Task</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.addTaskForm}>
-          <TextInput
-            style={styles.input}
-            placeholder="Task name"
-            value={newTaskName}
-            onChangeText={setNewTaskName}
-            placeholderTextColor={Colors.light.textLight}
-          />
-          <Text style={styles.sectionLabel}>Section:</Text>
-          <View style={styles.sectionSelector}>
-            {[1, 2, 3, 4].map((section) => (
-              <TouchableOpacity
-                key={section}
-                style={[
-                  styles.sectionOption,
-                  newTaskSection === section && styles.sectionOptionActive,
-                ]}
-                onPress={() => setNewTaskSection(section as 1 | 2 | 3 | 4)}
-              >
-                <Text
+      {user?.role !== 'student' && (
+        !isAddingTask ? (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setIsAddingTask(true)}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.addButtonText}>Add New Task</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.addTaskForm}>
+            <TextInput
+              style={styles.input}
+              placeholder="Task name"
+              value={newTaskName}
+              onChangeText={setNewTaskName}
+              placeholderTextColor={Colors.light.textLight}
+            />
+            <Text style={styles.sectionLabel}>Section:</Text>
+            <View style={styles.sectionSelector}>
+              {[1, 2, 3, 4].map((section) => (
+                <TouchableOpacity
+                  key={section}
                   style={[
-                    styles.sectionOptionText,
-                    newTaskSection === section && styles.sectionOptionTextActive,
+                    styles.sectionOption,
+                    newTaskSection === section && styles.sectionOptionActive,
                   ]}
+                  onPress={() => setNewTaskSection(section as 1 | 2 | 3 | 4)}
                 >
-                  {section}
-                </Text>
+                  <Text
+                    style={[
+                      styles.sectionOptionText,
+                      newTaskSection === section && styles.sectionOptionTextActive,
+                    ]}
+                  >
+                    {section}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => {
+                  setIsAddingTask(false);
+                  setNewTaskName('');
+                  setNewTaskSection(1);
+                }}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-            ))}
+              <TouchableOpacity
+                style={[styles.button, styles.saveButton]}
+                onPress={handleAddTask}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={() => {
-                setIsAddingTask(false);
-                setNewTaskName('');
-                setNewTaskSection(1);
-              }}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.saveButton]}
-              onPress={handleAddTask}
-            >
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        )
       )}
 
       <FlatList

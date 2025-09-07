@@ -27,6 +27,7 @@ export interface Task {
   name: string;
   studentId?: string;
   capital: 1 | 2 | 3 | 4;
+  instructor_id?: string; // Track who created the task
 }
 
 export interface Subtask {
