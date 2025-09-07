@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform, Animated, Easing } from 'react-native';
-import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag, ChevronLeft } from 'lucide-react-native';
+import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
@@ -272,9 +272,7 @@ export default function StudentsScreen() {
     return (
       <View style={styles.container}>
         <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="admin-header">
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="admin-back" accessibilityLabel="Back">
-            <ChevronLeft size={22} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.backBtn} />
           <Text style={styles.headerTitle}>Admin Dashboard</Text>
           <TouchableOpacity
             onPress={handleLogout}
@@ -400,9 +398,7 @@ export default function StudentsScreen() {
     return (
       <View style={styles.container}>
         <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="student-header">
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="student-back" accessibilityLabel="Back">
-            <ChevronLeft size={22} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.backBtn} />
           <Text style={styles.headerTitle}>Student Dashboard</Text>
           <TouchableOpacity
             onPress={handleLogout}
