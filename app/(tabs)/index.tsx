@@ -553,9 +553,7 @@ export default function StudentsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.topHeader, { paddingTop: Math.max(10, insets.top + 6) }]} testID="instructor-header">
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} testID="instructor-back" accessibilityLabel="Back">
-          <ChevronLeft size={22} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.backBtn} />
         <Text style={styles.headerTitle}>Students</Text>
         <TouchableOpacity
           onPress={handleLogout}
