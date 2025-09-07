@@ -8,7 +8,7 @@ import Colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TasksScreen() {
-  const { tasks, loading, addTask, getTasksByInstructor, getDefaultTasks } = useTaskStore();
+  const { tasks, loading, addTask, getTasksByInstructor } = useTaskStore();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,20 +21,16 @@ export default function TasksScreen() {
     if (!user) return [];
     
     if (user.role === 'instructor') {
-      // Show default tasks (no instructor_id) and tasks created by this instructor
-      const defaultTasks = getDefaultTasks();
-      const instructorTasks = getTasksByInstructor(user.id);
-      return [...defaultTasks, ...instructorTasks];
+      // Instructors only see their own tasks (not default tasks)
+      return getTasksByInstructor(user.id);
     } else if (user.role === 'admin') {
       // Admin sees all tasks
       return tasks;
     } else {
-      // Students see default tasks (no instructor_id) and tasks from their instructor
-      const defaultTasks = getDefaultTasks();
-      const instructorTasks = user.instructor_id ? getTasksByInstructor(user.instructor_id) : [];
-      return [...defaultTasks, ...instructorTasks];
+      // Students see tasks from their instructor only (not default tasks)
+      return user.instructor_id ? getTasksByInstructor(user.instructor_id) : [];
     }
-  }, [tasks, user, getTasksByInstructor, getDefaultTasks]);
+  }, [tasks, user, getTasksByInstructor]);
 
   const filteredTasks = availableTasks.filter(task =>
     task.name.toLowerCase().includes(searchQuery.toLowerCase())
