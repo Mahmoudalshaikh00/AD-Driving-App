@@ -97,59 +97,6 @@ export default function StudentsScreen() {
 
   // Admin Dashboard
   if (user?.role === 'admin') {
-    const [adminStats, setAdminStats] = useState({
-      totalUsers: 0,
-      totalInstructors: 0,
-      totalStudents: 0,
-      pendingApprovals: 0,
-      restrictedUsers: 0,
-      totalReports: 0,
-      activeBookings: 0,
-      totalEvaluations: 0,
-    });
-
-    useEffect(() => {
-      // Calculate real admin stats based on actual data
-      const mockInstructors = 3; // John Smith, Sarah Johnson, Mike Wilson
-      const totalUsers = 1 + mockInstructors + students.length; // 1 admin + instructors + students
-      
-      setAdminStats({
-        totalUsers: totalUsers,
-        totalInstructors: mockInstructors,
-        totalStudents: students.length,
-        pendingApprovals: 0, // All users are auto-approved now
-        restrictedUsers: 0, // No restricted users by default
-        totalReports: 2,
-        activeBookings: 12,
-        totalEvaluations: 45,
-      });
-    }, [students.length]);
-
-    const StatCard = ({ icon, title, value, color = Colors.light.primary, subtitle, onPress }: {
-      icon: React.ReactNode;
-      title: string;
-      value: number | string;
-      color?: string;
-      subtitle?: string;
-      onPress?: () => void;
-    }) => (
-      <TouchableOpacity 
-        style={[styles.statCard, { borderLeftColor: color }]}
-        onPress={onPress}
-        disabled={!onPress}
-      >
-        <View style={styles.statHeader}>
-          <View style={[styles.statIcon, { backgroundColor: color + '15' }]}>
-            {icon}
-          </View>
-          <View style={styles.statInfo}>
-            <Text style={styles.statValue}>{value}</Text>
-            <Text style={styles.statTitle}>{title}</Text>
-            {subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
 
     const QuickAction = ({ icon, title, onPress, color = Colors.light.primary }: {
       icon: React.ReactNode;
@@ -194,78 +141,11 @@ export default function StudentsScreen() {
 
         <FlatList
           data={[
-            { key: 'stats' },
             { key: 'actions' },
             { key: 'recent' }
           ]}
           keyExtractor={(item) => item.key}
           renderItem={({ item }) => {
-            if (item.key === 'stats') {
-              return (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Platform Statistics</Text>
-                  <View style={styles.statsGrid}>
-                    <StatCard
-                      icon={<Users size={20} color={Colors.light.primary} />}
-                      title="Total Users"
-                      value={adminStats.totalUsers}
-                      subtitle="Active accounts"
-                      onPress={() => router.push('/admin/users')}
-                    />
-                    <StatCard
-                      icon={<User size={20} color="#10b981" />}
-                      title="Instructors"
-                      value={adminStats.totalInstructors}
-                      color="#10b981"
-                      onPress={() => router.push('/admin/users')}
-                    />
-                    <StatCard
-                      icon={<Users size={20} color="#3b82f6" />}
-                      title="Students"
-                      value={adminStats.totalStudents}
-                      color="#3b82f6"
-                      onPress={() => router.push('/admin/users')}
-                    />
-                    <StatCard
-                      icon={<CheckCircle size={20} color="#10b981" />}
-                      title="Auto-Approved"
-                      value={adminStats.totalUsers - 1} // All users except admin
-                      color="#10b981"
-                      subtitle="All new users"
-                      onPress={() => router.push('/admin/users')}
-                    />
-                    <StatCard
-                      icon={<Users size={20} color="#8b5cf6" />}
-                      title="Active Users"
-                      value={adminStats.totalUsers}
-                      color="#8b5cf6"
-                      subtitle="All approved"
-                      onPress={() => router.push('/admin/users')}
-                    />
-                    <StatCard
-                      icon={<AlertTriangle size={20} color="#f97316" />}
-                      title="Reports"
-                      value={adminStats.totalReports}
-                      color="#f97316"
-                      onPress={() => router.push('/admin/reports')}
-                    />
-                    <StatCard
-                      icon={<CalendarDays size={20} color="#8b5cf6" />}
-                      title="Active Bookings"
-                      value={adminStats.activeBookings}
-                      color="#8b5cf6"
-                    />
-                    <StatCard
-                      icon={<TrendingUp size={20} color="#06b6d4" />}
-                      title="Evaluations"
-                      value={adminStats.totalEvaluations}
-                      color="#06b6d4"
-                    />
-                  </View>
-                </View>
-              );
-            }
-
             if (item.key === 'actions') {
               return (
                 <View style={styles.section}>
