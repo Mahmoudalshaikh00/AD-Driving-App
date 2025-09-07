@@ -21,8 +21,10 @@ export default function TasksScreen() {
     if (!user) return [];
     
     if (user.role === 'instructor') {
-      // Show only tasks created by this instructor
-      return getTasksByInstructor(user.id);
+      // Show default tasks (no instructor_id) and tasks created by this instructor
+      const defaultTasks = getDefaultTasks();
+      const instructorTasks = getTasksByInstructor(user.id);
+      return [...defaultTasks, ...instructorTasks];
     } else if (user.role === 'admin') {
       // Admin sees all tasks
       return tasks;
