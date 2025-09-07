@@ -28,7 +28,52 @@ export default function StudentsScreen() {
   const [newStudentPassword, setNewStudentPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  const filteredStudents = students.filter(student => 
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const result = await new Promise<any>((resolve) => {
+          supabase
+            .from('users')
+            .select('*')
+            .order('role')
+            .order('name')
+            .then(resolve);
+        });
+        
+        const { data, error } = result;
+        
+        if (error) {
+          console.error('Error fetching users:', error);
+        } else {
+          setAllUsers(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    if (user?.role === 'instructor') {
+      fetchAllUsers();
+    } else {
+      setLoadingUsers(false);
+    }
+  }, [user]);
+
+  const instructors = allUsers.filter(u => u.role === 'instructor');
+  const studentsOnly = allUsers.filter(u => u.role === 'student');
+
+  const filteredInstructors = instructors.filter(instructor => 
+    instructor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    instructor.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredStudents = studentsOnly.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     student.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -87,7 +132,7 @@ export default function StudentsScreen() {
     );
   };
 
-  if (loading) {
+  if (loading || loadingUsers) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
@@ -525,13 +570,27 @@ export default function StudentsScreen() {
       )}
 
       <FlatList
-        data={filteredStudents}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <StudentCard student={item} />}
+        data={[
+          { type: 'section', title: 'Instructors' },
+          ...filteredInstructors.map(i => ({ ...i, type: 'instructor' })),
+          { type: 'section', title: 'Students' },
+          ...filteredStudents.map(s => ({ ...s, type: 'student' }))
+        ]}
+        keyExtractor={(item, index) => item.type === 'section' ? `section-${item.title}` : item.id}
+        renderItem={({ item }) => {
+          if (item.type === 'section') {
+            return (
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionHeaderText}>{item.title}</Text>
+              </View>
+            );
+          }
+          return <StudentCard student={item} />;
+        }}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No students found</Text>
+            <Text style={styles.emptyText}>No users found</Text>
           </View>
         }
       />
@@ -721,6 +780,19 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: Colors.light.textLight,
+  },
+  sectionHeader: {
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  sectionHeaderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.textLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   studentProfileContainer: {
     flex: 1,
