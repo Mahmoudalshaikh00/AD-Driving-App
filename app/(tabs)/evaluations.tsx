@@ -115,7 +115,7 @@ const StudentView = React.memo(function StudentView({ userId, tasks, subtasks, e
                 </Text>
                 {trainerName ? (
                   <Text style={styles.trainerSubtitle} numberOfLines={1}>
-                    Trainer: {trainerName}
+                    Instructor: {trainerName}
                   </Text>
                 ) : null}
               </View>
@@ -188,7 +188,7 @@ const StudentView = React.memo(function StudentView({ userId, tasks, subtasks, e
                     <View style={styles.taskBody}>
                       {notes?.notes ? (
                         <View style={styles.notesBox}>
-                          <Text style={styles.notesTitle}>Trainer Notes</Text>
+                          <Text style={styles.notesTitle}>Instructor Notes</Text>
                           <Text style={styles.notesText}>{notes.notes}</Text>
                         </View>
                       ) : null}
@@ -220,7 +220,7 @@ const StudentView = React.memo(function StudentView({ userId, tasks, subtasks, e
         <View style={styles.emptyContainer}>
           <BarChart3 size={64} color={Colors.light.textLight} />
           <Text style={styles.emptyText}>No evaluations yet</Text>
-          <Text style={styles.emptySubtext}>Your trainer will add evaluations and notes.</Text>
+          <Text style={styles.emptySubtext}>Your instructor will add evaluations and notes.</Text>
         </View>
       )}
     </View>
@@ -269,14 +269,14 @@ export default function EvaluationsScreen() {
       const { data, error } = result;
       
       if (!error && data) {
-        // Add mock trainers for demo
-        const mockTrainers = [
-          { id: 'mock-trainer-1', name: 'John Smith', email: 'john@example.com', role: 'trainer', created_at: '2024-01-15', is_approved: true, is_restricted: false },
-          { id: 'mock-trainer-2', name: 'Sarah Johnson', email: 'sarah@example.com', role: 'trainer', created_at: '2024-01-20', is_approved: true, is_restricted: false },
-          { id: 'mock-trainer-3', name: 'Mike Wilson', email: 'mike@example.com', role: 'trainer', created_at: '2024-02-01', is_approved: false, is_restricted: false },
-          { id: 'mock-trainer-4', name: 'Lisa Brown', email: 'lisa@example.com', role: 'trainer', created_at: '2024-02-10', is_approved: true, is_restricted: true },
+        // Add mock instructors for demo
+        const mockInstructors = [
+          { id: 'mock-instructor-1', name: 'John Smith', email: 'john@example.com', role: 'instructor', created_at: '2024-01-15', is_approved: true, is_restricted: false },
+          { id: 'mock-instructor-2', name: 'Sarah Johnson', email: 'sarah@example.com', role: 'instructor', created_at: '2024-01-20', is_approved: true, is_restricted: false },
+          { id: 'mock-instructor-3', name: 'Mike Wilson', email: 'mike@example.com', role: 'instructor', created_at: '2024-02-01', is_approved: false, is_restricted: false },
+          { id: 'mock-instructor-4', name: 'Lisa Brown', email: 'lisa@example.com', role: 'instructor', created_at: '2024-02-10', is_approved: true, is_restricted: true },
         ];
-        setAllUsers([...data, ...mockTrainers]);
+        setAllUsers([...data, ...mockInstructors]);
       }
     } catch (error) {
       console.error('Error loading users:', error);
@@ -344,7 +344,7 @@ export default function EvaluationsScreen() {
       
       const getStatusText = () => {
         if (userData.is_restricted) return 'Restricted';
-        if (!userData.is_approved && userData.role === 'trainer') return 'Pending';
+        if (!userData.is_approved && userData.role === 'instructor') return 'Pending';
         return 'Active';
       };
       
@@ -369,7 +369,7 @@ export default function EvaluationsScreen() {
           </View>
           
           <View style={styles.userActions}>
-            {userData.role === 'trainer' && !userData.is_approved && (
+            {userData.role === 'instructor' && !userData.is_approved && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.approveButton]}
                 onPress={() => handleUserAction(userData.id, 'approve')}
@@ -410,7 +410,7 @@ export default function EvaluationsScreen() {
             </View>
             <View>
               <Text style={styles.adminTitle}>User Management</Text>
-              <Text style={styles.adminSubtitle}>Manage trainers and students</Text>
+              <Text style={styles.adminSubtitle}>Manage instructors and students</Text>
             </View>
           </View>
         </View>

@@ -42,11 +42,10 @@ export default function AdminUsersScreen() {
       console.log('🔄 Loading all users from database...');
       
       // Fetch all users from database
-      const result = supabase
+      const { data: dbUsers, error } = await supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
-      const { data: dbUsers, error } = await (result as any);
 
       if (error) {
         console.error('❌ Error fetching users:', error);
@@ -194,11 +193,10 @@ export default function AdminUsersScreen() {
                     setUsers(prev => prev.filter(u => u.id !== userId));
                   } else {
                     // Real user - delete from database
-                    const deleteResult = supabase
+                    const { error } = await supabase
                       .from('users')
                       .delete()
                       .eq('id', userId);
-                    const { error } = await (deleteResult as any);
                     
                     if (error) throw error;
                     
@@ -243,11 +241,10 @@ export default function AdminUsersScreen() {
         ));
       } else {
         // Real user - update in database
-        const updateResult = supabase
+        const { error } = await supabase
           .from('users')
           .update(updates)
           .eq('id', userId);
-        const { error } = await (updateResult as any);
         
         if (error) throw error;
         
@@ -310,11 +307,10 @@ export default function AdminUsersScreen() {
         ));
       } else {
         // Real user - update in database
-        const updateResult = supabase
+        const { error } = await supabase
           .from('users')
           .update(updates)
           .eq('id', editingUser.id);
-        const { error } = await (updateResult as any);
         
         if (error) throw error;
         
