@@ -10,7 +10,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
   const { user } = useAuth();
 
   const fetchStudents = useCallback(async () => {
-    if (!user || user.role !== 'trainer') return;
+    if (!user || user.role !== 'instructor') return;
 
     setLoading(true);
     try {
@@ -18,7 +18,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         .from('users')
         .select('*')
         .eq('role', 'student')
-        .eq('trainer_id', user.id)
+        .eq('instructor_id', user.id)
         .order('name');
 
       result.then(({ data, error }: any) => {
@@ -36,7 +36,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
   }, [user]);
 
   useEffect(() => {
-    if (user?.role === 'trainer') {
+    if (user?.role === 'instructor') {
       fetchStudents();
     } else if (user?.role === 'student') {
       // For students, set themselves as the only "student" in the list
@@ -50,8 +50,8 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
       return { success: false, error: 'You must be logged in to create students' };
     }
 
-    let isTrainer = user.role === 'trainer';
-    if (!isTrainer) {
+    let isInstructor = user.role === 'instructor';
+    if (!isInstructor) {
       try {
         console.log('🔎 Verifying role from profile for user', user.id);
         const { data: freshProfile, error: profileErr } = await supabase
@@ -63,15 +63,15 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
           console.log('⚠️ Could not verify role from profile:', profileErr);
         } else {
           console.log('📄 Fresh profile role:', (freshProfile as any)?.role);
-          isTrainer = (freshProfile as any)?.role === 'trainer';
+          isInstructor = (freshProfile as any)?.role === 'instructor';
         }
       } catch (e) {
         console.log('⚠️ Role verification failed:', e);
       }
     }
 
-    if (!isTrainer) {
-      return { success: false, error: 'Only trainers are allowed to create student accounts.' };
+    if (!isInstructor) {
+      return { success: false, error: 'Only instructors are allowed to create student accounts.' };
     }
 
     try {
@@ -95,7 +95,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
             name,
             email,
             role: 'student',
-            trainer_id: user.id,
+            instructor_id: user.id,
             password, // Include password for mock database
             is_approved: true, // Auto-approve by default
             is_restricted: false, // Not restricted by default
@@ -128,8 +128,8 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
   }, [students]);
 
   const updateStudent = useCallback(async (id: string, updates: Partial<Student>) => {
-    if (!user || user.role !== 'trainer') {
-      return { success: false, error: 'Only trainers can update students' };
+    if (!user || user.role !== 'instructor') {
+      return { success: false, error: 'Only instructors can update students' };
     }
 
     try {
@@ -137,7 +137,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         .from('users')
         .update(updates)
         .eq('id', id)
-        .eq('trainer_id', user.id);
+        .eq('instructor_id', user.id);
 
       const result = await new Promise((resolve) => {
         query.then(resolve);
@@ -157,8 +157,8 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
   }, [user]);
 
   const deleteStudent = useCallback(async (id: string) => {
-    if (!user || user.role !== 'trainer') {
-      return { success: false, error: 'Only trainers can delete students' };
+    if (!user || user.role !== 'instructor') {
+      return { success: false, error: 'Only instructors can delete students' };
     }
 
     try {
@@ -168,7 +168,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         .from('users')
         .delete()
         .eq('id', id)
-        .eq('trainer_id', user.id);
+        .eq('instructor_id', user.id);
 
       const result = await new Promise((resolve) => {
         query.then(resolve);

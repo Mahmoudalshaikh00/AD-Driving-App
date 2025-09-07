@@ -97,7 +97,7 @@ export default function StudentsScreen() {
   if (user?.role === 'admin') {
     const [adminStats, setAdminStats] = useState({
       totalUsers: 0,
-      totalTrainers: 0,
+      totalInstructors: 0,
       totalStudents: 0,
       pendingApprovals: 0,
       restrictedUsers: 0,
@@ -113,7 +113,7 @@ export default function StudentsScreen() {
       
       setAdminStats({
         totalUsers: totalUsers,
-        totalTrainers: mockInstructors,
+        totalInstructors: mockInstructors,
         totalStudents: students.length,
         pendingApprovals: 0, // All users are auto-approved now
         restrictedUsers: 0, // No restricted users by default
@@ -199,8 +199,8 @@ export default function StudentsScreen() {
                     />
                     <StatCard
                       icon={<User size={20} color="#10b981" />}
-                      title="Trainers"
-                      value={adminStats.totalTrainers}
+                      title="Instructors"
+                      value={adminStats.totalInstructors}
                       color="#10b981"
                       onPress={() => router.push('/admin/users')}
                     />
@@ -398,9 +398,9 @@ export default function StudentsScreen() {
       let mounted = true;
       (async () => {
         try {
-          if (!currentStudent?.trainer_id) { if (mounted) setTrainerName(''); return; }
+          if (!currentStudent?.instructor_id) { if (mounted) setTrainerName(''); return; }
           const { supabase } = await import('@/lib/supabase');
-          const { data, error } = await supabase.from('users').select('*').eq('id', currentStudent.trainer_id).single();
+          const { data, error } = await supabase.from('users').select('*').eq('id', currentStudent.instructor_id).single();
           if (!mounted) return;
           if (error || !data) setTrainerName(''); else setTrainerName((data as any)?.name ?? '');
         } catch {
@@ -408,7 +408,7 @@ export default function StudentsScreen() {
         }
       })();
       return () => { mounted = false; };
-    }, [currentStudent?.trainer_id]);
+    }, [currentStudent?.instructor_id]);
 
     const onToggleTask = (taskId: string, isOpen: boolean) => {
       setExpandedTaskId(isOpen ? null : taskId);

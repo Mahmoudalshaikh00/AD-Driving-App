@@ -101,10 +101,10 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
   }, [students]);
 
   const addAvailability = useCallback((startISO: string, endISO: string) => {
-    if (!user || user.role !== 'trainer') return { success: false, error: 'Only trainers can add availability' } as const;
+    if (!user || user.role !== 'instructor') return { success: false, error: 'Only instructors can add availability' } as const;
     const slot: AvailabilitySlot = {
       id: uid(),
-      trainer_id: user.id,
+      instructor_id: user.id,
       start: startISO,
       end: endISO,
     };
@@ -118,21 +118,21 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
   }, [user]);
 
   const removeAvailability = useCallback((slotId: string) => {
-    if (!user || user.role !== 'trainer') return { success: false, error: 'Only trainers can remove availability' } as const;
+    if (!user || user.role !== 'instructor') return { success: false, error: 'Only instructors can remove availability' } as const;
     setAvailability(prev => prev.filter(slot => slot.id !== slotId));
     return { success: true } as const;
   }, [user]);
 
   const requestBooking = useCallback((studentId: string, startISO: string, endISO: string) => {
     if (!user) return { success: false, error: 'Not authenticated' } as const;
-    const trainerId = user.role === 'student' ? (user.trainer_id ?? '') : user.id;
-    if (!trainerId) return { success: false, error: 'Trainer not found' } as const;
-    const createdBy: 'trainer' | 'student' = user.role === 'trainer' ? 'trainer' : 'student';
-    const status: BookingStatus = createdBy === 'trainer' ? 'approved' : 'pending';
+    const trainerId = user.role === 'student' ? (user.instructor_id ?? '') : user.id;
+    if (!trainerId) return { success: false, error: 'Instructor not found' } as const;
+    const createdBy: 'instructor' | 'student' = user.role === 'instructor' ? 'instructor' : 'student';
+    const status: BookingStatus = createdBy === 'instructor' ? 'approved' : 'pending';
     const booking: Booking = {
       id: uid(),
       student_id: studentId,
-      trainer_id: trainerId,
+      instructor_id: trainerId,
       start: startISO,
       end: endISO,
       status,
@@ -148,7 +148,7 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
     if (createdBy === 'student') {
       notifyLocal('New booking request', 'A student sent a booking request');
     } else {
-      notifyLocal('New lesson booked', 'A trainer scheduled a lesson');
+      notifyLocal('New lesson booked', 'An instructor scheduled a lesson');
     }
     return { success: true, booking } as const;
   }, [user]);
@@ -180,7 +180,7 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
   }, []);
 
   const updateBooking = useCallback((bookingId: string, studentId: string, startISO: string, endISO: string) => {
-    if (!user || user.role !== 'trainer') return { success: false, error: 'Only trainers can update bookings' } as const;
+    if (!user || user.role !== 'instructor') return { success: false, error: 'Only instructors can update bookings' } as const;
     setBookings(prev => prev.map(b => 
       b.id === bookingId 
         ? { ...b, student_id: studentId, start: startISO, end: endISO }
@@ -190,7 +190,7 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
   }, [user]);
 
   const updateAvailabilitySlot = useCallback((slotId: string, startISO: string, endISO: string) => {
-    if (!user || user.role !== 'trainer') return { success: false, error: 'Only trainers can update availability' } as const;
+    if (!user || user.role !== 'instructor') return { success: false, error: 'Only instructors can update availability' } as const;
     setAvailability(prev => prev.map(slot => 
       slot.id === slotId 
         ? { ...slot, start: startISO, end: endISO }
@@ -201,7 +201,7 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
 
   const myBookings = useMemo(() => {
     if (!user) return [] as Booking[];
-    if (user.role === 'trainer') return bookings.filter(b => b.trainer_id === user.id && b.status !== 'rejected');
+    if (user.role === 'instructor') return bookings.filter(b => b.instructor_id === user.id && b.status !== 'rejected');
     return bookings.filter(b => b.student_id === user.id && b.status !== 'rejected');
   }, [bookings, user]);
 
@@ -210,28 +210,28 @@ export const [ScheduleProvider, useScheduleStore] = createContextHook(() => {
   }, [bookings]);
 
   const trainerBookings = useCallback((trainerId?: string) => {
-    const targetTrainerId = trainerId || (user?.role === 'trainer' ? user.id : user?.trainer_id);
+    const targetTrainerId = trainerId || (user?.role === 'instructor' ? user.id : user?.instructor_id);
     if (!targetTrainerId) return [];
-    return bookings.filter(b => b.trainer_id === targetTrainerId && b.status !== 'rejected');
+    return bookings.filter(b => b.instructor_id === targetTrainerId && b.status !== 'rejected');
   }, [bookings, user]);
 
   const myTrainerAvailability = useMemo(() => {
     if (!user) return [] as AvailabilitySlot[];
-    if (user.role === 'trainer') return availability.filter(a => a.trainer_id === user.id);
-    // For students, show their trainer's availability
-    return availability.filter(a => a.trainer_id === user.trainer_id);
+    if (user.role === 'instructor') return availability.filter(a => a.instructor_id === user.id);
+    // For students, show their instructor's availability
+    return availability.filter(a => a.instructor_id === user.instructor_id);
   }, [availability, user]);
 
   const trainerAvailability = useCallback((trainerId?: string) => {
     if (trainerId) {
-      return availability.filter(a => a.trainer_id === trainerId);
+      return availability.filter(a => a.instructor_id === trainerId);
     }
     if (!user) return [];
-    if (user.role === 'trainer') {
-      return availability.filter(a => a.trainer_id === user.id);
+    if (user.role === 'instructor') {
+      return availability.filter(a => a.instructor_id === user.id);
     }
-    // For students, return their trainer's availability
-    return availability.filter(a => a.trainer_id === user.trainer_id);
+    // For students, return their instructor's availability
+    return availability.filter(a => a.instructor_id === user.instructor_id);
   }, [availability, user]);
 
   const studentColor = useCallback((studentId: string) => {
