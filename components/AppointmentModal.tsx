@@ -79,7 +79,14 @@ export default function AppointmentModal({
       } else {
         // Reset to defaults for new appointment
         // For students, auto-select themselves
-        setSelectedStudent(isStudentView ? (currentUserId || null) : null);
+        // For instructors, auto-select if there's only one student
+        if (isStudentView) {
+          setSelectedStudent(currentUserId || null);
+        } else if (students.length === 1) {
+          setSelectedStudent(students[0].id);
+        } else {
+          setSelectedStudent(null);
+        }
         setSelectedDate(new Date());
         setStartHour(9);
         setStartMinute(0);
@@ -88,7 +95,7 @@ export default function AppointmentModal({
       }
       setShowDatePicker(false);
     }
-  }, [visible, editingAppointment, isStudentView, currentUserId]);
+  }, [visible, editingAppointment, isStudentView, currentUserId, students]);
 
   // Always call useCallback hooks
   const handleDateSelect = React.useCallback((date: Date, hour: number, minute: number) => {
@@ -154,8 +161,8 @@ export default function AppointmentModal({
               </TouchableOpacity>
             </View>
 
-            {/* Student Selection - Only show for trainers */}
-            {!isStudentView && (
+            {/* Student Selection - Only show for trainers with multiple students */}
+            {!isStudentView && students.length > 1 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Who is this appointment with?</Text>
                 <View style={styles.studentList}>
@@ -181,6 +188,19 @@ export default function AppointmentModal({
               </View>
             )}
             
+            {/* Show selected student when auto-selected */}
+            {!isStudentView && students.length === 1 && selectedStudent && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Appointment with:</Text>
+                <View style={styles.selectedStudentDisplay}>
+                  <View style={[styles.colorDot, { backgroundColor: studentColor(selectedStudent) }]} />
+                  <Text style={styles.selectedStudentDisplayText}>
+                    {students.find(s => s.id === selectedStudent)?.name}
+                  </Text>
+                </View>
+              </View>
+            )}
+            
             {/* Info Box */}
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>
@@ -199,14 +219,14 @@ export default function AppointmentModal({
             <TouchableOpacity
               style={[
                 styles.confirmButton,
-                (!selectedStudent && !isStudentView) && styles.disabledButton,
+                (!selectedStudent && !isStudentView && students.length > 1) && styles.disabledButton,
               ]}
               onPress={handleConfirm}
-              disabled={!selectedStudent && !isStudentView}
+              disabled={!selectedStudent && !isStudentView && students.length > 1}
             >
               <Text style={[
                 styles.confirmButtonText,
-                (!selectedStudent && !isStudentView) && { color: '#999' }
+                (!selectedStudent && !isStudentView && students.length > 1) && { color: '#999' }
               ]}>
                 {editingAppointment 
                   ? (isStudentView ? 'Update Request' : 'Update Appointment')
@@ -494,5 +514,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.textLight,
     lineHeight: 20,
+  },
+  selectedStudentDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f8ff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+  },
+  selectedStudentDisplayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.primary,
   },
 });
