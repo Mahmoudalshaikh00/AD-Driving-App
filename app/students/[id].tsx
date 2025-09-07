@@ -152,7 +152,7 @@ export default function StudentDetailsScreen() {
               {student.email ? (
                 <Text style={styles.contactInfo}>{student.email}</Text>
               ) : null}
-              <Text style={styles.trainerInfo}>Instructor: {user?.role === 'trainer' ? (user?.name ?? 'You') : 'Assigned Instructor'}</Text>
+              <Text style={styles.trainerInfo}>Instructor: {user?.role === 'instructor' ? (user?.name ?? 'You') : 'Assigned Instructor'}</Text>
             </View>
             <View style={styles.studentHeaderRight}>
               <View style={styles.circularWrapper}>
@@ -273,11 +273,11 @@ export default function StudentDetailsScreen() {
             style={styles.taskItem}
             onPress={() => {
               console.log('Task press', { userRole: user?.role, studentId: id, taskId: item.id });
-              if (user?.role === 'trainer') {
+              if (user?.role === 'instructor') {
                 router.push(`/evaluate/${id}/${item.id}`);
               }
             }}
-            disabled={user?.role !== 'trainer'}
+            disabled={user?.role !== 'instructor'}
             testID={`student-task-${item.id}`}
           >
             <View style={styles.taskIconContainer}>
