@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ClipboardList, Edit2, Trash2, Save, X } from 'lucide-react-native';
+import { ClipboardList, Edit2, Trash2, Save, X, Eye, EyeOff } from 'lucide-react-native';
 import { Task, User } from '@/types';
 import Colors from '@/constants/colors';
 import { useTaskStore } from '@/hooks/useTaskStore';
@@ -15,10 +15,12 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, studentId, showActions = false, currentUser }: TaskCardProps) {
   const router = useRouter();
-  const { updateTask, deleteTask } = useTaskStore();
+  const { updateTask, deleteTask, toggleHideTask, isTaskHidden } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(task.name);
   const [editSection, setEditSection] = useState<1 | 2 | 3 | 4>(task.capital);
+  
+  const isHidden = currentUser?.role === 'instructor' && !task.instructor_id && isTaskHidden(currentUser.id, task.id);
 
   const handlePress = () => {
     if (!isEditing) {
@@ -66,6 +68,12 @@ export default function TaskCard({ task, studentId, showActions = false, current
         },
       ]
     );
+  };
+
+  const handleToggleHide = () => {
+    if (currentUser?.role === 'instructor') {
+      toggleHideTask(currentUser.id, task.id);
+    }
   };
 
   if (isEditing) {
@@ -119,30 +127,43 @@ export default function TaskCard({ task, studentId, showActions = false, current
 
   return (
     <TouchableOpacity 
-      style={styles.container} 
+      style={[styles.container, isHidden && styles.hiddenContainer]} 
       onPress={handlePress}
       testID={`task-card-${task.id}`}
     >
       <View style={styles.iconContainer}>
-        <ClipboardList size={24} color={Colors.light.primary} />
+        <ClipboardList size={24} color={isHidden ? Colors.light.textLight : Colors.light.primary} />
       </View>
       <View style={styles.infoContainer}>
-        <Text style={styles.name}>{task.name}</Text>
-        <Text style={styles.section}>Section {task.capital}</Text>
+        <Text style={[styles.name, isHidden && styles.hiddenText]}>{task.name}</Text>
+        <Text style={[styles.section, isHidden && styles.hiddenText]}>Section {task.capital}</Text>
+        {isHidden && <Text style={styles.hiddenLabel}>Hidden from your view</Text>}
       </View>
       {showActions && currentUser && (
-        // Only show actions for tasks created by the current instructor (not default tasks)
-        (currentUser.role === 'admin' || 
-         (currentUser.role === 'instructor' && task.instructor_id === currentUser.id)) && (
-          <View style={styles.actionContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
-              <Edit2 size={18} color={Colors.light.primary} />
+        <View style={styles.actionContainer}>
+          {/* Show hide/unhide button for instructors on default tasks */}
+          {currentUser.role === 'instructor' && !task.instructor_id && (
+            <TouchableOpacity style={styles.actionButton} onPress={handleToggleHide}>
+              {isHidden ? (
+                <Eye size={18} color={Colors.light.secondary} />
+              ) : (
+                <EyeOff size={18} color={Colors.light.textLight} />
+              )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-              <Trash2 size={18} color={Colors.light.danger} />
-            </TouchableOpacity>
-          </View>
-        )
+          )}
+          {/* Show edit/delete for admin or instructor's own tasks */}
+          {(currentUser.role === 'admin' || 
+           (currentUser.role === 'instructor' && task.instructor_id === currentUser.id)) && (
+            <>
+              <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                <Edit2 size={18} color={Colors.light.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
+                <Trash2 size={18} color={Colors.light.danger} />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -239,5 +260,18 @@ const styles = StyleSheet.create({
   },
   sectionEditOptionTextActive: {
     color: '#fff',
+  },
+  hiddenContainer: {
+    opacity: 0.6,
+    backgroundColor: '#f8f9fa',
+  },
+  hiddenText: {
+    color: Colors.light.textLight,
+  },
+  hiddenLabel: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    fontStyle: 'italic',
+    marginTop: 2,
   },
 });

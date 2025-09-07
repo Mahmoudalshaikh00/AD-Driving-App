@@ -8,7 +8,7 @@ import Colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TasksScreen() {
-  const { tasks, loading, addTask, getTasksByInstructor } = useTaskStore();
+  const { tasks, loading, addTask, getTasksByInstructor, getVisibleTasksForInstructor } = useTaskStore();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,10 +21,8 @@ export default function TasksScreen() {
     if (!user) return [];
     
     if (user.role === 'instructor') {
-      // Instructors see their own tasks + default tasks
-      const instructorTasks = getTasksByInstructor(user.id);
-      const defaultTasks = tasks.filter(task => !task.instructor_id);
-      return [...defaultTasks, ...instructorTasks];
+      // Instructors see their own tasks + visible default tasks
+      return getVisibleTasksForInstructor(user.id);
     } else if (user.role === 'admin') {
       // Admin sees all tasks
       return tasks;
@@ -35,7 +33,7 @@ export default function TasksScreen() {
       const defaultTasks = tasks.filter(task => !task.instructor_id);
       return [...defaultTasks, ...instructorTasks];
     }
-  }, [tasks, user, getTasksByInstructor]);
+  }, [tasks, user, getTasksByInstructor, getVisibleTasksForInstructor]);
 
   const filteredTasks = availableTasks.filter(task =>
     task.name.toLowerCase().includes(searchQuery.toLowerCase())

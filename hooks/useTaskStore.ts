@@ -300,10 +300,12 @@ const initialSubtasks: Subtask[] = [
 
 const TASKS_STORAGE_KEY = 'driving-app-tasks';
 const SUBTASKS_STORAGE_KEY = 'driving-app-subtasks';
+const HIDDEN_TASKS_STORAGE_KEY = 'driving-app-hidden-tasks';
 
 export const [TaskProvider, useTaskStore] = createContextHook(() => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [hiddenTasksByInstructor, setHiddenTasksByInstructor] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
 
   // Load tasks and subtasks from storage
@@ -312,6 +314,7 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
       try {
         const storedTasks = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
         const storedSubtasks = await AsyncStorage.getItem(SUBTASKS_STORAGE_KEY);
+        const storedHiddenTasks = await AsyncStorage.getItem(HIDDEN_TASKS_STORAGE_KEY);
         
         if (storedTasks) {
           setTasks(JSON.parse(storedTasks));
@@ -325,6 +328,10 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
         } else {
           setSubtasks(initialSubtasks);
           await AsyncStorage.setItem(SUBTASKS_STORAGE_KEY, JSON.stringify(initialSubtasks));
+        }
+        
+        if (storedHiddenTasks) {
+          setHiddenTasksByInstructor(JSON.parse(storedHiddenTasks));
         }
       } catch (error) {
         console.error('Failed to load tasks/subtasks:', error);
@@ -352,6 +359,13 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
         .catch(error => console.error('Failed to save subtasks:', error));
     }
   }, [subtasks, loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      AsyncStorage.setItem(HIDDEN_TASKS_STORAGE_KEY, JSON.stringify(hiddenTasksByInstructor))
+        .catch(error => console.error('Failed to save hidden tasks:', error));
+    }
+  }, [hiddenTasksByInstructor, loading]);
 
   const addTask = async (task: Omit<Task, 'id'>) => {
     const newTask: Task = {
@@ -427,6 +441,42 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
     return subtasks.filter(subtask => subtask.taskId === taskId);
   };
 
+  const toggleHideTask = (instructorId: string, taskId: string) => {
+    setHiddenTasksByInstructor(prev => {
+      const instructorHiddenTasks = prev[instructorId] || [];
+      const isHidden = instructorHiddenTasks.includes(taskId);
+      
+      if (isHidden) {
+        // Unhide the task
+        return {
+          ...prev,
+          [instructorId]: instructorHiddenTasks.filter(id => id !== taskId)
+        };
+      } else {
+        // Hide the task
+        return {
+          ...prev,
+          [instructorId]: [...instructorHiddenTasks, taskId]
+        };
+      }
+    });
+  };
+
+  const isTaskHidden = (instructorId: string, taskId: string) => {
+    return hiddenTasksByInstructor[instructorId]?.includes(taskId) || false;
+  };
+
+  const getVisibleTasksForInstructor = (instructorId: string) => {
+    const instructorTasks = tasks.filter(task => task.instructor_id === instructorId);
+    const defaultTasks = tasks.filter(task => !task.instructor_id);
+    const hiddenTasks = hiddenTasksByInstructor[instructorId] || [];
+    
+    // Filter out hidden default tasks for this instructor
+    const visibleDefaultTasks = defaultTasks.filter(task => !hiddenTasks.includes(task.id));
+    
+    return [...visibleDefaultTasks, ...instructorTasks];
+  };
+
   return {
     tasks,
     subtasks,
@@ -441,5 +491,8 @@ export const [TaskProvider, useTaskStore] = createContextHook(() => {
     getSubtasksByTaskId,
     getTasksByInstructor,
     getDefaultTasks,
+    toggleHideTask,
+    isTaskHidden,
+    getVisibleTasksForInstructor,
   };
 });
