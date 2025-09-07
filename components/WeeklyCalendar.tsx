@@ -38,8 +38,14 @@ export default function WeeklyCalendar({ onEditAppointment, onEditAvailability, 
   }, [weekStart]);
 
   const availability = useMemo(() => {
+    // If studentId is provided and user is trainer, show trainer's availability
+    // If studentId is provided and user is student, show trainer's availability for that student's trainer
+    if (studentId && isTrainer) {
+      // For instructor viewing a specific student's schedule, show instructor's own availability
+      return trainerAvailability();
+    }
     return isTrainer ? trainerAvailability() : myTrainerAvailability;
-  }, [isTrainer, trainerAvailability, myTrainerAvailability]);
+  }, [isTrainer, trainerAvailability, myTrainerAvailability, studentId]);
 
   const getBookingForSlot = useCallback((date: Date, hour: number, minute: number): Booking | undefined => {
     // If studentId is provided, show only that student's bookings
