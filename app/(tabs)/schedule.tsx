@@ -46,7 +46,7 @@ export default function ScheduleScreen() {
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
 
-  const isTrainer = user?.role === 'instructor';
+  const isInstructor = user?.role === 'instructor';
   const isAdmin = user?.role === 'admin';
   const pendingBookings = myBookings.filter(b => b.status === 'pending');
   
@@ -81,7 +81,7 @@ export default function ScheduleScreen() {
   
   // Mark schedule notifications as read when entering this screen
   React.useEffect(() => {
-    if (isTrainer) {
+    if (isInstructor) {
       // For trainers, mark all schedule notifications as read
       students.forEach(student => {
         markAsReadByStudentAndType(student.id, 'schedule');
@@ -90,7 +90,7 @@ export default function ScheduleScreen() {
       // For students, mark instructor's schedule notifications as read
       markAsReadByStudentAndType(user.instructor_id, 'schedule');
     }
-  }, [isTrainer, students, user?.instructor_id, markAsReadByStudentAndType]);
+  }, [isInstructor, students, user?.instructor_id, markAsReadByStudentAndType]);
 
 
   const handleAppointmentCreate = (studentId: string, date: Date, startHour: number, startMinute: number, endHour: number, endMinute: number) => {
@@ -107,7 +107,7 @@ export default function ScheduleScreen() {
       }
       
       // For students, use their own ID as studentId
-      const finalStudentId = isTrainer ? studentId : (user?.id || '');
+      const finalStudentId = isInstructor ? studentId : (user?.id || '');
       
       let result;
       if (editingAppointment) {
@@ -122,7 +122,7 @@ export default function ScheduleScreen() {
       if (result.success) {
         setShowAppointmentModal(false);
         setEditingAppointment(null);
-        const successMessage = isTrainer 
+        const successMessage = isInstructor 
           ? (editingAppointment ? 'Appointment updated successfully!' : 'Appointment created successfully!')
           : (editingAppointment ? 'Appointment request updated!' : 'Appointment request sent!');
         Alert.alert('Success', successMessage);
@@ -176,7 +176,7 @@ export default function ScheduleScreen() {
   const renderActionButtons = () => {
     return (
       <View style={styles.actionButtons}>
-        {isTrainer ? (
+        {isInstructor ? (
           <>
             <TouchableOpacity
               style={styles.actionButton}
@@ -225,8 +225,8 @@ export default function ScheduleScreen() {
   const renderPendingRequests = () => {
     if (pendingBookings.length === 0) return null;
 
-    const title = isTrainer ? 'Pending Requests' : 'Pending Appointments';
-    const showActions = isTrainer;
+    const title = isInstructor ? 'Pending Requests' : 'Pending Appointments';
+    const showActions = isInstructor;
 
     return (
       <View style={styles.pendingContainer}>
@@ -242,7 +242,7 @@ export default function ScheduleScreen() {
                 <View style={styles.pendingHeader}>
                   <View style={[styles.colorDot, { backgroundColor: studentColor(booking.student_id) }]} />
                   <Text style={styles.pendingStudentName}>
-                    {isTrainer ? (student?.name || 'Student') : 'Your Appointment'}
+                    {isInstructor ? (student?.name || 'Student') : 'Your Appointment'}
                   </Text>
                 </View>
                 <Text style={styles.pendingTime}>
@@ -287,7 +287,7 @@ export default function ScheduleScreen() {
     const availabilitySlots = myTrainerAvailability;
     if (availabilitySlots.length === 0) return null;
 
-    const title = isTrainer ? 'My Availability Slots' : 'Instructor Availability';
+    const title = isInstructor ? 'My Availability Slots' : 'Instructor Availability';
 
     return (
       <View style={styles.availabilityContainer}>
@@ -307,7 +307,7 @@ export default function ScheduleScreen() {
                     {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
                   </Text>
                 </View>
-                {isTrainer && (
+                {isInstructor && (
                   <TouchableOpacity
                     style={styles.editAvailabilityButton}
                     onPress={() => {
@@ -503,10 +503,10 @@ export default function ScheduleScreen() {
           setEditingAppointment(null);
         }}
         onConfirm={handleAppointmentCreate}
-        students={isTrainer ? students : []}
+        students={isInstructor ? students : []}
         studentColor={studentColor}
         editingAppointment={editingAppointment}
-        isStudentView={!isTrainer}
+        isStudentView={!isInstructor}
         currentUserId={user?.id}
       />
       
