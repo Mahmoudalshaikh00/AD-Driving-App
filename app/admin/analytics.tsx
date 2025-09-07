@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { BarChart3, TrendingUp, Users, Calendar, MessageSquare, Star, Activity, Clock, Award, AlertTriangle } from 'lucide-react-native';
+import { BarChart3, TrendingUp, Users, Calendar, MessageSquare, Star, Activity, Clock, Award, AlertTriangle, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import Colors from '@/constants/colors';
@@ -163,12 +163,20 @@ export default function AdminAnalyticsScreen() {
           <Text style={styles.sectionTitle}>Platform Overview</Text>
           <View style={styles.metricsGrid}>
             <MetricCard
-              icon={<Users size={24} color={Colors.light.primary} />}
-              title="Total Users"
-              value={analytics.userGrowth[analytics.userGrowth.length - 1]?.users || 0}
-              subtitle="Active accounts"
+              icon={<User size={20} color="#10b981" />}
+              title="Instructors"
+              value={analytics.userGrowth[analytics.userGrowth.length - 1]?.instructors || 0}
+              subtitle="Active instructors"
+              color="#10b981"
               trend="up"
-              size="large"
+            />
+            <MetricCard
+              icon={<Users size={20} color="#3b82f6" />}
+              title="Students"
+              value={analytics.userGrowth[analytics.userGrowth.length - 1]?.students || 0}
+              subtitle="Active students"
+              color="#3b82f6"
+              trend="up"
             />
             <MetricCard
               icon={<Calendar size={20} color="#10b981" />}
@@ -186,10 +194,10 @@ export default function AdminAnalyticsScreen() {
               trend="up"
             />
             <MetricCard
-              icon={<MessageSquare size={20} color="#3b82f6" />}
+              icon={<MessageSquare size={20} color="#8b5cf6" />}
               title="Active Chats"
               value={analytics.platformActivity.activeChats}
-              color="#3b82f6"
+              color="#8b5cf6"
               trend="stable"
             />
           </View>
