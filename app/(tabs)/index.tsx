@@ -628,21 +628,49 @@ function CircularProgress({ percent, animatedValue, size, strokeWidth }: { perce
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(100, percent));
+  const dashOffsetStatic = circumference - (circumference * clamped) / 100;
+  
   if (Platform.OS === 'web') {
-    const dashOffsetStatic = circumference - (circumference * clamped) / 100;
     return (
-      <Svg width={size} height={size}>
+      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
         <Circle cx={size/2} cy={size/2} r={radius} stroke={Colors.light.border} strokeWidth={strokeWidth} fill="none" />
-        <Circle cx={size/2} cy={size/2} r={radius} stroke={Colors.light.primary} strokeWidth={strokeWidth} strokeDasharray={`${circumference} ${circumference}`} strokeDashoffset={dashOffsetStatic} strokeLinecap="round" fill="none" />
+        <Circle 
+          cx={size/2} 
+          cy={size/2} 
+          r={radius} 
+          stroke={Colors.light.primary} 
+          strokeWidth={strokeWidth} 
+          strokeDasharray={`${circumference} ${circumference}`} 
+          strokeDashoffset={dashOffsetStatic} 
+          strokeLinecap="round" 
+          fill="none" 
+        />
       </Svg>
     );
   }
-  const dashOffset = animatedValue.interpolate({ inputRange: [0, 100], outputRange: [circumference, circumference - (circumference * clamped) / 100], extrapolate: 'clamp' });
+  
+  const dashOffset = animatedValue.interpolate({ 
+    inputRange: [0, 100], 
+    outputRange: [circumference, dashOffsetStatic], 
+    extrapolate: 'clamp' 
+  });
+  
   const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+  
   return (
-    <Svg width={size} height={size}>
+    <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
       <Circle cx={size/2} cy={size/2} r={radius} stroke={Colors.light.border} strokeWidth={strokeWidth} fill="none" />
-      <AnimatedCircle cx={size/2} cy={size/2} r={radius} stroke={Colors.light.primary} strokeWidth={strokeWidth} strokeDasharray={`${circumference} ${circumference}`} strokeDashoffset={dashOffset as unknown as number} strokeLinecap="round" fill="none" />
+      <AnimatedCircle 
+        cx={size/2} 
+        cy={size/2} 
+        r={radius} 
+        stroke={Colors.light.primary} 
+        strokeWidth={strokeWidth} 
+        strokeDasharray={`${circumference} ${circumference}`} 
+        strokeDashoffset={dashOffset as unknown as number} 
+        strokeLinecap="round" 
+        fill="none" 
+      />
     </Svg>
   );
 }
