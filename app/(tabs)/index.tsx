@@ -529,19 +529,34 @@ export default function StudentsScreen() {
       </View>
       <View style={styles.contentWrapper}>
       <View style={styles.topSection}>
-        <View style={styles.searchContainer}>
+        <TouchableOpacity 
+          style={styles.searchButton}
+          onPress={() => setSearchQuery(searchQuery === '' ? ' ' : '')}
+        >
           <Search size={20} color={Colors.light.textLight} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.addStudentButton} 
+          onPress={() => setIsAddingStudent(true)}
+        >
+          <Plus size={20} color="#fff" />
+          <Text style={styles.addButtonText}>Add Student</Text>
+        </TouchableOpacity>
+      </View>
+
+      {searchQuery.trim() !== '' && (
+        <View style={styles.searchInputContainer}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search students..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor={Colors.light.textLight}
+            autoFocus
           />
         </View>
-        
-        <View style={{ width: 50 }} />
-      </View>
+      )}
 
       {isAddingStudent ? (
         <View style={styles.addStudentForm}>
@@ -596,17 +611,7 @@ export default function StudentsScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      ) : (
-        <View>
-          <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={() => setIsAddingStudent(true)}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.addButtonText}>Add Student</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      ) : null}
 
       <FlatList
         data={filteredStudents}
@@ -722,6 +727,44 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
+  searchButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  addStudentButton: {
+    flex: 1,
+    height: 50,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchInputContainer: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -753,8 +796,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   searchInput: {
-    flex: 1,
-    marginLeft: 8,
+    height: 50,
     fontSize: 16,
     color: Colors.light.text,
   },
