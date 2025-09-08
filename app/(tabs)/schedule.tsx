@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, TextInput } from 'react-native';
-import { ChevronLeft, Plus, Clock, Shield, Mail, Save, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronLeft, Plus, Clock, Shield, Mail, Save, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { format } from 'date-fns';
 import Colors from '@/constants/colors';
 import { useScheduleStore } from '@/hooks/useScheduleStore';
@@ -45,6 +45,7 @@ export default function ScheduleScreen() {
   const [showAvailabilityModal, setShowAvailabilityModal] = useState<boolean>(false);
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
+  const [showAvailabilitySection, setShowAvailabilitySection] = useState<boolean>(false);
 
   const isInstructor = user?.role === 'instructor';
   const isAdmin = user?.role === 'admin';
@@ -291,37 +292,50 @@ export default function ScheduleScreen() {
 
     return (
       <View style={styles.availabilityContainer}>
-        <Text style={styles.availabilityTitle}>{title} ({availabilitySlots.length})</Text>
-        <View style={styles.availabilityGrid}>
-          {availabilitySlots.map(slot => {
-            const startDate = new Date(slot.start);
-            const endDate = new Date(slot.end);
-            
-            return (
-              <View key={slot.id} style={styles.availabilitySlot}>
-                <View style={styles.availabilityInfo}>
-                  <Text style={styles.availabilityDate}>
-                    {format(startDate, 'EEE, MMM d')}
-                  </Text>
-                  <Text style={styles.availabilityTime}>
-                    {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
-                  </Text>
+        <TouchableOpacity 
+          style={styles.availabilityHeader}
+          onPress={() => setShowAvailabilitySection(!showAvailabilitySection)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.availabilityTitle}>{title} ({availabilitySlots.length})</Text>
+          {showAvailabilitySection ? (
+            <ChevronUp size={20} color={Colors.light.textLight} />
+          ) : (
+            <ChevronDown size={20} color={Colors.light.textLight} />
+          )}
+        </TouchableOpacity>
+        {showAvailabilitySection && (
+          <View style={styles.availabilityGrid}>
+            {availabilitySlots.map(slot => {
+              const startDate = new Date(slot.start);
+              const endDate = new Date(slot.end);
+              
+              return (
+                <View key={slot.id} style={styles.availabilitySlot}>
+                  <View style={styles.availabilityInfo}>
+                    <Text style={styles.availabilityDate}>
+                      {format(startDate, 'EEE, MMM d')}
+                    </Text>
+                    <Text style={styles.availabilityTime}>
+                      {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
+                    </Text>
+                  </View>
+                  {isInstructor && (
+                    <TouchableOpacity
+                      style={styles.editAvailabilityButton}
+                      onPress={() => {
+                        setEditingAvailability(slot.id);
+                        setShowAvailabilityModal(true);
+                      }}
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-                {isInstructor && (
-                  <TouchableOpacity
-                    style={styles.editAvailabilityButton}
-                    onPress={() => {
-                      setEditingAvailability(slot.id);
-                      setShowAvailabilityModal(true);
-                    }}
-                  >
-                    <Text style={styles.editButtonText}>Edit</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            );
-          })}
-        </View>
+              );
+            })}
+          </View>
+        )}
       </View>
     );
   };
@@ -659,22 +673,28 @@ const styles = StyleSheet.create({
   },
   availabilityContainer: {
     backgroundColor: Colors.light.cardBackground,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
-    maxHeight: 200,
+  },
+  availabilityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   availabilityTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: Colors.light.text,
-    marginBottom: 12,
   },
   availabilityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    maxHeight: 200,
   },
   availabilitySlot: {
     flexDirection: 'row',
