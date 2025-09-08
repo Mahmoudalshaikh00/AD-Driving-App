@@ -649,6 +649,7 @@ function CircularProgress({ percent, animatedValue, size, strokeWidth }: { perce
           strokeDashoffset={dashOffsetStatic}
           strokeLinecap="round"
           fill="none"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </Svg>
     );
@@ -682,6 +683,7 @@ function CircularProgress({ percent, animatedValue, size, strokeWidth }: { perce
         strokeDashoffset={dashOffset as unknown as number}
         strokeLinecap="round"
         fill="none"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
       />
     </Svg>
   );
