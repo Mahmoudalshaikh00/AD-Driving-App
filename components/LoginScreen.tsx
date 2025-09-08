@@ -146,17 +146,7 @@ export default function LoginScreen() {
               <Text style={styles.roleButtonText}>I&apos;m a Student</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity
-              style={styles.roleButton}
-              onPress={() => {
-                resetForm();
-                setMode('admin');
-              }}
-              testID="admin-button"
-            >
-              <Shield size={24} color={Colors.light.primary} />
-              <Text style={styles.roleButtonText}>Admin Panel</Text>
-            </TouchableOpacity>
+
           </View>
           
           <Text style={styles.footerText}>
