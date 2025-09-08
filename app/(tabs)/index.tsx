@@ -23,6 +23,7 @@ export default function StudentsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
@@ -531,7 +532,12 @@ export default function StudentsScreen() {
       <View style={styles.topSection}>
         <TouchableOpacity 
           style={styles.searchButton}
-          onPress={() => setSearchQuery(searchQuery === '' ? ' ' : '')}
+          onPress={() => {
+            setShowSearchInput(!showSearchInput);
+            if (showSearchInput) {
+              setSearchQuery('');
+            }
+          }}
         >
           <Search size={20} color={Colors.light.textLight} />
         </TouchableOpacity>
@@ -545,7 +551,7 @@ export default function StudentsScreen() {
         </TouchableOpacity>
       </View>
 
-      {searchQuery.trim() !== '' && (
+      {showSearchInput && (
         <View style={styles.searchInputContainer}>
           <TextInput
             style={styles.searchInput}
