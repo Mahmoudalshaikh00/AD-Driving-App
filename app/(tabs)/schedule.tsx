@@ -305,36 +305,42 @@ export default function ScheduleScreen() {
           )}
         </TouchableOpacity>
         {showAvailabilitySection && (
-          <View style={styles.availabilityGrid}>
-            {availabilitySlots.map(slot => {
-              const startDate = new Date(slot.start);
-              const endDate = new Date(slot.end);
-              
-              return (
-                <View key={slot.id} style={styles.availabilitySlot}>
-                  <View style={styles.availabilityInfo}>
-                    <Text style={styles.availabilityDate}>
-                      {format(startDate, 'EEE, MMM d')}
-                    </Text>
-                    <Text style={styles.availabilityTime}>
-                      {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
-                    </Text>
+          <ScrollView 
+            style={styles.availabilityScrollView}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+          >
+            <View style={styles.availabilityGrid}>
+              {availabilitySlots.map(slot => {
+                const startDate = new Date(slot.start);
+                const endDate = new Date(slot.end);
+                
+                return (
+                  <View key={slot.id} style={styles.availabilitySlot}>
+                    <View style={styles.availabilityInfo}>
+                      <Text style={styles.availabilityDate}>
+                        {format(startDate, 'EEE, MMM d')}
+                      </Text>
+                      <Text style={styles.availabilityTime}>
+                        {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
+                      </Text>
+                    </View>
+                    {isInstructor && (
+                      <TouchableOpacity
+                        style={styles.editAvailabilityButton}
+                        onPress={() => {
+                          setEditingAvailability(slot.id);
+                          setShowAvailabilityModal(true);
+                        }}
+                      >
+                        <Text style={styles.editButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                  {isInstructor && (
-                    <TouchableOpacity
-                      style={styles.editAvailabilityButton}
-                      onPress={() => {
-                        setEditingAvailability(slot.id);
-                        setShowAvailabilityModal(true);
-                      }}
-                    >
-                      <Text style={styles.editButtonText}>Edit</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })}
-          </View>
+                );
+              })}
+            </View>
+          </ScrollView>
         )}
       </View>
     );
@@ -688,13 +694,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.light.text,
   },
+  availabilityScrollView: {
+    maxHeight: 200,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
   availabilityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    maxHeight: 200,
   },
   availabilitySlot: {
     flexDirection: 'row',
