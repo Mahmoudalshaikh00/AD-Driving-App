@@ -34,6 +34,7 @@ export default function AdminUsersScreen() {
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<UserStatus | 'all'>('all');
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [instructors, setInstructors] = useState<AdminUser[]>([]);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', role: 'student' as UserRole, password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -132,8 +133,12 @@ export default function AdminUsersScreen() {
         ...formattedUsers
       ];
 
+      // Separate instructors for lookup
+      const instructorList = allUsers.filter(user => user.role === 'instructor');
+      setInstructors(instructorList);
       setUsers(allUsers);
       console.log('📊 Users loaded successfully:', allUsers.length);
+      console.log('👨‍🏫 Instructors loaded:', instructorList.length);
     } catch (error) {
       console.error('🚨 Error loading users:', error);
       Alert.alert('Error', 'Failed to load users. Please try again.');
@@ -379,6 +384,14 @@ export default function AdminUsersScreen() {
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{user.name}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
+          {user.role === 'student' && user.instructor_id && (
+            <View style={styles.instructorInfo}>
+              <Text style={styles.instructorLabel}>Instructor: </Text>
+              <Text style={styles.instructorName}>
+                {instructors.find(inst => inst.id === user.instructor_id)?.name || 'Unknown Instructor'}
+              </Text>
+            </View>
+          )}
           <View style={styles.userMeta}>
             <Text style={[styles.userRole, { color: user.role === 'admin' ? Colors.light.primary : user.role === 'instructor' ? '#10b981' : '#3b82f6' }]}>
               {user.role.toUpperCase()}
@@ -763,6 +776,21 @@ const styles = StyleSheet.create({
   phoneText: {
     fontSize: 12,
     color: Colors.light.textLight,
+  },
+  instructorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  instructorLabel: {
+    fontSize: 12,
+    color: Colors.light.textLight,
+    fontWeight: '500',
+  },
+  instructorName: {
+    fontSize: 12,
+    color: '#10b981',
+    fontWeight: '600',
   },
   userActions: {
     flexDirection: 'row',
