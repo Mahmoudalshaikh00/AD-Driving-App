@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStudentStore } from '@/hooks/useStudentStore';
@@ -180,7 +180,11 @@ export default function StudentEvaluationsScreen() {
             </TouchableOpacity>
             
             {isFilterExpanded && (
-              <View style={styles.taskFilters}>
+              <ScrollView 
+                style={styles.taskFiltersContainer}
+                contentContainerStyle={styles.taskFilters}
+                showsVerticalScrollIndicator={true}
+              >
                 <TouchableOpacity
                   style={[
                     styles.taskFilterButton,
@@ -212,7 +216,7 @@ export default function StudentEvaluationsScreen() {
                     ]}>{task.name}</Text>
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ScrollView>
             )}
           </View>
         </View>
@@ -339,6 +343,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  taskFiltersContainer: {
+    maxHeight: 150,
   },
   taskFilters: {
     flexDirection: 'row',
