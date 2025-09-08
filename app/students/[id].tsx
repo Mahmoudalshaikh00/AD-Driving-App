@@ -628,7 +628,9 @@ function CircularProgress({ percent, animatedValue, size, strokeWidth }: { perce
   const clamped = Math.max(0, Math.min(100, percent));
 
   if (Platform.OS === 'web') {
-    const dashOffsetStatic = circumference - (circumference * clamped) / 100;
+    // Fixed calculation: when percent is 0, offset should be circumference (no line)
+    // when percent is 100, offset should be 0 (full line)
+    const dashOffsetStatic = circumference * (1 - clamped / 100);
     return (
       <Svg width={size} height={size}>
         <Circle
@@ -657,7 +659,7 @@ function CircularProgress({ percent, animatedValue, size, strokeWidth }: { perce
 
   const dashOffset = animatedValue.interpolate({
     inputRange: [0, 100],
-    outputRange: [circumference, circumference - (circumference * clamped) / 100],
+    outputRange: [circumference, circumference * (1 - clamped / 100)],
     extrapolate: 'clamp',
   });
 
