@@ -149,9 +149,7 @@ export default function LoginScreen() {
 
           </View>
           
-          <Text style={styles.footerText}>
-            This app contains sensitive student information
-          </Text>
+
         </View>
       </View>
     );
