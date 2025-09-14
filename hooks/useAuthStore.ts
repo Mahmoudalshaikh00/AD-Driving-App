@@ -26,13 +26,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           details: (error as any)?.details,
           hint: (error as any)?.hint,
         };
-        console.error('❌ Error fetching user profile:', safeError);
+        try {
+          console.error('❌ Error fetching user profile:', JSON.stringify(safeError));
+        } catch {
+          console.error('❌ Error fetching user profile:', safeError);
+        }
 
-        // If profile row doesn't exist yet, create a minimal one on-the-fly
+        const sessionRes = await supabase.auth.getUser();
+        const authUser = sessionRes.data.user;
+
         if ((safeError.code === 'PGRST116') || (safeError.message?.toLowerCase?.().includes('no rows'))) {
           console.log('ℹ️ No profile found. Creating a new minimal profile row for user:', userId);
-          const sessionRes = await supabase.auth.getUser();
-          const authUser = sessionRes.data.user;
           if (!authUser) {
             console.warn('⚠️ No auth user available to seed profile. Aborting profile creation.');
             setAuthState({ user: null, isAuthenticated: false, isLoading: false });
@@ -41,22 +45,22 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           const minimal: Partial<User> & { id: string; email: string; role: User['role'] } = {
             id: authUser.id,
             email: authUser.email ?? '',
-            name: authUser.user_metadata?.name ?? authUser.email ?? 'New User',
+            name: (authUser.user_metadata as any)?.name ?? authUser.email ?? 'New User',
             role: 'instructor',
           };
           const { data: inserted, error: insertErr } = await supabase
             .from('users')
-            .insert(minimal)
+            .upsert(minimal, { onConflict: 'id' })
             .select('id,name,email,role,instructor_id,created_at')
             .single();
           if (insertErr) {
             console.error('🚨 Failed to auto-create user profile:', {
-              message: insertErr.message,
-              code: insertErr.code,
-              details: insertErr.details,
-              hint: insertErr.hint,
+              message: (insertErr as any)?.message,
+              code: (insertErr as any)?.code,
+              details: (insertErr as any)?.details,
+              hint: (insertErr as any)?.hint,
             });
-            setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+            setAuthState({ user: { id: authUser.id, name: (minimal.name ?? authUser.email ?? 'User'), email: minimal.email ?? '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
             return;
           }
           console.log('✅ Auto-created user profile:', inserted);
@@ -64,10 +68,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           return;
         }
 
-        // If schema cache is missing unexpected columns, avoid blocking auth
         if (safeError.code === 'PGRST204') {
           console.warn('⚠️ Schema cache issue detected. Proceeding without extra columns.');
-          setAuthState({ user: { id: userId, name: 'User', email: '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
+          setAuthState({ user: { id: userId, name: authUser?.email ?? 'User', email: authUser?.email ?? '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
+          return;
+        }
+
+        if (authUser) {
+          console.warn('⚠️ Proceeding with minimal auth user due to profile fetch error');
+          setAuthState({ user: { id: authUser.id, name: (authUser.user_metadata as any)?.name ?? authUser.email ?? 'User', email: authUser.email ?? '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
           return;
         }
 
@@ -75,7 +84,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         return;
       }
 
-      console.log('✅ User profile fetched successfully:', data);
+      try { console.log('✅ User profile fetched successfully:', JSON.stringify(data)); } catch { console.log('✅ User profile fetched successfully'); }
       setAuthState({
         user: data as User,
         isAuthenticated: true,
@@ -88,7 +97,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         details: error?.details,
         hint: error?.hint,
       };
-      console.error('🚨 Error in fetchUserProfile:', safe);
+      try { console.error('🚨 Error in fetchUserProfile:', JSON.stringify(safe)); } catch { console.error('🚨 Error in fetchUserProfile:', safe); }
       setAuthState({
         user: null,
         isAuthenticated: false,

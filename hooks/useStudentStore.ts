@@ -139,9 +139,6 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
             email,
             role: 'student',
             instructor_id: user.id,
-            is_approved: true,
-            is_restricted: false,
-            status: 'active',
           });
 
         const profileResult = await new Promise((resolve) => {
@@ -150,7 +147,12 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         const profileError = (profileResult as any).error;
 
         if (profileError) {
-          console.error('🚨 Student store: Profile creation error:', profileError);
+          console.error('🚨 Student store: Profile creation error:', {
+            message: (profileError as any)?.message ?? String(profileError ?? ''),
+            code: (profileError as any)?.code,
+            details: (profileError as any)?.details,
+            hint: (profileError as any)?.hint,
+          });
           throw profileError;
         }
         console.log('✅ Student store: Student profile created successfully');

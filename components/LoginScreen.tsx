@@ -77,7 +77,7 @@ export default function LoginScreen() {
     }
 
     if (!validatePassword(password)) {
-      setError('Password must start with a capital letter');
+      setError('Password must be at least 6 characters');
       return;
     }
 
