@@ -18,7 +18,7 @@ import { trpcClient } from '@/lib/trpc';
 type LoginMode = 'select' | 'instructor' | 'student' | 'admin' | 'signup';
 
 export default function LoginScreen() {
-  const [mode, setMode] = useState<LoginMode>('select');
+  const [mode, setMode] = useState<LoginMode>('instructor');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [name, setName] = useState<string>('');
@@ -32,10 +32,11 @@ export default function LoginScreen() {
   };
 
   const validatePassword = (password: string): boolean => {
-    return password.length > 0 && password[0] === password[0].toUpperCase() && password[0] !== password[0].toLowerCase();
+    return password.length >= 6;
   };
 
   const handleSignIn = async () => {
+    console.log('👉 LoginScreen: Sign in pressed', { mode, emailLength: email.length });
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -47,24 +48,18 @@ export default function LoginScreen() {
     }
 
     if (!validatePassword(password)) {
-      setError('Password must start with a capital letter');
+      setError('Password must be at least 6 characters');
       return;
-    }
-
-    if (mode === 'admin') {
-      if (email !== 'mahmoud200276@gmail.com' || password !== 'Liverpool9876') {
-        setError('Invalid admin credentials');
-        return;
-      }
     }
 
     setIsLoading(true);
     setError('');
-    
+
     const result = await signIn(email, password);
-    
+    console.log('👉 LoginScreen: Sign in result', result);
+
     setIsLoading(false);
-    
+
     if (!result.success) {
       setError(result.error || 'Login failed');
     }
@@ -187,7 +182,7 @@ export default function LoginScreen() {
           <Text style={styles.title}>
             {mode === 'signup' ? 'Create Instructor Account' : 
              mode === 'instructor' ? 'Instructor Login' : 
-             mode === 'admin' ? 'Admin Panel' : 'Student Login'}
+             mode === 'admin' ? 'Admin Login' : 'Student Login'}
           </Text>
           <Text style={styles.subtitle}>
             {mode === 'signup' ? 'Sign up as a new instructor' :
@@ -251,6 +246,8 @@ export default function LoginScreen() {
             onPress={mode === 'signup' ? handleSignUp : handleSignIn}
             disabled={isLoading}
             testID="submit-button"
+            accessibilityRole="button"
+            accessibilityLabel={mode === 'signup' ? 'Create Account' : 'Sign In'}
           >
             <Text style={styles.loginButtonText}>
               {isLoading ? 'Please wait...' : 
