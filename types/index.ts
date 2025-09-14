@@ -5,8 +5,9 @@ export interface User {
   role: 'instructor' | 'student' | 'admin';
   instructor_id?: string;
   created_at: string;
-  is_approved?: boolean;
-  is_restricted?: boolean;
+  is_approved: boolean;
+  is_restricted: boolean;
+  status: string;
 }
 
 export interface Student extends User {
