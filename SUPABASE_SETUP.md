@@ -76,51 +76,45 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if they exist
+-- Drop ALL existing policies to avoid conflicts
 DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
 DROP POLICY IF EXISTS "Instructors can view their students" ON public.users;
 DROP POLICY IF EXISTS "Instructors can create students" ON public.users;
+DROP POLICY IF EXISTS "Instructors can create student accounts" ON public.users;
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.users;
 DROP POLICY IF EXISTS "Admins can manage all users" ON public.users;
+DROP POLICY IF EXISTS "Admins can view all users" ON public.users;
+DROP POLICY IF EXISTS "Allow instructor signup" ON public.users;
+DROP POLICY IF EXISTS "Allow public insert for signup" ON public.users;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.users;
 
--- Users table policies
-CREATE POLICY "Users can view their own profile" ON public.users
+-- FIXED POLICIES WITHOUT CIRCULAR REFERENCES
+
+-- 1. Allow users to view their own profile
+CREATE POLICY "Users can view own profile" ON public.users
   FOR SELECT USING (auth.uid() = id);
 
+-- 2. Allow instructors to view their students (simplified to avoid recursion)
 CREATE POLICY "Instructors can view their students" ON public.users
-  FOR SELECT USING (
-    auth.uid() IN (
-      SELECT id FROM public.users WHERE role = 'instructor'
-    ) AND instructor_id = auth.uid()
-  );
+  FOR SELECT USING (instructor_id = auth.uid());
 
-CREATE POLICY "Admins can view all users" ON public.users
-  FOR SELECT USING (
-    auth.uid() IN (
-      SELECT id FROM public.users WHERE role = 'admin'
-    )
-  );
-
-CREATE POLICY "Users can update their own profile" ON public.users
+-- 3. Allow users to update their own profile
+CREATE POLICY "Users can update own profile" ON public.users
   FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Instructors can create student accounts" ON public.users
-  FOR INSERT WITH CHECK (
-    auth.uid() IN (
-      SELECT id FROM public.users WHERE role = 'instructor'
-    ) AND role = 'student'
-  );
+-- 4. Allow anyone to insert during signup (for both instructor and student creation)
+-- This is needed for the auth trigger to work
+CREATE POLICY "Allow public insert for signup" ON public.users
+  FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Admins can manage all users" ON public.users
-  FOR ALL USING (
-    auth.uid() IN (
-      SELECT id FROM public.users WHERE role = 'admin'
-    )
-  );
+-- 5. Allow instructors to update their students
+CREATE POLICY "Instructors can update their students" ON public.users
+  FOR UPDATE USING (instructor_id = auth.uid());
 
--- Allow public signup for instructors (no auth required for first instructor)
-CREATE POLICY "Allow instructor signup" ON public.users
-  FOR INSERT WITH CHECK (role = 'instructor');
+-- 6. Allow instructors to delete their students  
+CREATE POLICY "Instructors can delete their students" ON public.users
+  FOR DELETE USING (instructor_id = auth.uid());
 
 -- Evaluations policies
 CREATE POLICY "Users can view their own evaluations" ON public.evaluations
