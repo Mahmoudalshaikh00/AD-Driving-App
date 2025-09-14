@@ -4,10 +4,10 @@ export interface User {
   email: string;
   role: 'instructor' | 'student' | 'admin';
   instructor_id?: string;
-  created_at: string;
-  is_approved: boolean;
-  is_restricted: boolean;
-  status: string;
+  created_at?: string;
+  is_approved?: boolean;
+  is_restricted?: boolean;
+  status?: string;
 }
 
 export interface Student extends User {

@@ -102,9 +102,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             email,
             role,
             instructor_id: instructorId || null,
-            is_approved: true,
-            is_restricted: false,
-            status: 'active',
           })
           .select();
 

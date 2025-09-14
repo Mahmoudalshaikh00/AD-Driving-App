@@ -59,10 +59,10 @@ export type Database = {
           email: string;
           role: 'instructor' | 'student' | 'admin';
           instructor_id: string | null;
-          created_at: string;
-          is_approved: boolean;
-          is_restricted: boolean;
-          status: string;
+          created_at?: string;
+          is_approved?: boolean;
+          is_restricted?: boolean;
+          status?: string;
         };
         Insert: {
           id?: string;
