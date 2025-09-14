@@ -105,34 +105,40 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       if (data.user) {
         console.log('✅ Auth store: Auth user created, creating profile...');
-        // Create user profile
-        // Auto-approve all new users by default
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            name,
-            email,
-            role,
-            instructor_id: instructorId || null,
-            is_approved: true,
-            is_restricted: false,
-            status: 'active',
-          })
-          .select();
+        // Create user profile with minimal columns to avoid DB schema mismatch errors
+        const basePayload = {
+          id: data.user.id,
+          name,
+          email,
+          role,
+          instructor_id: instructorId || null,
+        } as const;
 
+        let profileError: any = null;
+        try {
+          const { error: insertErr } = await supabase
+            .from('users')
+            .insert(basePayload)
+            .select();
+          profileError = insertErr ?? null;
+        } catch (e: any) {
+          profileError = e;
+        }
+
+        // If it still fails for some other reason, surface a friendly error
         if (profileError) {
           console.error('🚨 Auth store: Profile creation error:', profileError);
-          throw profileError;
+          throw new Error(
+            profileError?.message || 'Profile creation failed. Please try again.'
+          );
         }
-        console.log('✅ Auth store: User profile created successfully with auto-approval');
+        console.log('✅ Auth store: User profile created successfully');
       }
 
       return { success: true, error: null };
     } catch (error: any) {
       console.error('🚨 Auth store: Sign up error:', error);
       
-      // Provide more helpful error messages
       if (error.message?.includes('Network request failed')) {
         return { 
           success: false, 
