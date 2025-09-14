@@ -20,7 +20,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         .single();
 
       if (error) {
-        console.error('❌ Error fetching user profile:', error);
+        console.error('❌ Error fetching user profile:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          fullError: error
+        });
         setAuthState({
           user: null,
           isAuthenticated: false,
@@ -35,8 +41,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         isAuthenticated: true,
         isLoading: false,
       });
-    } catch (error) {
-      console.error('🚨 Error in fetchUserProfile:', error);
+    } catch (error: any) {
+      console.error('🚨 Error in fetchUserProfile:', {
+        message: error?.message || 'Unknown error',
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        stack: error?.stack,
+        fullError: error
+      });
       setAuthState({
         user: null,
         isAuthenticated: false,
@@ -102,6 +115,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             email,
             role,
             instructor_id: instructorId || null,
+            is_approved: true,
+            is_restricted: false,
+            status: 'active',
           })
           .select();
 
