@@ -1,55 +1,126 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { SubtaskEvaluation, EvaluationWithNotes } from '@/types';
-
-const STORAGE_KEY = 'driving-app-evaluations';
-const NOTES_STORAGE_KEY = 'driving-app-evaluation-notes';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from './useAuthStore';
 
 export const [EvaluationProvider, useEvaluationStore] = createContextHook(() => {
   const [evaluations, setEvaluations] = useState<SubtaskEvaluation[]>([]);
   const [evaluationNotes, setEvaluationNotes] = useState<EvaluationWithNotes[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { user } = useAuth();
 
-  // Load evaluations and notes from storage
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const storedEvaluations = await AsyncStorage.getItem(STORAGE_KEY);
-        const storedNotes = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
-        
-        if (storedEvaluations) {
-          const parsed: unknown = JSON.parse(storedEvaluations);
-          setEvaluations(Array.isArray(parsed) ? (parsed as SubtaskEvaluation[]) : []);
-        }
-        
-        if (storedNotes) {
-          setEvaluationNotes(JSON.parse(storedNotes));
-        }
-      } catch (error) {
-        console.error('Failed to load evaluations:', error);
-      } finally {
-        setLoading(false);
+  const fetchEvaluations = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      console.log('📊 Fetching evaluations for user:', user.id, 'role:', user.role);
+      
+      let query = supabase.from('evaluations').select('*');
+      
+      // Filter based on user role
+      if (user.role === 'instructor') {
+        query = query.eq('instructor_id', user.id);
+      } else if (user.role === 'student') {
+        query = query.eq('student_id', user.id);
       }
+      // Admin can see all evaluations
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('❌ Error fetching evaluations:', error);
+        return;
+      }
+      
+      console.log('✅ Evaluations fetched successfully:', data?.length || 0);
+      // Transform Supabase evaluations to match our SubtaskEvaluation type
+      const transformedEvaluations: SubtaskEvaluation[] = (data || []).map(evaluation => ({
+        id: evaluation.id,
+        studentId: evaluation.student_id,
+        taskId: 'task-1', // Default task ID since we don't have tasks table yet
+        subtaskId: 'subtask-1', // Default subtask ID
+        rating: evaluation.score,
+        notes: evaluation.feedback,
+        timestamp: evaluation.created_at,
+      }));
+      
+      setEvaluations(transformedEvaluations);
+    } catch (error) {
+      console.error('🚨 Error in fetchEvaluations:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Load evaluations from Supabase and set up realtime subscriptions
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
+    fetchEvaluations();
+    
+    // Set up realtime subscription for evaluations
+    console.log('📡 Setting up realtime subscription for evaluations');
+    const subscription = supabase
+      .channel('evaluations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'evaluations',
+        },
+        (payload) => {
+          console.log('📡 Realtime evaluation change:', payload);
+          
+          // Check if this change is relevant to the current user
+          const evaluation = payload.new || payload.old;
+          const isRelevant = user.role === 'admin' || 
+                           (user.role === 'instructor' && (evaluation as any)?.instructor_id === user.id) ||
+                           (user.role === 'student' && (evaluation as any)?.student_id === user.id);
+          
+          if (!isRelevant) return;
+          
+          if (payload.eventType === 'INSERT') {
+            const newEval = payload.new as any;
+            const transformedEval: SubtaskEvaluation = {
+              id: newEval.id,
+              studentId: newEval.student_id,
+              taskId: 'task-1',
+              subtaskId: 'subtask-1',
+              rating: newEval.score,
+              notes: newEval.feedback,
+              timestamp: newEval.created_at,
+            };
+            setEvaluations(prev => [transformedEval, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedEval = payload.new as any;
+            const transformedEval: SubtaskEvaluation = {
+              id: updatedEval.id,
+              studentId: updatedEval.student_id,
+              taskId: 'task-1',
+              subtaskId: 'subtask-1',
+              rating: updatedEval.score,
+              notes: updatedEval.feedback,
+              timestamp: updatedEval.created_at,
+            };
+            setEvaluations(prev => prev.map(e => e.id === updatedEval.id ? transformedEval : e));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedEval = payload.old as any;
+            setEvaluations(prev => prev.filter(e => e.id !== deletedEval.id));
+          }
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      console.log('📡 Cleaning up realtime subscription for evaluations');
+      subscription.unsubscribe();
     };
-
-    loadData();
-  }, []);
-
-  // Save evaluations and notes to storage whenever they change
-  useEffect(() => {
-    if (!loading) {
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(evaluations))
-        .catch(error => console.error('Failed to save evaluations:', error));
-    }
-  }, [evaluations, loading]);
-
-  useEffect(() => {
-    if (!loading) {
-      AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(evaluationNotes))
-        .catch(error => console.error('Failed to save evaluation notes:', error));
-    }
-  }, [evaluationNotes, loading]);
+  }, [user, fetchEvaluations]);
 
   const addEvaluation = async (evaluation: Omit<SubtaskEvaluation, 'id' | 'timestamp'>) => {
     // Check if evaluation already exists for this student/task/subtask combination

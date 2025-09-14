@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Student } from '@/types';
 import { useAuth } from './useAuthStore';
 import createContextHook from '@nkzw/create-context-hook';
+import { trpcClient } from '@/lib/trpc';
 
 export const [StudentProvider, useStudentStore] = createContextHook(() => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -38,6 +39,44 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
   useEffect(() => {
     if (user?.role === 'instructor') {
       fetchStudents();
+      
+      // Set up realtime subscription for students
+      console.log('📡 Setting up realtime subscription for students');
+      const subscription = supabase
+        .channel('students-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'users',
+            filter: `instructor_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log('📡 Realtime student change:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              const newStudent = payload.new as Student;
+              if (newStudent.role === 'student') {
+                setStudents(prev => [...prev, newStudent]);
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedStudent = payload.new as Student;
+              if (updatedStudent.role === 'student') {
+                setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+              }
+            } else if (payload.eventType === 'DELETE') {
+              const deletedStudent = payload.old as Student;
+              setStudents(prev => prev.filter(s => s.id !== deletedStudent.id));
+            }
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        console.log('📡 Cleaning up realtime subscription for students');
+        subscription.unsubscribe();
+      };
     } else if (user?.role === 'student') {
       // For students, set themselves as the only "student" in the list
       setStudents([user as Student]);
@@ -165,26 +204,24 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
     }
 
     try {
-      // For mock implementation, we only need to delete from users table
-      // In real Supabase, you would also delete from auth using admin.deleteUser
-      const query = supabase
-        .from('users')
-        .delete()
-        .eq('id', id)
-        .eq('instructor_id', user.id);
-
-      const result = await new Promise((resolve) => {
-        query.then(resolve);
+      console.log('🗑️ Student store: Using tRPC to atomically delete student:', id);
+      
+      // Use tRPC procedure for atomic deletion (auth + database)
+      const result = await trpcClient.admin.deleteUser.mutate({
+        userId: id,
+        requesterId: user.id,
       });
-      if ((result as any).error) throw (result as any).error;
-
-      // Update local state
+      
+      console.log('✅ Student deleted successfully via tRPC:', result);
+      
+      // Local state will be updated via realtime subscription
+      // But we can also update it immediately for better UX
       setStudents(prev => prev.filter(student => student.id !== id));
 
       return { success: true, error: null };
     } catch (error: any) {
-      console.error('Error deleting student:', error);
-      return { success: false, error: error.message };
+      console.error('🚨 Error deleting student via tRPC:', error);
+      return { success: false, error: error.message || 'Failed to delete student' };
     }
   }, [user]);
 

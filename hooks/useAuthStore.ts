@@ -135,29 +135,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     try {
       console.log('🔑 Auth store: Starting sign in process for:', email);
       
-      // Handle admin login
-      if (email === 'mahmoud200276@gmail.com' && password === 'Liverpool9876') {
-        console.log('👑 Admin login detected');
-        // Create a mock admin user
-        const adminUser = {
-          id: 'admin-001',
-          name: 'System Administrator',
-          email: 'mahmoud200276@gmail.com',
-          role: 'admin' as const,
-          created_at: new Date().toISOString(),
-          is_approved: true,
-          is_restricted: false
-        };
-        
-        setAuthState({
-          user: adminUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        
-        return { success: true, error: null };
-      }
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

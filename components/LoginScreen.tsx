@@ -10,9 +10,10 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { User, UserPlus, Lock, Mail, Shield } from 'lucide-react-native';
+import { User, UserPlus, Lock, Mail, Shield, Crown } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
+import { trpcClient } from '@/lib/trpc';
 
 type LoginMode = 'select' | 'instructor' | 'student' | 'admin' | 'signup';
 
@@ -146,6 +147,17 @@ export default function LoginScreen() {
               <Text style={styles.roleButtonText}>I&apos;m a Student</Text>
             </TouchableOpacity>
             
+            <TouchableOpacity
+              style={styles.roleButton}
+              onPress={() => {
+                resetForm();
+                setMode('admin');
+              }}
+              testID="admin-button"
+            >
+              <Crown size={24} color={Colors.light.primary} />
+              <Text style={styles.roleButtonText}>Admin Panel</Text>
+            </TouchableOpacity>
 
           </View>
           
