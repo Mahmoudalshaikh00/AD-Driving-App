@@ -92,7 +92,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       if (data.user) {
         console.log('✅ Auth store: Auth user created, creating profile...');
-        // Create user profile - include password for mock database
+        // Create user profile
         // Auto-approve all new users by default
         const { error: profileError } = await supabase
           .from('users')
@@ -102,10 +102,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             email,
             role,
             instructor_id: instructorId || null,
-            password, // Include password for mock database
-            is_approved: true, // Auto-approve by default
-            is_restricted: false, // Not restricted by default
-            status: 'active', // Set as active by default
+            is_approved: true,
+            is_restricted: false,
+            status: 'active',
           })
           .select();
 

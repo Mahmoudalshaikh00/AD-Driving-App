@@ -100,10 +100,9 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
             email,
             role: 'student',
             instructor_id: user.id,
-            password, // Include password for mock database
-            is_approved: true, // Auto-approve by default
-            is_restricted: false, // Not restricted by default
-            status: 'active', // Set as active by default
+            is_approved: true,
+            is_restricted: false,
+            status: 'active',
           });
 
         const profileResult = await new Promise((resolve) => {
