@@ -94,18 +94,18 @@ export const createAdminUserProcedure = publicProcedure
     try {
       console.log('👑 Creating admin user:', email);
       
-      // Create auth user
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
+        user_metadata: { name },
+        app_metadata: { role: 'admin' },
       });
       
       if (authError || !authData.user) {
         throw new Error(`Failed to create auth user: ${authError?.message}`);
       }
       
-      // Create user profile
       const { error: profileError } = await supabaseAdmin
         .from('users')
         .insert({
@@ -119,7 +119,6 @@ export const createAdminUserProcedure = publicProcedure
         });
         
       if (profileError) {
-        // Cleanup auth user if profile creation fails
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
         throw new Error(`Failed to create user profile: ${profileError.message}`);
       }
@@ -134,6 +133,68 @@ export const createAdminUserProcedure = publicProcedure
     } catch (error: any) {
       console.error('🚨 Admin user creation error:', error);
       throw new Error(error.message || 'Failed to create admin user');
+    }
+  });
+
+export const createStudentForInstructorProcedure = publicProcedure
+  .input(z.object({
+    instructorId: z.string(),
+    email: z.string().email(),
+    password: z.string().min(6),
+    name: z.string(),
+  }))
+  .mutation(async ({ input }) => {
+    const { instructorId, email, password, name } = input;
+
+    try {
+      console.log('🎓 Creating student for instructor:', instructorId, email);
+
+      const { data: instructor, error: instructorErr } = await supabaseAdmin
+        .from('users')
+        .select('id, role')
+        .eq('id', instructorId)
+        .single();
+
+      if (instructorErr || !instructor) {
+        throw new Error('Instructor not found');
+      }
+      if (instructor.role !== 'instructor' && instructor.role !== 'admin') {
+        throw new Error('Only instructors or admins can create students');
+      }
+
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name, instructor_id: instructorId },
+        app_metadata: { role: 'student' },
+      });
+
+      if (authError || !authData.user) {
+        throw new Error(`Failed to create auth user: ${authError?.message}`);
+      }
+
+      const { error: profileError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          name,
+          email,
+          role: 'student',
+          instructor_id: instructorId,
+          status: 'active',
+        });
+
+      if (profileError) {
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        throw new Error(`Failed to create student profile: ${profileError.message}`);
+      }
+
+      console.log('✅ Student created successfully:', authData.user.id);
+      return { success: true, userId: authData.user.id };
+    } catch (error: any) {
+      console.error('🚨 createStudentForInstructor error:', error);
+      throw new Error(error.message || 'Failed to create student');
     }
   });
 

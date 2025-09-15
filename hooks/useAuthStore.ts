@@ -34,6 +34,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
         const sessionRes = await supabase.auth.getUser();
         const authUser = sessionRes.data.user;
+        const metaRole = ((authUser?.app_metadata as any)?.role ?? (authUser?.user_metadata as any)?.role) as User['role'] | undefined;
+        const inferredRole: User['role'] = metaRole === 'student' || metaRole === 'admin' || metaRole === 'instructor' ? metaRole : 'student';
+        const inferredInstructorId = (authUser?.user_metadata as any)?.instructor_id as string | undefined;
 
         if ((safeError.code === 'PGRST116') || (safeError.message?.toLowerCase?.().includes('no rows'))) {
           console.log('ℹ️ No profile found. Creating a new minimal profile row for user:', userId);
@@ -46,8 +49,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             id: authUser.id,
             email: authUser.email ?? '',
             name: (authUser.user_metadata as any)?.name ?? authUser.email ?? 'New User',
-            role: 'instructor',
-          };
+            role: inferredRole,
+            ...(inferredRole === 'student' && inferredInstructorId ? { instructor_id: inferredInstructorId } : {}),
+          } as const;
           const { data: inserted, error: insertErr } = await supabase
             .from('users')
             .upsert(minimal, { onConflict: 'id' })
@@ -60,7 +64,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               details: (insertErr as any)?.details,
               hint: (insertErr as any)?.hint,
             });
-            setAuthState({ user: { id: authUser.id, name: (minimal.name ?? authUser.email ?? 'User'), email: minimal.email ?? '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
+            setAuthState({ user: { id: authUser.id, name: (minimal.name ?? authUser.email ?? 'User'), email: minimal.email ?? '', role: inferredRole, instructor_id: inferredInstructorId }, isAuthenticated: true, isLoading: false });
             return;
           }
           console.log('✅ Auto-created user profile:', inserted);
@@ -70,13 +74,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
         if (safeError.code === 'PGRST204') {
           console.warn('⚠️ Schema cache issue detected. Proceeding without extra columns.');
-          setAuthState({ user: { id: userId, name: authUser?.email ?? 'User', email: authUser?.email ?? '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
+          setAuthState({ user: { id: userId, name: authUser?.email ?? 'User', email: authUser?.email ?? '', role: inferredRole, instructor_id: inferredInstructorId }, isAuthenticated: true, isLoading: false });
           return;
         }
 
         if (authUser) {
           console.warn('⚠️ Proceeding with minimal auth user due to profile fetch error');
-          setAuthState({ user: { id: authUser.id, name: (authUser.user_metadata as any)?.name ?? authUser.email ?? 'User', email: authUser.email ?? '', role: 'instructor' }, isAuthenticated: true, isLoading: false });
+          setAuthState({ user: { id: authUser.id, name: (authUser.user_metadata as any)?.name ?? authUser.email ?? 'User', email: authUser.email ?? '', role: inferredRole, instructor_id: inferredInstructorId }, isAuthenticated: true, isLoading: false });
           return;
         }
 
@@ -144,7 +148,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: undefined, data: { name, role } }
+        options: { emailRedirectTo: undefined, data: { name, role, instructor_id: instructorId } }
       });
 
       if (error) {

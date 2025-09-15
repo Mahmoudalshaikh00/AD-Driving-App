@@ -1,5 +1,5 @@
 import { createTRPCRouter } from "./create-context";
-import hiRoute, { deleteUserProcedure, createAdminUserProcedure } from "./routes/example/hi/route";
+import hiRoute, { deleteUserProcedure, createAdminUserProcedure, createStudentForInstructorProcedure } from "./routes/example/hi/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -8,6 +8,7 @@ export const appRouter = createTRPCRouter({
   admin: createTRPCRouter({
     deleteUser: deleteUserProcedure,
     createAdminUser: createAdminUserProcedure,
+    createStudentForInstructor: createStudentForInstructorProcedure,
   }),
 });
 

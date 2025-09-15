@@ -93,20 +93,20 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
       return { success: false, error: 'You must be logged in to create students' };
     }
 
-    let isInstructor = user.role === 'instructor';
+    let isInstructor = user.role === 'instructor' || user.role === 'admin';
     if (!isInstructor) {
       try {
         console.log('🔎 Verifying role from profile for user', user.id);
         const { data: freshProfile, error: profileErr } = await supabase
           .from('users')
-          .select('*')
+          .select('role')
           .eq('id', user.id)
           .single();
         if (profileErr) {
           console.log('⚠️ Could not verify role from profile:', profileErr);
         } else {
           console.log('📄 Fresh profile role:', (freshProfile as any)?.role);
-          isInstructor = (freshProfile as any)?.role === 'instructor';
+          isInstructor = (freshProfile as any)?.role === 'instructor' || (freshProfile as any)?.role === 'admin';
         }
       } catch (e) {
         console.log('⚠️ Role verification failed:', e);
@@ -119,46 +119,16 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
 
     try {
       console.log('👨‍🎓 Student store: Creating student account for:', email);
-      const { data, error } = await supabase.auth.signUp({
+
+      const result = await trpcClient.admin.createStudentForInstructor.mutate({
+        instructorId: user.id,
         email,
         password,
+        name,
       });
 
-      if (error) {
-        console.error('🚨 Student store: Auth signup error:', error);
-        throw error;
-      }
-
-      if (data?.user) {
-        console.log('✅ Student store: Auth user created, creating profile...');
-        const profileQuery = supabase
-          .from('users')
-          .insert({
-            id: (data as any).user.id,
-            name,
-            email,
-            role: 'student',
-            instructor_id: user.id,
-          });
-
-        const profileResult = await new Promise((resolve) => {
-          (profileQuery as any).then(resolve);
-        });
-        const profileError = (profileResult as any).error;
-
-        if (profileError) {
-          console.error('🚨 Student store: Profile creation error:', {
-            message: (profileError as any)?.message ?? String(profileError ?? ''),
-            code: (profileError as any)?.code,
-            details: (profileError as any)?.details,
-            hint: (profileError as any)?.hint,
-          });
-          throw profileError;
-        }
-        console.log('✅ Student store: Student profile created successfully');
-
-        await fetchStudents();
-      }
+      console.log('✅ Student created via tRPC:', result);
+      await fetchStudents();
 
       return { success: true, error: null };
     } catch (error: any) {
