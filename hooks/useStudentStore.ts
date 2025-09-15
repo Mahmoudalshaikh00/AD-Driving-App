@@ -4,6 +4,7 @@ import { Student } from '@/types';
 import { useAuth } from './useAuthStore';
 import createContextHook from '@nkzw/create-context-hook';
 import { trpcClient } from '@/lib/trpc';
+import Constants from 'expo-constants';
 
 export const [StudentProvider, useStudentStore] = createContextHook(() => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -121,8 +122,43 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
     try {
       console.log('👨‍🎓 Student store: Creating student account for:', email);
 
+      // Test API connectivity first
+      try {
+        console.log('🔍 Testing API connectivity...');
+        const apiBaseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 
+                          Constants.expoConfig?.extra?.EXPO_PUBLIC_RORK_API_BASE_URL || 
+                          'ad-driving-app.vercel.app';
+        const normalizedUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+        const testUrl = `${normalizedUrl}/api/test`;
+        
+        console.log('🔗 Testing URL:', testUrl);
+        const testResponse = await fetch(testUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        console.log('📥 Test response status:', testResponse.status);
+        
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log('✅ API test successful:', testData);
+        } else {
+          const errorText = await testResponse.text();
+          console.error('❌ API test failed with status:', testResponse.status, errorText);
+        }
+      } catch (testError: any) {
+        console.error('❌ API test failed:', {
+          message: testError.message,
+          name: testError.name,
+          stack: testError.stack?.substring(0, 200)
+        });
+      }
+
       // Try tRPC first, fallback to direct Supabase if it fails
       try {
+        console.log('🚀 Attempting tRPC call to createStudentForInstructor...');
         const result = await trpcClient.admin.createStudentForInstructor.mutate({
           instructorId: user.id,
           email,
@@ -135,7 +171,11 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         await fetchStudents();
         return { success: true, error: null };
       } catch (trpcError: any) {
-        console.log('⚠️ tRPC failed, trying direct Supabase approach:', trpcError.message);
+        console.log('⚠️ tRPC failed, trying direct Supabase approach:', {
+          message: trpcError.message,
+          name: trpcError.name,
+          stack: trpcError.stack?.substring(0, 300)
+        });
         
         // Fallback to direct Supabase admin operations
         const { supabaseAdmin } = await import('@/lib/supabase');
