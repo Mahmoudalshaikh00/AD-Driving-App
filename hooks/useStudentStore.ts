@@ -28,7 +28,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         const msg = (error as any)?.message ?? JSON.stringify(error);
         console.error('❌ Error fetching students:', msg);
       } else {
-        console.log('✅ Fetched students:', data?.length || 0);
+        console.log('✅ Fetched students:', data?.length || 0, 'students:', data?.map(s => ({ id: s.id, name: s.name, email: s.email })));
         setStudents((data as Student[]) ?? []);
       }
     } catch (error) {
@@ -45,7 +45,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
       // Set up realtime subscription for students
       console.log('📡 Setting up realtime subscription for students');
       const subscription = supabase
-        .channel('students-changes')
+        .channel(`students-changes-${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -59,21 +59,32 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
             
             if (payload.eventType === 'INSERT') {
               const newStudent = payload.new as Student;
-              if (newStudent.role === 'student') {
-                setStudents(prev => [...prev, newStudent]);
+              if (newStudent.role === 'student' && newStudent.instructor_id === user.id) {
+                console.log('➕ Adding new student to local state:', newStudent.name);
+                setStudents(prev => {
+                  // Avoid duplicates
+                  if (prev.find(s => s.id === newStudent.id)) {
+                    return prev;
+                  }
+                  return [...prev, newStudent];
+                });
               }
             } else if (payload.eventType === 'UPDATE') {
               const updatedStudent = payload.new as Student;
-              if (updatedStudent.role === 'student') {
+              if (updatedStudent.role === 'student' && updatedStudent.instructor_id === user.id) {
+                console.log('✏️ Updating student in local state:', updatedStudent.name);
                 setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
               }
             } else if (payload.eventType === 'DELETE') {
               const deletedStudent = payload.old as Student;
+              console.log('🗑️ Removing student from local state:', deletedStudent.id);
               setStudents(prev => prev.filter(s => s.id !== deletedStudent.id));
             }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('📡 Realtime subscription status:', status);
+        });
         
       return () => {
         console.log('📡 Cleaning up realtime subscription for students');
@@ -168,7 +179,9 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
 
         console.log('✅ Student created via tRPC:', result);
         // Force refresh the students list
-        await fetchStudents();
+        setTimeout(() => {
+          fetchStudents();
+        }, 1000); // Give database time to propagate
         return { success: true, error: null };
       } catch (trpcError: any) {
         console.log('⚠️ tRPC failed, trying direct Supabase approach:', {
@@ -263,7 +276,9 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
 
         console.log('✅ Student created via direct Supabase:', authData.user.id);
         // Force refresh the students list
-        await fetchStudents();
+        setTimeout(() => {
+          fetchStudents();
+        }, 1000); // Give database time to propagate
         return { success: true, error: null };
       }
     } catch (error: any) {

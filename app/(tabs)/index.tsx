@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TextInput, ActivityIndicator, TouchableOpacity, Alert, Platform, Animated, Easing } from 'react-native';
-import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag } from 'lucide-react-native';
+import { Plus, Search, LogOut, User, CalendarDays, MessageSquare, ClipboardList, ChevronDown, ChevronUp, Shield, Users, AlertTriangle, Settings, CheckCircle, XCircle, Clock, TrendingUp, Tag, RefreshCw } from 'lucide-react-native';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useTaskStore } from '@/hooks/useTaskStore';
 import { useEvaluationStore } from '@/hooks/useEvaluationStore';
@@ -29,8 +29,7 @@ export default function StudentsScreen() {
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
+
   const [selectedCapital, setSelectedCapital] = useState<1 | 2 | 3 | 4>(1);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [circleAnim] = useState(new Animated.Value(0));
@@ -93,66 +92,19 @@ export default function StudentsScreen() {
   }, [subtasks, tasks, myEvaluations, user]);
 
   useEffect(() => {
-    const fetchAllUsers = async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase');
-        const result = await new Promise<any>((resolve) => {
-          supabase
-            .from('users')
-            .select('*')
-            .eq('role', 'student')
-            .eq('instructor_id', user?.id ?? '')
-            .order('name')
-            .then(resolve);
-        });
-        
-        const { data, error } = result;
-        
-        if (error) {
-          console.error('Error fetching users:', error);
-        } else {
-          // Filter to only show students that belong to this instructor
-          if (user?.role === 'instructor') {
-            const instructorStudents = (data || []).filter((u: any) => 
-              u.role === 'student' && u.instructor_id === user.id
-            );
-            setAllUsers(instructorStudents);
-          } else {
-            setAllUsers(data || []);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoadingUsers(false);
-      }
-    };
-
     if (user?.role === 'instructor') {
-      fetchAllUsers();
-      // Also refresh the students from the store
+      // Only refresh the students from the store
       refreshStudents();
-    } else {
-      setLoadingUsers(false);
     }
   }, [user, refreshStudents]);
 
-  // Combine students from both sources and deduplicate
-  const allStudentsList = user?.role === 'instructor' ? 
-    (() => {
-      const combined = [...students, ...allUsers];
-      const unique = combined.filter((student, index, arr) => 
-        arr.findIndex(s => s.id === student.id) === index
-      );
-      console.log('📊 Students data:', {
-        studentsFromStore: students.length,
-        allUsersFromLocal: allUsers.length,
-        combinedUnique: unique.length,
-        studentsData: students.map(s => ({ id: s.id, name: s.name })),
-        allUsersData: allUsers.map(u => ({ id: u.id, name: u.name }))
-      });
-      return unique;
-    })() : allUsers;
+  // Use students from the store only
+  const allStudentsList = user?.role === 'instructor' ? students : [];
+  
+  console.log('📊 Students data:', {
+    studentsFromStore: students.length,
+    studentsData: students.map(s => ({ id: s.id, name: s.name, email: s.email }))
+  });
 
   const filteredStudents = allStudentsList.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,24 +124,10 @@ export default function StudentsScreen() {
           setIsAddingStudent(false);
           Alert.alert('Success', 'Student account created successfully!');
           
-          // Force refresh both the store and local state
-          await refreshStudents();
-          
-          // Also refresh the local allUsers state
-          const { supabase } = await import('@/lib/supabase');
-          const freshResult = await new Promise<any>((resolve) => {
-            supabase
-              .from('users')
-              .select('*')
-              .eq('role', 'student')
-              .eq('instructor_id', user?.id ?? '')
-              .order('name')
-              .then(resolve);
-          });
-          
-          if (!freshResult.error && freshResult.data) {
-            setAllUsers(freshResult.data);
-          }
+          // Force refresh the store
+          setTimeout(() => {
+            refreshStudents();
+          }, 1500); // Give more time for database propagation
         } else {
           Alert.alert('Error', result.error || 'Failed to create student account');
         }
@@ -265,7 +203,7 @@ export default function StudentsScreen() {
     setExpandedTaskId(isOpen ? null : taskId);
   };
 
-  if (loading || loadingUsers) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
@@ -562,6 +500,16 @@ export default function StudentsScreen() {
         </TouchableOpacity>
         
         <TouchableOpacity 
+          style={styles.refreshButton}
+          onPress={() => {
+            console.log('🔄 Manual refresh triggered');
+            refreshStudents();
+          }}
+        >
+          <RefreshCw size={20} color={Colors.light.textLight} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
           style={styles.addStudentButton} 
           onPress={() => setIsAddingStudent(true)}
         >
@@ -753,6 +701,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   searchButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  refreshButton: {
     width: 50,
     height: 50,
     backgroundColor: Colors.light.cardBackground,
