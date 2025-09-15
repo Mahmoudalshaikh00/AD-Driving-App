@@ -151,16 +151,52 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
           throw new Error(`Failed to create auth user: ${authError?.message}`);
         }
 
-        // First verify instructor exists in users table
+        // First verify instructor exists in users table, create if missing
+        console.log('🔍 Checking if instructor exists in users table:', user.id);
         const { data: instructorExists, error: checkError } = await supabaseAdmin
           .from('users')
-          .select('id')
+          .select('id, role')
           .eq('id', user.id)
           .single();
 
+        console.log('🔍 Instructor check result:', { instructorExists, checkError });
+        
         if (checkError || !instructorExists) {
+          // Instructor profile doesn't exist, let's create it
+          console.log('🔧 Instructor profile missing, creating it now...');
+          
+          // Get instructor auth data
+          const { data: instructorAuth } = await supabaseAdmin.auth.admin.getUserById(user.id);
+          if (!instructorAuth.user) {
+            await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+            throw new Error('Instructor auth user not found. Please contact support.');
+          }
+          
+          // Create instructor profile
+          const instructorProfile = {
+            id: user.id,
+            name: user.name || instructorAuth.user.email || 'Instructor',
+            email: user.email || instructorAuth.user.email || '',
+            role: 'instructor' as const,
+            status: 'active',
+            is_approved: true,
+            is_restricted: false,
+          };
+          
+          const { error: createInstructorError } = await supabaseAdmin
+            .from('users')
+            .insert(instructorProfile);
+            
+          if (createInstructorError) {
+            console.error('🚨 Failed to create instructor profile:', createInstructorError);
+            await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+            throw new Error(`Failed to create instructor profile: ${createInstructorError.message}`);
+          }
+          
+          console.log('✅ Instructor profile created successfully');
+        } else if (instructorExists.role !== 'instructor' && instructorExists.role !== 'admin') {
           await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-          throw new Error('Instructor not found in users table. Please ensure your account is properly set up.');
+          throw new Error(`Invalid role: ${instructorExists.role}. Only instructors and admins can create students.`);
         }
 
         // Create profile in users table

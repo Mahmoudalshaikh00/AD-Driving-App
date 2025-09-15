@@ -149,18 +149,7 @@ export const createStudentForInstructorProcedure = publicProcedure
     try {
       console.log('🎓 Creating student for instructor:', instructorId, email);
 
-      const { data: instructor, error: instructorErr } = await supabaseAdmin
-        .from('users')
-        .select('id, role')
-        .eq('id', instructorId)
-        .single();
-
-      if (instructorErr || !instructor) {
-        throw new Error('Instructor not found');
-      }
-      if (instructor.role !== 'instructor' && instructor.role !== 'admin') {
-        throw new Error('Only instructors or admins can create students');
-      }
+      // We'll check instructor existence and role later, after creating the auth user
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
@@ -174,16 +163,52 @@ export const createStudentForInstructorProcedure = publicProcedure
         throw new Error(`Failed to create auth user: ${authError?.message}`);
       }
 
-      // First check if instructor exists in users table
+      // First check if instructor exists in users table, create if missing
+      console.log('🔍 tRPC: Checking if instructor exists in users table:', instructorId);
       const { data: instructorExists, error: checkError } = await supabaseAdmin
         .from('users')
-        .select('id')
+        .select('id, role')
         .eq('id', instructorId)
         .single();
 
+      console.log('🔍 tRPC: Instructor check result:', { instructorExists, checkError });
+      
       if (checkError || !instructorExists) {
+        // Instructor profile doesn't exist, let's create it
+        console.log('🔧 tRPC: Instructor profile missing, creating it now...');
+        
+        // Get instructor auth data
+        const { data: instructorAuth } = await supabaseAdmin.auth.admin.getUserById(instructorId);
+        if (!instructorAuth.user) {
+          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+          throw new Error('Instructor auth user not found. Please contact support.');
+        }
+        
+        // Create instructor profile
+        const instructorProfile = {
+          id: instructorId,
+          name: (instructorAuth.user.user_metadata as any)?.name || instructorAuth.user.email || 'Instructor',
+          email: instructorAuth.user.email || '',
+          role: 'instructor' as const,
+          status: 'active',
+          is_approved: true,
+          is_restricted: false,
+        };
+        
+        const { error: createInstructorError } = await supabaseAdmin
+          .from('users')
+          .insert(instructorProfile);
+          
+        if (createInstructorError) {
+          console.error('🚨 tRPC: Failed to create instructor profile:', createInstructorError);
+          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+          throw new Error(`Failed to create instructor profile: ${createInstructorError.message}`);
+        }
+        
+        console.log('✅ tRPC: Instructor profile created successfully');
+      } else if (instructorExists.role !== 'instructor' && instructorExists.role !== 'admin') {
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        throw new Error('Instructor not found in users table');
+        throw new Error(`Invalid instructor role: ${instructorExists.role}. Only instructors and admins can create students.`);
       }
 
       const { error: profileError } = await supabaseAdmin

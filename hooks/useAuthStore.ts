@@ -50,8 +50,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             email: authUser.email ?? '',
             name: (authUser.user_metadata as any)?.name ?? authUser.email ?? 'New User',
             role: inferredRole,
+            status: 'active',
+            is_approved: true,
+            is_restricted: false,
             ...(inferredRole === 'student' && inferredInstructorId ? { instructor_id: inferredInstructorId } : {}),
           } as const;
+          
+          console.log('🔧 Creating profile with data:', minimal);
           const { data: inserted, error: insertErr } = await supabase
             .from('users')
             .upsert(minimal, { onConflict: 'id' })
@@ -165,7 +170,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           email,
           role,
           instructor_id: instructorId || null,
+          status: 'active',
+          is_approved: true,
+          is_restricted: false,
         } as const;
+        
+        console.log('🔧 Creating profile during signup with data:', basePayload);
 
         let profileError: any = null;
         try {
