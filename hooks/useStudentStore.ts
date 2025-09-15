@@ -131,6 +131,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         });
 
         console.log('✅ Student created via tRPC:', result);
+        // Force refresh the students list
         await fetchStudents();
         return { success: true, error: null };
       } catch (trpcError: any) {
@@ -221,6 +222,7 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         }
 
         console.log('✅ Student created via direct Supabase:', authData.user.id);
+        // Force refresh the students list
         await fetchStudents();
         return { success: true, error: null };
       }

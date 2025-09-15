@@ -137,9 +137,24 @@ export default function StudentsScreen() {
     }
   }, [user, refreshStudents]);
 
-  const studentsOnly = (user?.role === 'instructor') ? (students.length > 0 ? students : allUsers) : allUsers;
+  // Combine students from both sources and deduplicate
+  const allStudentsList = user?.role === 'instructor' ? 
+    (() => {
+      const combined = [...students, ...allUsers];
+      const unique = combined.filter((student, index, arr) => 
+        arr.findIndex(s => s.id === student.id) === index
+      );
+      console.log('📊 Students data:', {
+        studentsFromStore: students.length,
+        allUsersFromLocal: allUsers.length,
+        combinedUnique: unique.length,
+        studentsData: students.map(s => ({ id: s.id, name: s.name })),
+        allUsersData: allUsers.map(u => ({ id: u.id, name: u.name }))
+      });
+      return unique;
+    })() : allUsers;
 
-  const filteredStudents = studentsOnly.filter(student => 
+  const filteredStudents = allStudentsList.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     student.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -157,7 +172,10 @@ export default function StudentsScreen() {
           setIsAddingStudent(false);
           Alert.alert('Success', 'Student account created successfully!');
           
-          // Refresh both the local state and the store
+          // Force refresh both the store and local state
+          await refreshStudents();
+          
+          // Also refresh the local allUsers state
           const { supabase } = await import('@/lib/supabase');
           const freshResult = await new Promise<any>((resolve) => {
             supabase
