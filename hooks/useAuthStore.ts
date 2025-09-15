@@ -116,25 +116,70 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
+    let isMounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        console.log('🔄 Auth store: Initializing authentication...');
+        
+        // Get initial session with timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+        );
+        
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
+        
+        if (error) {
+          console.error('❌ Auth store: Session fetch error:', error);
+          if (isMounted) {
+            setAuthState({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+          }
+          return;
+        }
+        
+        console.log('📱 Auth store: Session check result:', session ? 'Found session' : 'No session');
+        
+        if (session?.user && isMounted) {
+          console.log('👤 Auth store: User found, fetching profile...');
+          await fetchUserProfile(session.user.id);
+        } else if (isMounted) {
+          console.log('🚫 Auth store: No user session, setting unauthenticated state');
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } catch (error: any) {
+        console.error('🚨 Auth store: Initialization error:', error.message);
+        if (isMounted) {
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
       }
-    });
+    };
+    
+    // Start initialization
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
+        console.log('🔄 Auth store: Auth state changed:', event, session ? 'with session' : 'no session');
+        if (session?.user && isMounted) {
           await fetchUserProfile(session.user.id);
-        } else {
+        } else if (isMounted) {
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -144,7 +189,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [fetchUserProfile]);
 
   const signUp = useCallback(async (email: string, password: string, name: string, role: 'instructor' | 'student' | 'admin', instructorId?: string) => {

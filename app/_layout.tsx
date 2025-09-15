@@ -3,7 +3,7 @@ import { trpc, trpcClient } from "@/lib/trpc";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StudentProvider } from "@/hooks/useStudentStore";
 import { TaskProvider } from "@/hooks/useTaskStore";
@@ -55,18 +55,35 @@ function RootLayoutNav() {
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [loadingTimeout, setLoadingTimeout] = React.useState(false);
 
-  if (isLoading) {
+  // Add a timeout for loading state to prevent infinite loading
+  React.useEffect(() => {
+    if (isLoading) {
+      console.log('⏳ App: Authentication is loading...');
+      const timer = setTimeout(() => {
+        console.warn('⚠️ App: Authentication loading timeout reached');
+        setLoadingTimeout(true);
+      }, 15000); // 15 second timeout
+      
+      return () => clearTimeout(timer);
+    } else {
+      console.log('✅ App: Authentication loading completed');
+      setLoadingTimeout(false);
+    }
+  }, [isLoading]);
+
+  if (isLoading && !loadingTimeout) {
     return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        backgroundColor: Colors.light.background 
-      }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
+  }
+
+  if (loadingTimeout) {
+    console.error('🚨 App: Loading timeout - forcing login screen');
+    return <LoginScreen />;
   }
 
   if (!isAuthenticated) {
@@ -98,7 +115,7 @@ export default function RootLayout() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={styles.container}>
           <AuthProvider>
             <AuthenticatedApp />
           </AuthProvider>
@@ -107,3 +124,15 @@ export default function RootLayout() {
     </trpc.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.light.background,
+  },
+  container: {
+    flex: 1,
+  },
+});
