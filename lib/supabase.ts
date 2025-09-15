@@ -33,6 +33,31 @@ export const supabase = createClient(url, anonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // Add retry configuration for better mobile network handling
+    storageKey: 'supabase.auth.token',
+    flowType: 'pkce',
+  },
+  global: {
+    // Add timeout and retry configuration
+    fetch: async (url, options = {}) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        return response;
+      } catch (error: any) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - please check your connection');
+        }
+        throw error;
+      }
+    },
   },
   realtime: {
     params: {

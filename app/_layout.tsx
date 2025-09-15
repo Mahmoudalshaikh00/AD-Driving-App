@@ -64,7 +64,7 @@ function AuthenticatedApp() {
       const timer = setTimeout(() => {
         console.warn('⚠️ App: Authentication loading timeout reached');
         setLoadingTimeout(true);
-      }, 15000); // 15 second timeout
+      }, 30000); // 30 second timeout for mobile networks
       
       return () => clearTimeout(timer);
     } else {

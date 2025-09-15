@@ -122,10 +122,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       try {
         console.log('🔄 Auth store: Initializing authentication...');
         
-        // Get initial session with timeout
+        // Get initial session with longer timeout for mobile networks
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+          setTimeout(() => reject(new Error('Session fetch timeout')), 30000) // Increased to 30 seconds for mobile
         );
         
         const { data: { session }, error } = await Promise.race([
@@ -270,10 +270,20 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     try {
       console.log('🔑 Auth store: Starting sign in process for:', email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Add timeout for sign in operation
+      const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Sign in timeout - please check your connection')), 30000)
+      );
+      
+      const { data, error } = await Promise.race([
+        signInPromise,
+        timeoutPromise
+      ]) as any;
 
       if (error) {
         console.error('🚨 Auth store: Sign in error:', error);
@@ -281,15 +291,33 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
 
       console.log('✅ Auth store: Sign in successful, data:', data);
+      
+      // Wait a bit for the auth state to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       return { success: true, error: null };
     } catch (error: any) {
       console.error('🚨 Auth store: Sign in error:', error);
       
       // Provide more helpful error messages
-      if (error.message?.includes('Network request failed')) {
+      if (error.message?.includes('Network request failed') || error.message?.includes('fetch')) {
         return { 
           success: false, 
-          error: 'Unable to connect to server. Please check your internet connection and Supabase configuration.' 
+          error: 'Network connection issue. Please check your internet and try again.' 
+        };
+      }
+      
+      if (error.message?.includes('timeout')) {
+        return { 
+          success: false, 
+          error: 'Connection timeout. Please check your internet speed and try again.' 
+        };
+      }
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        return { 
+          success: false, 
+          error: 'Invalid email or password. Please check and try again.' 
         };
       }
       

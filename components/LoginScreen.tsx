@@ -9,11 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { User, UserPlus, Lock, Mail, Shield, Crown } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuthStore';
 import Colors from '@/constants/colors';
-import { trpcClient } from '@/lib/trpc';
 
 type LoginMode = 'select' | 'instructor' | 'student' | 'admin' | 'signup';
 
@@ -55,13 +55,19 @@ export default function LoginScreen() {
     setIsLoading(true);
     setError('');
 
-    const result = await signIn(email, password);
-    console.log('👉 LoginScreen: Sign in result', result);
+    try {
+      const result = await signIn(email, password);
+      console.log('👉 LoginScreen: Sign in result', result);
 
-    setIsLoading(false);
-
-    if (!result.success) {
-      setError(result.error || 'Login failed');
+      if (!result.success) {
+        setError(result.error || 'Login failed. Please try again.');
+        setIsLoading(false);
+      }
+      // Don't set loading to false on success - let the auth state change handle it
+    } catch (error: any) {
+      console.error('🚨 LoginScreen: Sign in error:', error);
+      setError('Connection error. Please check your internet and try again.');
+      setIsLoading(false);
     }
   };
 
@@ -249,10 +255,13 @@ export default function LoginScreen() {
             accessibilityRole="button"
             accessibilityLabel={mode === 'signup' ? 'Create Account' : 'Sign In'}
           >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Please wait...' : 
-               mode === 'signup' ? 'Create Account' : 'Sign In'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.loginButtonText}>
+                {mode === 'signup' ? 'Create Account' : 'Sign In'}
+              </Text>
+            )}
           </TouchableOpacity>
           
           {mode === 'instructor' && (
