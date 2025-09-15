@@ -7,7 +7,7 @@ import Constants from "expo-constants";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
-  const fromEnv = process.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? Constants.expoConfig?.extra?.EXPO_PUBLIC_RORK_API_BASE_URL ?? "";
+  const fromEnv = process.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? Constants.expoConfig?.extra?.EXPO_PUBLIC_RORK_API_BASE_URL ?? "https://ad-driving-app.vercel.app";
   if (fromEnv) {
     const normalized = fromEnv.startsWith("http://") || fromEnv.startsWith("https://") ? fromEnv : `https://${fromEnv}`;
     return normalized.replace(/\/$/, "");
