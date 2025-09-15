@@ -100,7 +100,8 @@ export default function StudentsScreen() {
           supabase
             .from('users')
             .select('*')
-            .order('role')
+            .eq('role', 'student')
+            .eq('instructor_id', user?.id ?? '')
             .order('name')
             .then(resolve);
         });
@@ -136,7 +137,7 @@ export default function StudentsScreen() {
     }
   }, [user, refreshStudents]);
 
-  const studentsOnly = allUsers;
+  const studentsOnly = (user?.role === 'instructor') ? (students.length > 0 ? students : allUsers) : allUsers;
 
   const filteredStudents = studentsOnly.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -163,7 +164,7 @@ export default function StudentsScreen() {
               .from('users')
               .select('*')
               .eq('role', 'student')
-              .eq('instructor_id', user?.id)
+              .eq('instructor_id', user?.id ?? '')
               .order('name')
               .then(resolve);
           });
