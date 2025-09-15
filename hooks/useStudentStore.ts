@@ -151,6 +151,18 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
           throw new Error(`Failed to create auth user: ${authError?.message}`);
         }
 
+        // First verify instructor exists in users table
+        const { data: instructorExists, error: checkError } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        if (checkError || !instructorExists) {
+          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+          throw new Error('Instructor not found in users table. Please ensure your account is properly set up.');
+        }
+
         // Create profile in users table
         const { error: profileError } = await supabaseAdmin
           .from('users')
@@ -161,6 +173,8 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
             role: 'student',
             instructor_id: user.id,
             status: 'active',
+            is_approved: true,
+            is_restricted: false,
           });
 
         if (profileError) {

@@ -25,4 +25,14 @@ app.get("/", (c) => {
   return c.json({ status: "ok", message: "API is running" });
 });
 
+// Test endpoint for tRPC
+app.get("/test", (c) => {
+  return c.json({ 
+    status: "ok", 
+    message: "Backend is running",
+    timestamp: new Date().toISOString(),
+    endpoints: ["/api", "/api/trpc"]
+  });
+});
+
 export default app;

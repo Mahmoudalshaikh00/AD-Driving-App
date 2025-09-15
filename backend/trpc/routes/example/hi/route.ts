@@ -174,6 +174,18 @@ export const createStudentForInstructorProcedure = publicProcedure
         throw new Error(`Failed to create auth user: ${authError?.message}`);
       }
 
+      // First check if instructor exists in users table
+      const { data: instructorExists, error: checkError } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('id', instructorId)
+        .single();
+
+      if (checkError || !instructorExists) {
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        throw new Error('Instructor not found in users table');
+      }
+
       const { error: profileError } = await supabaseAdmin
         .from('users')
         .insert({
@@ -183,6 +195,8 @@ export const createStudentForInstructorProcedure = publicProcedure
           role: 'student',
           instructor_id: instructorId,
           status: 'active',
+          is_approved: true,
+          is_restricted: false,
         });
 
       if (profileError) {
