@@ -24,10 +24,11 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
         .order('name');
 
       if (error) {
-        console.error('❌ Error fetching students:', error);
+        const msg = (error as any)?.message ?? JSON.stringify(error);
+        console.error('❌ Error fetching students:', msg);
       } else {
         console.log('✅ Fetched students:', data?.length || 0);
-        setStudents(data as Student[] || []);
+        setStudents((data as Student[]) ?? []);
       }
     } catch (error) {
       console.error('🚨 Error fetching students:', error);
