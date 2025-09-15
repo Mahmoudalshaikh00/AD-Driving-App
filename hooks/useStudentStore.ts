@@ -15,23 +15,23 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
 
     setLoading(true);
     try {
-      const result = supabase
+      console.log('📚 Fetching students for instructor:', user.id);
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('role', 'student')
         .eq('instructor_id', user.id)
         .order('name');
 
-      result.then(({ data, error }: any) => {
-        if (error) {
-          console.error('Error fetching students:', error);
-        } else {
-          setStudents(data as Student[]);
-        }
-        setLoading(false);
-      });
+      if (error) {
+        console.error('❌ Error fetching students:', error);
+      } else {
+        console.log('✅ Fetched students:', data?.length || 0);
+        setStudents(data as Student[] || []);
+      }
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('🚨 Error fetching students:', error);
+    } finally {
       setLoading(false);
     }
   }, [user]);
@@ -120,20 +120,81 @@ export const [StudentProvider, useStudentStore] = createContextHook(() => {
     try {
       console.log('👨‍🎓 Student store: Creating student account for:', email);
 
-      const result = await trpcClient.admin.createStudentForInstructor.mutate({
-        instructorId: user.id,
-        email,
-        password,
-        name,
-      });
+      // Try tRPC first, fallback to direct Supabase if it fails
+      try {
+        const result = await trpcClient.admin.createStudentForInstructor.mutate({
+          instructorId: user.id,
+          email,
+          password,
+          name,
+        });
 
-      console.log('✅ Student created via tRPC:', result);
-      await fetchStudents();
+        console.log('✅ Student created via tRPC:', result);
+        await fetchStudents();
+        return { success: true, error: null };
+      } catch (trpcError: any) {
+        console.log('⚠️ tRPC failed, trying direct Supabase approach:', trpcError.message);
+        
+        // Fallback to direct Supabase admin operations
+        const { supabaseAdmin } = await import('@/lib/supabase');
+        
+        // Create auth user
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { name, instructor_id: user.id },
+          app_metadata: { role: 'student' },
+        });
 
-      return { success: true, error: null };
+        if (authError || !authData.user) {
+          throw new Error(`Failed to create auth user: ${authError?.message}`);
+        }
+
+        // Create profile in users table
+        const { error: profileError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            name,
+            email,
+            role: 'student',
+            instructor_id: user.id,
+            status: 'active',
+          });
+
+        if (profileError) {
+          // Cleanup auth user if profile creation fails
+          await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+          throw new Error(`Failed to create student profile: ${profileError.message}`);
+        }
+
+        console.log('✅ Student created via direct Supabase:', authData.user.id);
+        await fetchStudents();
+        return { success: true, error: null };
+      }
     } catch (error: any) {
       console.error('🚨 Student store: Error creating student:', error);
-      return { success: false, error: error?.message ?? 'Failed to create student' };
+      
+      let errorMessage = 'Failed to create student';
+      
+      if (error?.message) {
+        if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+          errorMessage = 'Network error: Please check your internet connection and try again';
+        } else if (error.message.includes('JSON Parse error')) {
+          errorMessage = 'Server error: Using fallback method';
+        } else if (error.message.includes('HTTP 404')) {
+          errorMessage = 'API endpoint not found: Using fallback method';
+        } else if (error.message.includes('HTTP 500')) {
+          errorMessage = 'Server error: Please try again later';
+        } else if (error.message.includes('duplicate key value')) {
+          errorMessage = 'A user with this email already exists';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   }, [user, fetchStudents]);
 

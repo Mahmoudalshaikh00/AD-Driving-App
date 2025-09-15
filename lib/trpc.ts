@@ -23,6 +23,31 @@ export const trpcClient = trpc.createClient({
     httpLink({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
+      fetch: async (url, options) => {
+        try {
+          console.log('🌐 tRPC request to:', url);
+          const response = await fetch(url, options);
+          
+          if (!response.ok) {
+            console.error('❌ tRPC HTTP error:', response.status, response.statusText);
+            const text = await response.text();
+            console.error('❌ Response body:', text.substring(0, 200));
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Non-JSON response:', text.substring(0, 200));
+            throw new Error('Server returned non-JSON response');
+          }
+          
+          return response;
+        } catch (error: any) {
+          console.error('🚨 tRPC fetch error:', error.message);
+          throw error;
+        }
+      },
     }),
   ],
 });
